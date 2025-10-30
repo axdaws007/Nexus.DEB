@@ -1,10 +1,14 @@
+using HotChocolate.AspNetCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Nexus.DEB.Application;
 using Nexus.DEB.Infrastructure;
+using Nexus.DEB.Infrastructure.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var environment = builder.Environment;
-var allowedOrigins = builder.Configuration["CORS:AllowedOrigins"];
+var configuration = builder.Configuration;
+var allowedOrigins = configuration["CORS:AllowedOrigins"];
 
 builder.Services.AddCors(options =>
 {
@@ -57,17 +61,97 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(configuration);
 
 builder.Services.AddHttpContextAccessor();
 
+var decryptionKey = configuration["Authentication:DecryptionKey"] ?? throw new InvalidOperationException("Authentication:DecryptionKey is required");
+var validationKey = configuration["Authentication:ValidationKey"] ?? throw new InvalidOperationException("Authentication:ValidationKey is required");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
+.AddCookie(options =>
+{
+    var cookieName = configuration["Authentication:CookieName"] ?? ".ASPXAUTH";
+    var cookieDomain = configuration["Authentication:CookieDomain"];
+
+    // Parse RequireHttps (default: true)
+    var requireHttps = true;
+    if (bool.TryParse(configuration["Authentication:RequireHttps"], out var configHttps))
+    {
+        requireHttps = configHttps;
+    }
+
+    // Parse SlidingExpiration (default: true)
+    var slidingExpiration = true;
+    if (bool.TryParse(configuration["Authentication:SlidingExpiration"], out var configSliding))
+    {
+        slidingExpiration = configSliding;
+    }
+
+    // Parse CookieExpirationMinutes (default: 480 = 8 hours)
+    var cookieExpirationMinutes = 480;
+    if (int.TryParse(configuration["Authentication:CookieExpirationMinutes"], out var configMinutes))
+    {
+        cookieExpirationMinutes = configMinutes;
+    }
+
+    options.Cookie.Name = cookieName;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = requireHttps ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.SlidingExpiration = slidingExpiration;
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(cookieExpirationMinutes);
+
+    if (!string.IsNullOrWhiteSpace(cookieDomain))
+    {
+        options.Cookie.Domain = cookieDomain;
+    }
+
+    // Use the custom AspNetTicketDataFormat for .NET Framework 4.8 compatibility
+    options.TicketDataFormat = new AspNetTicketDataFormat(decryptionKey, validationKey);
+
+    // Configure authentication challenge behavior
+    options.Events = new CookieAuthenticationEvents
+    {
+        OnRedirectToLogin = context =>
+        {
+            // For API calls, return 401 instead of redirecting
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        },
+        OnRedirectToAccessDenied = context =>
+        {
+            // For API calls, return 403 instead of redirecting
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        }
+    };
+});
+
+builder.Services.AddAuthorization();
+
 builder
     .AddGraphQL()
+    .AddAuthorization()
     .AddTypes();
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+
+app.UseHttpsRedirection();
+
 app.UseCors("GraphQLPolicy");
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapGraphQL();
 

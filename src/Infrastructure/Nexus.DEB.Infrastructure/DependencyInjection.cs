@@ -2,7 +2,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Infrastructure.Authentication;
 using Nexus.DEB.Infrastructure.Persistence;
+using Nexus.DEB.Infrastructure.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +19,21 @@ namespace Nexus.DEB.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
+            services.AddSingleton<AspNetTicketDataFormat>(provider =>
+            {
+                var decryptionKey = configuration["Authentication:DecryptionKey"]
+                    ?? throw new InvalidOperationException("Authentication:DecryptionKey is not configured");
+                var validationKey = configuration["Authentication:ValidationKey"]
+                    ?? throw new InvalidOperationException("Authentication:ValidationKey is not configured");
+
+                return new AspNetTicketDataFormat(decryptionKey, validationKey);
+            });
+
+            services.AddScoped<ILoginService, LoginService>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<IUserValidationService, SampleUserValidationService>();
+
+
             // Database - Using Pooled DbContext Factory for better performance
             services.AddPooledDbContextFactory<DebContext>(options =>
                 options.UseSqlServer(

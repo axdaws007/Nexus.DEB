@@ -29,9 +29,22 @@ namespace Nexus.DEB.Infrastructure
                 return new AspNetTicketDataFormat(decryptionKey, validationKey);
             });
 
+            var cisIdentityBaseUrl = configuration["LegacyApis:CisIdentity:BaseUrl"]
+                ?? throw new InvalidOperationException("LegacyApis:CisIdentity:BaseUrl is not configured");
+
+            var cisIdentityTimeout = int.Parse(configuration["LegacyApis:CisIdentity:Timeout"]);
+
+            services.AddHttpClient("CisIdentityApi", client =>
+            {
+                client.BaseAddress = new Uri(cisIdentityBaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(cisIdentityTimeout);
+                // Add any headers if needed (API keys, etc.)
+                // client.DefaultRequestHeaders.Add("X-API-Key", "your-api-key");
+            });
+
             services.AddScoped<ILoginService, LoginService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
-            services.AddScoped<IUserValidationService, SampleUserValidationService>();
+            services.AddScoped<IUserValidationService, CisIdentityApiClient>();
 
 
             // Database - Using Pooled DbContext Factory for better performance

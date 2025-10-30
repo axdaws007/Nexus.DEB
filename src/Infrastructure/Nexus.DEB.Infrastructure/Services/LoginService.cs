@@ -48,9 +48,9 @@ namespace Nexus.DEB.Infrastructure.Services
             }
 
             // Validate credentials using existing service
-            var (isValid, userId, postId) = await _userValidationService.ValidateCredentialsAsync(username, password);
+            var cisUser = await _userValidationService.ValidateCredentialsAsync(username, password);
 
-            if (!isValid)
+            if (cisUser == null)
             {
                 return Result<LoginResponse>.Failure(new ValidationError
                 {
@@ -60,14 +60,34 @@ namespace Nexus.DEB.Infrastructure.Services
                 });
             }
 
-            // Create claims
+            Guid postId;
+            List<CisPost>? postsToReturn = null;
+
+            if (cisUser.Posts == null || cisUser.Posts.Count == 0)
+            {
+                // No posts assigned - use empty guid
+                postId = Guid.Empty;
+            }
+            else if (cisUser.Posts.Count == 1)
+            {
+                // Single post - use that post's ID
+                postId = cisUser.Posts[0].PostId;
+            }
+            else
+            {
+                // Multiple posts - use empty guid and return posts for selection
+                postId = Guid.Empty;
+                postsToReturn = cisUser.Posts;
+            }
+
+            // Create claims with the determined PostId and UserId
             var claims = new List<Claim>
-        {
-            new Claim("PostId", postId.ToString()),
-            new Claim("UserId", userId.ToString()),
-            new Claim(ClaimTypes.Name, $"{postId}|{userId}"),
-            new Claim(ClaimTypes.Authentication, "Forms")
-        };
+            {
+                new Claim("PostId", postId.ToString()),
+                new Claim("UserId", cisUser.UserId.ToString()),
+                new Claim(ClaimTypes.Name, $"{postId}|{cisUser.UserId}"),
+                new Claim(ClaimTypes.Authentication, "Forms")
+            };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
@@ -114,14 +134,112 @@ namespace Nexus.DEB.Infrastructure.Services
             // Return success response
             var response = new LoginResponse
             {
-                UserId = userId,
+                UserId = cisUser.UserId,
                 PostId = postId,
                 Username = username,
+                Success = true,
+                ExpiresAt = expiresUtc,
+                Posts = postsToReturn  // Will be null unless multiple posts
+            };
+
+            return Result<LoginResponse>.Success(response);
+        }
+
+        public async Task<Result<SelectPostResponse>> SelectPostAsync(Guid postId)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null)
+            {
+                return Result<SelectPostResponse>.Failure(new ValidationError
+                {
+                    Field = "system",
+                    Message = "Unable to access HTTP context",
+                    Code = "HTTP_CONTEXT_ERROR"
+                });
+            }
+
+            // Ensure user is authenticated
+            if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+            {
+                return Result<SelectPostResponse>.Failure(new ValidationError
+                {
+                    Field = "authentication",
+                    Message = "User must be authenticated to select a post",
+                    Code = "NOT_AUTHENTICATED"
+                });
+            }
+
+            // Get the current UserId from the existing claims
+            var userIdClaim = httpContext.User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Result<SelectPostResponse>.Failure(new ValidationError
+                {
+                    Field = "userId",
+                    Message = "Unable to retrieve user ID from authentication cookie",
+                    Code = "USERID_NOT_FOUND"
+                });
+            }
+
+            // Validate postId
+            if (postId == Guid.Empty)
+            {
+                return Result<SelectPostResponse>.Failure(new ValidationError
+                {
+                    Field = "postId",
+                    Message = "Post ID cannot be empty",
+                    Code = "INVALID_POSTID"
+                });
+            }
+
+            // Get existing authentication properties to preserve rememberMe and expiration
+            var existingAuthResult = await httpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            var isPersistent = existingAuthResult.Properties?.IsPersistent ?? false;
+
+            // Get cookie expiration from configuration (default: 480 minutes = 8 hours)
+            var cookieExpirationMinutes = 480;
+            if (int.TryParse(_configuration["Authentication:CookieExpirationMinutes"], out var configMinutes))
+            {
+                cookieExpirationMinutes = configMinutes;
+            }
+
+            var expiresUtc = DateTimeOffset.UtcNow.AddMinutes(cookieExpirationMinutes);
+
+            // Create new claims with the selected PostId
+            var claims = new List<Claim>
+            {
+                new Claim("PostId", postId.ToString()),
+                new Claim("UserId", userId.ToString()),
+                new Claim(ClaimTypes.Name, $"{postId}|{userId}"),
+                new Claim(ClaimTypes.Authentication, "Forms")
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = isPersistent,
+                ExpiresUtc = expiresUtc,
+                AllowRefresh = true
+            };
+
+            // Sign in with the updated claims (this recreates the cookie)
+            await httpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                claimsPrincipal,
+                authProperties);
+
+            // Return success response
+            var response = new SelectPostResponse
+            {
+                UserId = userId,
+                PostId = postId,
                 Success = true,
                 ExpiresAt = expiresUtc
             };
 
-            return Result<LoginResponse>.Success(response);
+            return Result<SelectPostResponse>.Success(response);
         }
     }
 }

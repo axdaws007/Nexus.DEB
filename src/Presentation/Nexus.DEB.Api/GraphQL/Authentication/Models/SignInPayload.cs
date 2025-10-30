@@ -1,4 +1,6 @@
-﻿namespace Nexus.DEB.Api.GraphQL.Authentication.Models
+﻿using Nexus.DEB.Application.Common.Models;
+
+namespace Nexus.DEB.Api.GraphQL.Authentication.Models
 {
     /// <summary>
     /// Payload returned from sign-in mutation
@@ -11,5 +13,6 @@
         public bool Success { get; set; }
         public string? Message { get; set; }
         public DateTimeOffset? ExpiresAt { get; set; }
+        public List<CisPost>? Posts { get; set; }
     }
 }

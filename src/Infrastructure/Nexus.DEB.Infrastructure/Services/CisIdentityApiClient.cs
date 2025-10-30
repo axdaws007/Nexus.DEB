@@ -136,5 +136,59 @@ namespace Nexus.DEB.Infrastructure.Services
                 throw;
             }
         }
+
+        public async Task<UserDetails?> GetUserDetailsAsync(Guid userId, Guid postId, string authCookie)
+        {
+            try
+            {
+                _logger.LogInformation("Fetching user details for UserId: {UserId}, PostId: {PostId}", userId, postId);
+
+                if (string.IsNullOrEmpty(authCookie))
+                {
+                    _logger.LogError("Auth cookie is missing for GetUserDetails call");
+                    throw new InvalidOperationException("Authentication cookie is required");
+                }
+
+                var requestUri = $"api/Users/CurrentUser";
+
+                var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+
+                // Forward the Forms Authentication cookie to the CIS API
+                request.Headers.Add("Cookie", authCookie);
+
+                var response = await _httpClient.SendAsync(request);
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("Unauthorized when fetching user details for UserId: {UserId}", userId);
+                    return null;
+                }
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _logger.LogWarning("User not found: {UserId}", userId);
+                    return null;
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var userDetails = JsonSerializer.Deserialize<UserDetails>(responseContent, _jsonOptions);
+
+                if (userDetails == null)
+                {
+                    _logger.LogError("Failed to deserialize user details for UserId: {UserId}", userId);
+                    return null;
+                }
+
+                _logger.LogInformation("Successfully fetched user details for {Username}", userDetails.UserName);
+                return userDetails;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching user details for UserId: {UserId}", userId);
+                throw;
+            }
+        }
     }
 }

@@ -1,16 +1,15 @@
-﻿namespace Nexus.DEB.Api.GraphQL.Authentication.Models
+﻿namespace Nexus.DEB.Application.Common.Models
 {
-    public class CurrentUserInfo
+    public class UserDetails
     {
-        public Guid PostId { get; set; }
         public Guid UserId { get; set; }
         public string UserName { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
-        public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+        public Guid PostId { get; set; }
         public string PostTitle { get; set; } = string.Empty;
 
-        public bool IsAuthenticated { get; set; }
+        public string FullName => $"{FirstName} {LastName}".Trim();
     }
 }

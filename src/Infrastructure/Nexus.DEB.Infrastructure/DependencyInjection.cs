@@ -15,6 +15,8 @@ namespace Nexus.DEB.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
+            services.AddMemoryCache();
+
             services.AddSingleton<AspNetTicketDataFormat>(provider =>
             {
                 var decryptionKey = configuration["Authentication:DecryptionKey"]

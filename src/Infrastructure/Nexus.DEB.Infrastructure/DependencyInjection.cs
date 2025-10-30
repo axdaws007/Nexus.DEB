@@ -35,8 +35,7 @@ namespace Nexus.DEB.Infrastructure
                     {
                         return new HttpClientHandler
                         {
-                            CookieContainer = new CookieContainer(),
-                            UseCookies = true,
+                            UseCookies = false,
                             AllowAutoRedirect = false // Important for authentication scenarios
                         };
                     })

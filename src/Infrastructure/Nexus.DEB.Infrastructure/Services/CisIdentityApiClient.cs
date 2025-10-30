@@ -97,12 +97,19 @@ namespace Nexus.DEB.Infrastructure.Services
                     throw new InvalidOperationException("Authentication cookie is required");
                 }
 
-                var requestUri = $"api/Users/ValidatePost?userId={userId}&postId={postId}";
+                var requestUri = $"api/Users/ValidatePost?postId={postId}";
 
                 var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
 
                 // Forward the Forms Authentication cookie to the CIS API
                 request.Headers.Add("Cookie", authCookie);
+
+                _logger.LogInformation("Request URI: {Uri}", _httpClient.BaseAddress + requestUri);
+                _logger.LogInformation("Request Headers:");
+                foreach (var header in request.Headers)
+                {
+                    _logger.LogInformation("  {Name}: {Value}", header.Key, string.Join(", ", header.Value));
+                }
 
                 var response = await _httpClient.SendAsync(request);
 

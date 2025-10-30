@@ -85,39 +85,47 @@ namespace Nexus.DEB.Infrastructure.Services
             }
         }
 
-        public async Task<bool> ValidatePostAsync(Guid userId, Guid postId)
+        public async Task<bool> ValidatePostAsync(Guid userId, Guid postId, string authCookie)
         {
             try
             {
-                _logger.LogInformation("Validating credentials for user ID: {userId}", userId);
+                _logger.LogInformation("Validating post {PostId} for user {UserId}", postId, userId);
 
-                // Build the query string - matching your API format
-                var requestUri = $"api/Users/ValidatePost?userId={userId.ToString()}&postId={postId.ToString()}";
+                if (string.IsNullOrEmpty(authCookie))
+                {
+                    _logger.LogError("Auth cookie is missing for ValidatePost call");
+                    throw new InvalidOperationException("Authentication cookie is required");
+                }
 
-                // Make the HTTP POST request
-                var response = await _httpClient.PostAsync(requestUri, null);
+                var requestUri = $"api/Users/ValidatePost?userId={userId}&postId={postId}";
 
-                // Handle 401 Unauthorized - invalid credentials
+                var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
+
+                // Forward the Forms Authentication cookie to the CIS API
+                request.Headers.Add("Cookie", authCookie);
+
+                var response = await _httpClient.SendAsync(request);
+
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
                 {
-                    _logger.LogWarning("Invalid post for user ID: {userId}", userId);
+                    _logger.LogWarning("Unauthorized: Post {PostId} validation failed for user {UserId}", postId, userId);
                     return false;
                 }
 
-                // Ensure success status code (200 OK)
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning("Forbidden: User {UserId} does not have access to post {PostId}", userId, postId);
+                    return false;
+                }
+
                 response.EnsureSuccessStatusCode();
 
+                _logger.LogInformation("Successfully validated post {PostId} for user {UserId}", postId, userId);
                 return true;
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "HTTP request failed while validating post for user ID: {userId}", userId);
-                throw new InvalidOperationException(
-                    $"Failed to communicate with CIS Identity API: {ex.Message}", ex);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error while validating credentials for user ID: {userId}", userId);
+                _logger.LogError(ex, "Error validating post {PostId} for user {UserId}", postId, userId);
                 throw;
             }
         }

@@ -13,6 +13,7 @@ namespace Nexus.DEB.Infrastructure.Services
         private readonly IUserValidationService _userValidationService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _configuration;
+        private readonly string _authCookieName;
 
         public LoginService(
             IUserValidationService userValidationService,
@@ -22,6 +23,9 @@ namespace Nexus.DEB.Infrastructure.Services
             _userValidationService = userValidationService;
             _httpContextAccessor = httpContextAccessor;
             _configuration = configuration;
+
+            _authCookieName = _configuration["Authentication:CookieName"]
+                ?? throw new InvalidOperationException("Authentication:CookieName is not configured");
         }
 
         public async Task<Result<LoginResponse>> SignInAsync(string username, string password, bool rememberMe = false)
@@ -192,7 +196,10 @@ namespace Nexus.DEB.Infrastructure.Services
                 });
             }
 
-            var isPostValid = await _userValidationService.ValidatePostAsync(userId, postId);
+            var authCookie = httpContext.Request.Cookies[_authCookieName];
+            var cookieHeader = $"{_authCookieName}={authCookie}";
+
+            var isPostValid = await _userValidationService.ValidatePostAsync(userId, postId, cookieHeader);
 
             if (!isPostValid)
             {

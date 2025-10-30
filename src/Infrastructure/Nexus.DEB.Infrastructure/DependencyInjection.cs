@@ -5,11 +5,7 @@ using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Infrastructure.Authentication;
 using Nexus.DEB.Infrastructure.Persistence;
 using Nexus.DEB.Infrastructure.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net;
 
 namespace Nexus.DEB.Infrastructure
 {
@@ -34,13 +30,23 @@ namespace Nexus.DEB.Infrastructure
 
             var cisIdentityTimeout = int.Parse(configuration["LegacyApis:CisIdentity:Timeout"]);
 
-            services.AddHttpClient("CisIdentityApi", client =>
-            {
-                client.BaseAddress = new Uri(cisIdentityBaseUrl);
-                client.Timeout = TimeSpan.FromSeconds(cisIdentityTimeout);
-                // Add any headers if needed (API keys, etc.)
-                // client.DefaultRequestHeaders.Add("X-API-Key", "your-api-key");
-            });
+            services.AddHttpClient("CisIdentityApi")
+                    .ConfigurePrimaryHttpMessageHandler(() =>
+                    {
+                        return new HttpClientHandler
+                        {
+                            CookieContainer = new CookieContainer(),
+                            UseCookies = true,
+                            AllowAutoRedirect = false // Important for authentication scenarios
+                        };
+                    })
+                    .ConfigureHttpClient(client =>
+                    {
+                        client.BaseAddress = new Uri(cisIdentityBaseUrl);
+                        client.Timeout = TimeSpan.FromSeconds(cisIdentityTimeout);
+                        // Add any headers if needed (API keys, etc.)
+                        // client.DefaultRequestHeaders.Add("X-API-Key", "your-api-key");
+                    });
 
             services.AddScoped<ILoginService, LoginService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();

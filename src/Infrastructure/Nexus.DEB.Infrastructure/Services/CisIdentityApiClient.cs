@@ -19,7 +19,7 @@ namespace Nexus.DEB.Infrastructure.Services
             IHttpClientFactory httpClientFactory,
             ILogger<CisIdentityApiClient> logger)
         {
-            _httpClient = httpClientFactory.CreateClient("CisIdentityApi");
+            _httpClient = httpClientFactory.CreateClient("CisApi");
             _logger = logger;
 
             // Configure JSON options to match the API response format

@@ -27,12 +27,12 @@ namespace Nexus.DEB.Infrastructure
                 return new AspNetTicketDataFormat(decryptionKey, validationKey);
             });
 
-            var cisIdentityBaseUrl = configuration["LegacyApis:CisIdentity:BaseUrl"]
-                ?? throw new InvalidOperationException("LegacyApis:CisIdentity:BaseUrl is not configured");
+            var cisIdentityBaseUrl = configuration["LegacyApis:CIS:BaseUrl"]
+                ?? throw new InvalidOperationException("LegacyApis:CIS:BaseUrl is not configured");
 
-            var cisIdentityTimeout = int.Parse(configuration["LegacyApis:CisIdentity:Timeout"]);
+            var cisIdentityTimeout = int.Parse(configuration["LegacyApis:CIS:Timeout"]);
 
-            services.AddHttpClient("CisIdentityApi")
+            services.AddHttpClient("CisApi")
                     .ConfigurePrimaryHttpMessageHandler(() =>
                     {
                         return new HttpClientHandler

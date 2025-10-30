@@ -84,5 +84,42 @@ namespace Nexus.DEB.Infrastructure.Services
                 throw;
             }
         }
+
+        public async Task<bool> ValidatePostAsync(Guid userId, Guid postId)
+        {
+            try
+            {
+                _logger.LogInformation("Validating credentials for user ID: {userId}", userId);
+
+                // Build the query string - matching your API format
+                var requestUri = $"api/Users/ValidatePost?userId={userId.ToString()}&postId={postId.ToString()}";
+
+                // Make the HTTP POST request
+                var response = await _httpClient.PostAsync(requestUri, null);
+
+                // Handle 401 Unauthorized - invalid credentials
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("Invalid post for user ID: {userId}", userId);
+                    return false;
+                }
+
+                // Ensure success status code (200 OK)
+                response.EnsureSuccessStatusCode();
+
+                return true;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP request failed while validating post for user ID: {userId}", userId);
+                throw new InvalidOperationException(
+                    $"Failed to communicate with CIS Identity API: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while validating credentials for user ID: {userId}", userId);
+                throw;
+            }
+        }
     }
 }

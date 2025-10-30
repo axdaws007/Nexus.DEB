@@ -192,6 +192,18 @@ namespace Nexus.DEB.Infrastructure.Services
                 });
             }
 
+            var isPostValid = await _userValidationService.ValidatePostAsync(userId, postId);
+
+            if (!isPostValid)
+            {
+                return Result<SelectPostResponse>.Failure(new ValidationError
+                {
+                    Field = "postId",
+                    Message = "Post ID not valid for this user",
+                    Code = "INVALID_POSTID"
+                });
+            }
+
             // Get existing authentication properties to preserve rememberMe and expiration
             var existingAuthResult = await httpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             var isPersistent = existingAuthResult.Properties?.IsPersistent ?? false;

@@ -27,10 +27,10 @@ namespace Nexus.DEB.Infrastructure
                 return new AspNetTicketDataFormat(decryptionKey, validationKey);
             });
 
-            var cisIdentityBaseUrl = configuration["LegacyApis:CIS:BaseUrl"]
+            var cisBaseUrl = configuration["LegacyApis:CIS:BaseUrl"]
                 ?? throw new InvalidOperationException("LegacyApis:CIS:BaseUrl is not configured");
 
-            var cisIdentityTimeout = int.Parse(configuration["LegacyApis:CIS:Timeout"]);
+            var cisTimeout = int.Parse(configuration["LegacyApis:CIS:Timeout"]);
 
             services.AddHttpClient("CisApi")
                     .ConfigurePrimaryHttpMessageHandler(() =>
@@ -43,16 +43,31 @@ namespace Nexus.DEB.Infrastructure
                     })
                     .ConfigureHttpClient(client =>
                     {
-                        client.BaseAddress = new Uri(cisIdentityBaseUrl);
-                        client.Timeout = TimeSpan.FromSeconds(cisIdentityTimeout);
+                        client.BaseAddress = new Uri(cisBaseUrl);
+                        client.Timeout = TimeSpan.FromSeconds(cisTimeout);
                         // Add any headers if needed (API keys, etc.)
                         // client.DefaultRequestHeaders.Add("X-API-Key", "your-api-key");
                     });
 
+            services.AddHttpClient("CbacApi", client =>
+            {
+                var baseUrl = configuration["LegacyApis:CBAC:BaseUrl"]
+                    ?? throw new InvalidOperationException("LegacyApis:CBAC:BaseUrl is not configured");
+
+                var cbacTimeout = int.Parse(configuration["LegacyApis:CBAC:Timeout"]);
+
+                client.BaseAddress = new Uri(baseUrl);
+
+                // If your API uses API keys, add them here
+                // client.DefaultRequestHeaders.Add("X-API-Key", configuration["CbacApi:ApiKey"]);
+
+                client.Timeout = TimeSpan.FromSeconds(cbacTimeout);
+            });
+
             services.AddScoped<ILoginService, LoginService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IUserValidationService, CisIdentityApiClient>();
-
+            services.AddScoped<ICbacApiWrapper, CbacApiWrapper>();
 
             // Database - Using Pooled DbContext Factory for better performance
             services.AddPooledDbContextFactory<DebContext>(options =>

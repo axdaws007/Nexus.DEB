@@ -138,7 +138,17 @@ builder.Services.AddAuthorization();
 builder
     .AddGraphQL()
     .AddAuthorization()
-    .AddTypes();
+    .AddTypes()
+    .AddMutationConventions()
+//    .AddGlobalObjectIdentification()
+    .ModifyPagingOptions(x =>
+    {
+        x.MaxPageSize = 200;
+        x.IncludeTotalCount = true;
+    })
+    .AddProjections()
+    .AddSorting()
+    ;
 
 var app = builder.Build();
 

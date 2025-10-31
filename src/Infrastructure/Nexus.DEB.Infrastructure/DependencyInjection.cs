@@ -5,7 +5,6 @@ using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Infrastructure.Authentication;
 using Nexus.DEB.Infrastructure.Persistence;
 using Nexus.DEB.Infrastructure.Services;
-using System.Net;
 
 namespace Nexus.DEB.Infrastructure
 {
@@ -64,11 +63,6 @@ namespace Nexus.DEB.Infrastructure
                 client.Timeout = TimeSpan.FromSeconds(cbacTimeout);
             });
 
-            services.AddScoped<ILoginService, LoginService>();
-            services.AddScoped<ICurrentUserService, CurrentUserService>();
-            services.AddScoped<IUserValidationService, CisIdentityApiClient>();
-            services.AddScoped<ICbacApiWrapper, CbacApiWrapper>();
-
             // Database - Using Pooled DbContext Factory for better performance
             services.AddPooledDbContextFactory<DebContext>(options =>
                 options.UseSqlServer(
@@ -83,6 +77,14 @@ namespace Nexus.DEB.Infrastructure
             });
 
             // Other infrastructure services will be registered here
+            services.AddScoped<ILoginService, LoginService>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<IUserValidationService, CisIdentityApiClient>();
+            services.AddScoped<ICbacApiWrapper, CbacApiWrapper>();
+            services.AddScoped<IDebService, DebService>();
+
+            // Note: PawsService is used by field resolvers and needs to be transient
+            services.AddTransient<IPawsService, PawsService>();
 
             return services;
         }

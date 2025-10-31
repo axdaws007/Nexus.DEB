@@ -30,6 +30,9 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<Statement> Statement { get; set; }
         public DbSet<Domain.Models.Task> Tasks { get; set; }
 
+        // Views
+        public DbSet<StandardVersionSummary> StandardVersionSummaries { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

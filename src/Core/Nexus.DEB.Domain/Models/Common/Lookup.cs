@@ -7,7 +7,7 @@ namespace Nexus.DEB.Domain.Models.Common
         protected Lookup() { }
 
         public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; }
         public bool IsEnabled { get; set; } = true;
         public DateTime CreatedDate { get; set; }
         public DateTime LastModifiedDate { get; set; }

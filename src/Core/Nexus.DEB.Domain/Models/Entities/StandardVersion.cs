@@ -18,5 +18,7 @@ namespace Nexus.DEB.Domain.Models
 
         public short StandardId { get; set; }
         public virtual Standard Standard { get; set; }
+
+        public ICollection<Requirement> Requirements { get; set; }
     }
 }

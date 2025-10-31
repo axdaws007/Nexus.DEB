@@ -1,5 +1,4 @@
 ﻿using Nexus.DEB.Domain.Models.Common;
-using Nexus.DEB.Domain.Models.Entities;
 
 namespace Nexus.DEB.Domain.Models
 {

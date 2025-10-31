@@ -14,8 +14,8 @@ public abstract class EntityHead : IEntity
     public Guid Id { get; set; }
     public Guid ModuleId { get; set; }
     public string Title { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string SerialNumber { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? SerialNumber { get; set; }
     public Guid OwnedById { get; set; }
     public Guid? OwnedByGroupId { get; set; }
     public Guid CreatedById { get; set; }

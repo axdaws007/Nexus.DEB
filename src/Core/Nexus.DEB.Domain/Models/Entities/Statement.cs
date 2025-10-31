@@ -1,6 +1,6 @@
 ﻿using Nexus.DEB.Domain.Models.Common;
 
-namespace Nexus.DEB.Domain.Models.Entities
+namespace Nexus.DEB.Domain.Models
 {
     public class Statement : EntityHead
     {

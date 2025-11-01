@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using System.Net;
+using System.Net.Http.Json;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -69,6 +70,57 @@ namespace Nexus.DEB.Infrastructure.Services
                 HttpMethod.Get,
                 requestUri,
                 operationName: $"GetUserDetails for UserId: {userId}, PostId: {postId}");
+        }
+
+        public async Task<IReadOnlyDictionary<Guid, string?>> GetNamesByIdsAsync(List<Guid> ids, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // Create request DTO
+                var request = new CisBatchRequest
+                {
+                    Ids = ids
+                };
+
+                // Create JSON content (JsonOptions from base class)
+                var content = JsonContent.Create(request, options: JsonOptions);
+
+                // Use base class method - it gets the auth cookie from HttpContext automatically!
+                var response = await SendAuthenticatedRequestAsync<CisNamesBatchResponse>(
+                    HttpMethod.Post,
+                    "api/Users/BatchNames",
+                    operationName: $"GetBatchNames for {ids.Count} entities",
+                    content: content);
+
+                if (response?.Names == null)
+                {
+                    Logger.LogWarning("API returned null response for batch status request");
+                    return ids.ToDictionary(id => id, id => null as string);
+                }
+
+                // Convert API response to dictionary
+                var result = new Dictionary<Guid, string?>();
+                foreach (var nameItem in response.Names)
+                {
+                    result[nameItem.Id] = nameItem.Name;
+                }
+
+                // Add null entries for any entity IDs that weren't returned
+                foreach (var id in ids)
+                {
+                    if (!result.ContainsKey(id))
+                    {
+                        result[id] = null;
+                    }
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error fetching batch workflow statuses");
+                throw;
+            }
         }
     }
 }

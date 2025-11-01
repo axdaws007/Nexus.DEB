@@ -9,5 +9,9 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<bool> ValidatePostAsync(Guid userId, Guid postId);
 
         Task<UserDetails?> GetUserDetailsAsync(Guid userId, Guid postId);
+
+        Task<IReadOnlyDictionary<Guid, string?>> GetNamesByIdsAsync(
+            List<Guid> ids,
+            CancellationToken cancellationToken = default);
     }
 }

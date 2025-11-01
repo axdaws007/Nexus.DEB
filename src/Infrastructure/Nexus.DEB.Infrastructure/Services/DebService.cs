@@ -9,13 +9,15 @@ namespace Nexus.DEB.Infrastructure.Services
     {
         private readonly DebContext _dbContext;
 
+        // Constructor
         public DebService(IDbContextFactory<DebContext> dbContextFactory) => _dbContext = dbContextFactory.CreateDbContext();
 
+        // Dispose
         public ValueTask DisposeAsync() => _dbContext.DisposeAsync();
 
-        public IQueryable<StandardVersionSummary> GetStandardVersionsForGrid()
-        {
-            return _dbContext.StandardVersionSummaries.AsNoTracking();
-        }
+        // Start of Service methods
+        public IQueryable<StandardVersionSummary> GetStandardVersionsForGrid() => _dbContext.StandardVersionSummaries.AsNoTracking();
+
+        public IQueryable<ScopeSummary> GetScopesForGrid() => _dbContext.ScopeSummaries.AsNoTracking();
     }
 }

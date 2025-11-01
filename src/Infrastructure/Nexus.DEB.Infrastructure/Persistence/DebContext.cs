@@ -32,6 +32,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
 
         // Views
         public DbSet<StandardVersionSummary> StandardVersionSummaries { get; set; }
+        public DbSet<ScopeSummary> ScopeSummaries { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

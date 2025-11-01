@@ -2,7 +2,7 @@
 
 namespace Nexus.DEB.Application.Common.Interfaces
 {
-    public interface IUserValidationService
+    public interface ICisService
     {
         Task<CisUser?> ValidateCredentialsAsync(string username, string password);
 

@@ -16,9 +16,5 @@ namespace Nexus.DEB.Api.GraphQL.StandardVersion
             IResolverContext resolverContext)
             => debService.GetStandardVersionsForGrid();
 
-        public static string GetStatus(
-            IPawsService pawsService,
-            IResolverContext resolverContext)
-            => pawsService.GetStatusForEntity(Guid.NewGuid());
     }
 }

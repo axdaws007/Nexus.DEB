@@ -10,13 +10,13 @@ namespace Nexus.DEB.Infrastructure.Services
 {
     public class LoginService : ILoginService
     {
-        private readonly IUserValidationService _userValidationService;
+        private readonly ICisService _userValidationService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _configuration;
         private readonly string _authCookieName;
 
         public LoginService(
-            IUserValidationService userValidationService,
+            ICisService userValidationService,
             IHttpContextAccessor httpContextAccessor,
             IConfiguration configuration)
         {

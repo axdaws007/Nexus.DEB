@@ -9,15 +9,15 @@ namespace Nexus.DEB.Infrastructure.Services
     /// <summary>
     /// HTTP client wrapper for the legacy .NET Framework 4.8 CIS Identity Web API
     /// </summary>
-    public class CisIdentityApiClient : IUserValidationService
+    public class CisService : ICisService
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger<CisIdentityApiClient> _logger;
+        private readonly ILogger<CisService> _logger;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        public CisIdentityApiClient(
+        public CisService(
             IHttpClientFactory httpClientFactory,
-            ILogger<CisIdentityApiClient> logger)
+            ILogger<CisService> logger)
         {
             _httpClient = httpClientFactory.CreateClient("CisApi");
             _logger = logger;

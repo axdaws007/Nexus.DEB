@@ -2,7 +2,7 @@
 
 namespace Nexus.DEB.Application.Common.Interfaces
 {
-    public interface ICbacApiWrapper
+    public interface ICbacService
     {
         Task<List<CbacCapability>> GetCapabilitiesAsync(Guid moduleId, string authCookie);
     }

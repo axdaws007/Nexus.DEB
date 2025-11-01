@@ -37,7 +37,7 @@ namespace Nexus.DEB.Api.GraphQL.Authentication
         }
 
         public static async Task<List<CbacCapability>> GetCapabilities(
-            [Service] ICbacApiWrapper cbacApi,
+            [Service] ICbacService cbacApi,
             [Service] IHttpContextAccessor httpContextAccessor,
             [Service] IConfiguration configuration)
         {

@@ -11,14 +11,14 @@ namespace Nexus.DEB.Infrastructure.Services
     public class CurrentUserService : ICurrentUserService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IUserValidationService _userValidationService;
+        private readonly ICisService _userValidationService;
         private readonly IMemoryCache _memoryCache;
         private readonly ILogger<CurrentUserService> _logger;
         private readonly string _authCookieName;
 
         public CurrentUserService(
             IHttpContextAccessor httpContextAccessor,
-            IUserValidationService userValidationService,
+            ICisService userValidationService,
             IMemoryCache memoryCache,
             IConfiguration configuration,
             ILogger<CurrentUserService> logger)

@@ -6,15 +6,15 @@ using System.Text.Json;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
-    public class CbacApiWrapper : ICbacApiWrapper
+    public class CbacService : ICbacService
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger<CbacApiWrapper> _logger;
+        private readonly ILogger<CbacService> _logger;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        public CbacApiWrapper(
+        public CbacService(
             IHttpClientFactory httpClientFactory,
-            ILogger<CbacApiWrapper> logger)
+            ILogger<CbacService> logger)
         {
             _httpClient = httpClientFactory.CreateClient("CbacApi");
             _logger = logger;

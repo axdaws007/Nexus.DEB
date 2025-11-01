@@ -21,7 +21,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
             builder.HasNoKey();
 
             // Column mappings (these should match the view column names)
-            builder.Property(e => e.StandardVersionId)
+            builder.Property(e => e.Id)
                 .HasColumnName("Id")
                 .IsRequired();
 

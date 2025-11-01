@@ -1,8 +1,10 @@
-﻿namespace Nexus.DEB.Domain.Models
+﻿using Nexus.DEB.Domain.Interfaces;
+
+namespace Nexus.DEB.Domain.Models
 {
-    public class StandardVersionSummary
+    public class StandardVersionSummary : IEntity
     {
-        public Guid StandardVersionId { get; set; }
+        public Guid Id { get; set; }
         public string StandardTitle { get; set; }
         public string Version { get; set; }
         public string Title { get; set; }

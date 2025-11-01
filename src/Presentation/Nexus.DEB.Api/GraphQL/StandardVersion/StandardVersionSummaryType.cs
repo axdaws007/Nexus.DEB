@@ -1,4 +1,5 @@
-﻿using Nexus.DEB.Application.Common.Interfaces;
+﻿using Nexus.DEB.Api.GraphQL.Paws;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL.StandardVersion
@@ -16,12 +17,7 @@ namespace Nexus.DEB.Api.GraphQL.StandardVersion
         {
             descriptor
                 .Field("status")
-                .Resolve(context =>
-                {
-                    var standardVersionSummary = context.Parent<StandardVersionSummary>();
-
-                    return _pawsService.GetStatusForEntity(standardVersionSummary.StandardVersionId);
-                });
+                .ResolveWith<PawsResolver>(context => context.GetCurrentPawsStatusAsync(default, default, default));
 
             base.Configure(descriptor);
         }

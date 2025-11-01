@@ -2,7 +2,7 @@
 
 namespace Nexus.DEB.Domain.Models.Common;
 
-public abstract class EntityHead : IEntity
+public abstract class EntityHead : IEntityHead
 {
     protected EntityHead()
     {

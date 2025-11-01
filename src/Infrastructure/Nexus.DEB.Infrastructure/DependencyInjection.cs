@@ -26,41 +26,35 @@ namespace Nexus.DEB.Infrastructure
                 return new AspNetTicketDataFormat(decryptionKey, validationKey);
             });
 
-            var cisBaseUrl = configuration["LegacyApis:CIS:BaseUrl"]
-                ?? throw new InvalidOperationException("LegacyApis:CIS:BaseUrl is not configured");
+            services.AddHttpClient("CisApi", client =>
+            {
+                var baseUrl = configuration["LegacyApis:CIS:BaseUrl"]
+                    ?? throw new InvalidOperationException("LegacyApis:CIS:BaseUrl is not configured");
+                var cisTimeout = int.Parse(configuration["LegacyApis:CIS:Timeout"] ?? "30");
 
-            var cisTimeout = int.Parse(configuration["LegacyApis:CIS:Timeout"]);
-
-            services.AddHttpClient("CisApi")
-                    .ConfigurePrimaryHttpMessageHandler(() =>
-                    {
-                        return new HttpClientHandler
-                        {
-                            UseCookies = false,
-                            AllowAutoRedirect = false // Important for authentication scenarios
-                        };
-                    })
-                    .ConfigureHttpClient(client =>
-                    {
-                        client.BaseAddress = new Uri(cisBaseUrl);
-                        client.Timeout = TimeSpan.FromSeconds(cisTimeout);
-                        // Add any headers if needed (API keys, etc.)
-                        // client.DefaultRequestHeaders.Add("X-API-Key", "your-api-key");
-                    });
+                client.BaseAddress = new Uri(baseUrl);
+                client.Timeout = TimeSpan.FromSeconds(cisTimeout);
+            });
 
             services.AddHttpClient("CbacApi", client =>
             {
                 var baseUrl = configuration["LegacyApis:CBAC:BaseUrl"]
                     ?? throw new InvalidOperationException("LegacyApis:CBAC:BaseUrl is not configured");
-
-                var cbacTimeout = int.Parse(configuration["LegacyApis:CBAC:Timeout"]);
+                var cbacTimeout = int.Parse(configuration["LegacyApis:CBAC:Timeout"] ?? "30");
 
                 client.BaseAddress = new Uri(baseUrl);
-
-                // If your API uses API keys, add them here
-                // client.DefaultRequestHeaders.Add("X-API-Key", configuration["CbacApi:ApiKey"]);
-
                 client.Timeout = TimeSpan.FromSeconds(cbacTimeout);
+            });
+
+
+            services.AddHttpClient("PawsApi", client =>
+            {
+                var baseUrl = configuration["LegacyApis:Paws:BaseUrl"]
+                    ?? throw new InvalidOperationException("LegacyApis:Paws:BaseUrl is not configured");
+                var timeout = int.Parse(configuration["LegacyApis:Paws:Timeout"] ?? "30");
+
+                client.BaseAddress = new Uri(baseUrl);
+                client.Timeout = TimeSpan.FromSeconds(timeout);
             });
 
             // Database - Using Pooled DbContext Factory for better performance

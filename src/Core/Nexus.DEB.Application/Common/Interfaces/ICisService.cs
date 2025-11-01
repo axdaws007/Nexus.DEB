@@ -6,8 +6,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
     {
         Task<CisUser?> ValidateCredentialsAsync(string username, string password);
 
-        Task<bool> ValidatePostAsync(Guid userId, Guid postId, string authCookie);
+        Task<bool> ValidatePostAsync(Guid userId, Guid postId);
 
-        Task<UserDetails?> GetUserDetailsAsync(Guid userId, Guid postId, string authCookie);
+        Task<UserDetails?> GetUserDetailsAsync(Guid userId, Guid postId);
     }
 }

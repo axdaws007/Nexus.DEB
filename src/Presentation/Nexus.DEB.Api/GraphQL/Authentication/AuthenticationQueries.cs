@@ -6,6 +6,12 @@ using System.Security.Claims;
 
 namespace Nexus.DEB.Api.GraphQL.Authentication
 {
+    /// <summary>
+    /// GraphQL queries for authentication and user information.
+    /// 
+    /// SECURITY: Services (CisService, CbacService) automatically retrieve authentication
+    /// cookies from HttpContext, ensuring cookies are never shared across different user requests.
+    /// </summary>
     [QueryType]
     public static class AuthenticationQueries
     {
@@ -36,9 +42,14 @@ namespace Nexus.DEB.Api.GraphQL.Authentication
             };
         }
 
+        /// <summary>
+        /// Gets capabilities (permissions) for the current user in the DEB module.
+        /// 
+        /// SECURITY: CbacService automatically retrieves the authentication cookie
+        /// from the current HTTP context, so we don't need to pass it here.
+        /// </summary>
         public static async Task<List<CbacCapability>> GetCapabilities(
             [Service] ICbacService cbacApi,
-            [Service] IHttpContextAccessor httpContextAccessor,
             [Service] IConfiguration configuration)
         {
             var moduleIdString = configuration["Modules:DEB"]
@@ -49,26 +60,9 @@ namespace Nexus.DEB.Api.GraphQL.Authentication
                 throw new InvalidOperationException("Modules:DEB must be a valid GUID");
             }
 
-            var httpContext = httpContextAccessor.HttpContext;
-            if (httpContext == null)
-            {
-                throw new InvalidOperationException("HttpContext is not available");
-            }
-
-            var authCookieName = configuration["Authentication:CookieName"] 
-                ?? throw new InvalidOperationException("Authentication:CookieName not configured in appsettings");
-
-            // Retrieve the auth cookie from the current request
-            var authCookie = httpContext.Request.Cookies[authCookieName];
-
-            if (string.IsNullOrEmpty(authCookie))
-            {
-                throw new UnauthorizedAccessException("Authentication cookie not found");
-            }
-
-            var cookieHeader = $"{authCookieName}={authCookie}";
-
-            return await cbacApi.GetCapabilitiesAsync(moduleId, cookieHeader);
+            // CbacService will automatically get the auth cookie from HttpContext!
+            // No need to manually extract it anymore.
+            return await cbacApi.GetCapabilitiesAsync(moduleId);
         }
     }
 }

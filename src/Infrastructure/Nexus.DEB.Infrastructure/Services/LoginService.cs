@@ -10,7 +10,7 @@ namespace Nexus.DEB.Infrastructure.Services
 {
     public class LoginService : ILoginService
     {
-        private readonly ICisService _userValidationService;
+        private readonly ICisService _cisService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _configuration;
         private readonly string _authCookieName;
@@ -20,7 +20,7 @@ namespace Nexus.DEB.Infrastructure.Services
             IHttpContextAccessor httpContextAccessor,
             IConfiguration configuration)
         {
-            _userValidationService = userValidationService;
+            _cisService = userValidationService;
             _httpContextAccessor = httpContextAccessor;
             _configuration = configuration;
 
@@ -52,7 +52,7 @@ namespace Nexus.DEB.Infrastructure.Services
             }
 
             // Validate credentials using existing service
-            var cisUser = await _userValidationService.ValidateCredentialsAsync(username, password);
+            var cisUser = await _cisService.ValidateCredentialsAsync(username, password);
 
             if (cisUser == null)
             {
@@ -196,10 +196,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 });
             }
 
-            var authCookie = httpContext.Request.Cookies[_authCookieName];
-            var cookieHeader = $"{_authCookieName}={authCookie}";
-
-            var isPostValid = await _userValidationService.ValidatePostAsync(userId, postId, cookieHeader);
+            var isPostValid = await _cisService.ValidatePostAsync(userId, postId);
 
             if (!isPostValid)
             {

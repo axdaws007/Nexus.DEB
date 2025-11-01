@@ -1,34 +1,35 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
-using System.Security.Claims;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
+    /// <summary>
+    /// Service for accessing information about the currently authenticated user.
+    /// 
+    /// SECURITY: This service retrieves user information from the CIS API.
+    /// The CisService automatically gets the authentication cookie from HttpContext,
+    /// ensuring cookies are never shared across different user requests.
+    /// </summary>
     public class CurrentUserService : ICurrentUserService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ICisService _cisService;
+        private readonly ICisService _userValidationService;
         private readonly IMemoryCache _memoryCache;
         private readonly ILogger<CurrentUserService> _logger;
-        private readonly string _authCookieName;
 
         public CurrentUserService(
             IHttpContextAccessor httpContextAccessor,
             ICisService userValidationService,
             IMemoryCache memoryCache,
-            IConfiguration configuration,
             ILogger<CurrentUserService> logger)
         {
             _httpContextAccessor = httpContextAccessor;
-            _cisService = userValidationService;
+            _userValidationService = userValidationService;
             _memoryCache = memoryCache;
             _logger = logger;
-            _authCookieName = configuration["Authentication:CookieName"]
-                ?? throw new InvalidOperationException("Authentication:CookieName is not configured");
         }
 
         public Guid UserId
@@ -61,6 +62,13 @@ namespace Nexus.DEB.Infrastructure.Services
             }
         }
 
+        /// <summary>
+        /// Gets detailed information about the current user from the CIS API.
+        /// Results are cached for 5 minutes to reduce API calls.
+        /// 
+        /// SECURITY: CisService automatically retrieves the authentication cookie
+        /// from the current HTTP context, ensuring the correct user's cookie is used.
+        /// </summary>
         public async Task<UserDetails?> GetUserDetailsAsync()
         {
             if (!IsAuthenticated)
@@ -91,26 +99,9 @@ namespace Nexus.DEB.Infrastructure.Services
             // Not in cache - fetch from CIS API
             try
             {
-                var httpContext = _httpContextAccessor.HttpContext;
-                if (httpContext == null)
-                {
-                    _logger.LogError("HttpContext is null - cannot retrieve auth cookie");
-                    return null;
-                }
-
-                // Get the auth cookie to forward to CIS API
-                var authCookie = httpContext.Request.Cookies[_authCookieName];
-
-                if (string.IsNullOrEmpty(authCookie))
-                {
-                    _logger.LogError("Auth cookie not found - cannot fetch user details");
-                    return null;
-                }
-
-                var cookieHeader = $"{_authCookieName}={authCookie}";
-
-                // Fetch from CIS API
-                var userDetails = await _cisService.GetUserDetailsAsync(userId, postId, cookieHeader);
+                // CisService will automatically get the auth cookie from HttpContext!
+                // No need to pass it as a parameter anymore.
+                var userDetails = await _userValidationService.GetUserDetailsAsync(userId, postId);
 
                 if (userDetails != null)
                 {

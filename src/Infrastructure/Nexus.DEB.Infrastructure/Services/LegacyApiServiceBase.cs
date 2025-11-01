@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text.Json;
 
@@ -8,6 +10,9 @@ namespace Nexus.DEB.Infrastructure.Services
     /// Base class for services that interact with legacy .NET Framework 4.x RESTful APIs.
     /// Provides common functionality for HTTP operations while ensuring authentication
     /// cookies are handled on a per-request basis to prevent cross-user contamination.
+    /// 
+    /// SECURITY: Authentication cookies are retrieved from HttpContext, which is request-scoped.
+    /// This ensures cookies are NEVER shared across different user requests.
     /// </summary>
     /// <typeparam name="TService">The derived service type (for logging)</typeparam>
     public abstract class LegacyApiServiceBase<TService> where TService : class
@@ -15,18 +20,26 @@ namespace Nexus.DEB.Infrastructure.Services
         protected readonly HttpClient HttpClient;
         protected readonly ILogger<TService> Logger;
         protected readonly JsonSerializerOptions JsonOptions;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly string _authCookieName;
 
         /// <summary>
-        /// The name of the HttpClient configuration (e.g., "CisApi", "CbacApi")
+        /// The name of the HttpClient configuration (e.g., "CisApi", "CbacApi", "WorkflowApi")
         /// </summary>
         protected abstract string HttpClientName { get; }
 
         protected LegacyApiServiceBase(
             IHttpClientFactory httpClientFactory,
-            ILogger<TService> logger)
+            ILogger<TService> logger,
+            IHttpContextAccessor httpContextAccessor,
+            IConfiguration configuration)
         {
             HttpClient = httpClientFactory.CreateClient(HttpClientName);
             Logger = logger;
+            _httpContextAccessor = httpContextAccessor;
+
+            _authCookieName = configuration["Authentication:CookieName"]
+                ?? throw new InvalidOperationException("Authentication:CookieName is not configured");
 
             // Configure JSON options to match legacy API response formats
             JsonOptions = new JsonSerializerOptions
@@ -36,25 +49,68 @@ namespace Nexus.DEB.Infrastructure.Services
         }
 
         /// <summary>
-        /// Creates an authenticated HTTP request with the provided authentication cookie.
-        /// CRITICAL: This method creates a new HttpRequestMessage for each call to ensure
-        /// that authentication cookies are NOT shared across different user requests.
+        /// Gets the authentication cookie from the current HTTP context.
+        /// 
+        /// SECURITY: This method retrieves the Forms Authentication cookie from the CURRENT request's
+        /// HttpContext. Since HttpContext is request-scoped, this ensures that each request gets its
+        /// own user's cookie, and cookies are NEVER shared across different user requests.
+        /// 
+        /// The cookie is read fresh on each call, ensuring:
+        /// 1. Always gets the current request's cookie
+        /// 2. No possibility of stale or cached cookies
+        /// 3. No possibility of cookie from different user
+        /// </summary>
+        /// <returns>Cookie header value (e.g., ".ASPXAUTH=xyz...") or null if not found</returns>
+        /// <exception cref="InvalidOperationException">Thrown when HttpContext is null (shouldn't happen in normal operation)</exception>
+        protected virtual string GetAuthCookieFromContext()
+        {
+            var context = _httpContextAccessor.HttpContext;
+
+            if (context == null)
+            {
+                Logger.LogError("HttpContext is null when trying to get auth cookie. This should not happen in a normal HTTP request.");
+                throw new InvalidOperationException(
+                    "HttpContext is not available. This service requires an active HTTP request context.");
+            }
+
+            // Get the Forms Authentication cookie from the current request
+            if (context.Request.Cookies.TryGetValue(_authCookieName, out var cookieValue))
+            {
+                // Format as cookie header: "CookieName=CookieValue"
+                var cookieHeader = $"{_authCookieName}={cookieValue}";
+
+                Logger.LogDebug(
+                    "Retrieved auth cookie from HTTP context for {ServiceType}",
+                    typeof(TService).Name);
+
+                return cookieHeader;
+            }
+
+            Logger.LogWarning(
+                "Authentication cookie '{CookieName}' not found in HTTP context for {ServiceType}. User may not be authenticated.",
+                _authCookieName,
+                typeof(TService).Name);
+
+            throw new InvalidOperationException(
+                $"Authentication cookie '{_authCookieName}' not found. User must be authenticated to use this service.");
+        }
+
+        /// <summary>
+        /// Creates an authenticated HTTP request using the cookie from the current HTTP context.
+        /// 
+        /// CRITICAL SECURITY: The authentication cookie is retrieved from the CURRENT request's
+        /// HttpContext, ensuring it is never shared across different user requests. Each call
+        /// creates a new HttpRequestMessage with the correct user's cookie.
         /// </summary>
         /// <param name="method">HTTP method</param>
         /// <param name="requestUri">Request URI (relative to base address)</param>
-        /// <param name="authCookie">User-specific authentication cookie</param>
         /// <returns>A new HttpRequestMessage with the authentication cookie header</returns>
-        /// <exception cref="InvalidOperationException">Thrown when authCookie is null or empty</exception>
         protected HttpRequestMessage CreateAuthenticatedRequest(
             HttpMethod method,
-            string requestUri,
-            string authCookie)
+            string requestUri)
         {
-            if (string.IsNullOrEmpty(authCookie))
-            {
-                Logger.LogError("Authentication cookie is missing for request to {RequestUri}", requestUri);
-                throw new InvalidOperationException("Authentication cookie is required");
-            }
+            // Get cookie from current HTTP context (request-scoped)
+            var authCookie = GetAuthCookieFromContext();
 
             var request = new HttpRequestMessage(method, requestUri);
 
@@ -67,19 +123,18 @@ namespace Nexus.DEB.Infrastructure.Services
 
         /// <summary>
         /// Sends an authenticated request and deserializes the JSON response.
+        /// Authentication cookie is automatically retrieved from the current HTTP context.
         /// Handles common HTTP status codes (401, 403, 404) and provides consistent error handling.
         /// </summary>
         /// <typeparam name="TResponse">The expected response type</typeparam>
         /// <param name="method">HTTP method</param>
         /// <param name="requestUri">Request URI</param>
-        /// <param name="authCookie">User-specific authentication cookie</param>
         /// <param name="operationName">Name of the operation (for logging)</param>
         /// <param name="content">Optional request content</param>
         /// <returns>The deserialized response, or null if the request was unsuccessful</returns>
         protected async Task<TResponse?> SendAuthenticatedRequestAsync<TResponse>(
             HttpMethod method,
             string requestUri,
-            string authCookie,
             string operationName,
             HttpContent? content = null) where TResponse : class
         {
@@ -88,7 +143,8 @@ namespace Nexus.DEB.Infrastructure.Services
                 Logger.LogInformation("Executing {OperationName}: {Method} {RequestUri}",
                     operationName, method, requestUri);
 
-                var request = CreateAuthenticatedRequest(method, requestUri, authCookie);
+                // Create request with cookie from current HTTP context
+                var request = CreateAuthenticatedRequest(method, requestUri);
 
                 if (content != null)
                 {
@@ -157,17 +213,16 @@ namespace Nexus.DEB.Infrastructure.Services
 
         /// <summary>
         /// Sends an authenticated request and returns a boolean indicating success.
+        /// Authentication cookie is automatically retrieved from the current HTTP context.
         /// Useful for validation endpoints that don't return data.
         /// </summary>
         /// <param name="method">HTTP method</param>
         /// <param name="requestUri">Request URI</param>
-        /// <param name="authCookie">User-specific authentication cookie</param>
         /// <param name="operationName">Name of the operation (for logging)</param>
         /// <returns>True if successful (2xx status), false otherwise</returns>
         protected async Task<bool> SendAuthenticatedValidationRequestAsync(
             HttpMethod method,
             string requestUri,
-            string authCookie,
             string operationName)
         {
             try
@@ -175,7 +230,8 @@ namespace Nexus.DEB.Infrastructure.Services
                 Logger.LogInformation("Executing {OperationName}: {Method} {RequestUri}",
                     operationName, method, requestUri);
 
-                var request = CreateAuthenticatedRequest(method, requestUri, authCookie);
+                // Create request with cookie from current HTTP context
+                var request = CreateAuthenticatedRequest(method, requestUri);
                 var response = await HttpClient.SendAsync(request);
 
                 if (response.StatusCode == HttpStatusCode.Unauthorized ||
@@ -200,7 +256,8 @@ namespace Nexus.DEB.Infrastructure.Services
         }
 
         /// <summary>
-        /// Sends an unauthenticated request (for endpoints like login that don't require cookies).
+        /// Sends an unauthenticated request (for endpoints like login that don't require cookies,
+        /// or for APIs that use service-level authentication like API keys).
         /// </summary>
         /// <typeparam name="TResponse">The expected response type</typeparam>
         /// <param name="method">HTTP method</param>

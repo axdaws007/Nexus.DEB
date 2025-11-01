@@ -2,6 +2,8 @@
 {
     public interface IPawsService
     {
-        string GetStatusForEntity(Guid id);
+        Task<IReadOnlyDictionary<Guid, string?>> GetStatusesForEntitiesAsync(
+            List<Guid> entityIds,
+            CancellationToken cancellationToken = default);
     }
 }

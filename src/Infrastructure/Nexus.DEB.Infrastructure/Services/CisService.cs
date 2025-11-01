@@ -1,194 +1,57 @@
 ﻿using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
-using System.Net;
-using System.Text.Json;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
     /// <summary>
     /// HTTP client wrapper for the legacy .NET Framework 4.8 CIS Identity Web API
     /// </summary>
-    public class CisService : ICisService
+    public class CisService : LegacyApiServiceBase<CisService>, ICisService
     {
-        private readonly HttpClient _httpClient;
-        private readonly ILogger<CisService> _logger;
-        private readonly JsonSerializerOptions _jsonOptions;
+        protected override string HttpClientName => "CisApi";
 
         public CisService(
             IHttpClientFactory httpClientFactory,
             ILogger<CisService> logger)
+            : base(httpClientFactory, logger)
         {
-            _httpClient = httpClientFactory.CreateClient("CisApi");
-            _logger = logger;
-
-            // Configure JSON options to match the API response format
-            _jsonOptions = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
         }
 
         public async Task<CisUser?> ValidateCredentialsAsync(string username, string password)
         {
-            try
-            {
-                _logger.LogInformation("Validating credentials for user: {Username}", username);
+            // Build the query string - matching your API format
+            var requestUri = $"api/Users/Signin?userName={Uri.EscapeDataString(username)}&password={Uri.EscapeDataString(password)}";
 
-                // Build the query string - matching your API format
-                var requestUri = $"api/Users/Signin?userName={Uri.EscapeDataString(username)}&password={Uri.EscapeDataString(password)}";
-
-                // Make the HTTP POST request
-                var response = await _httpClient.PostAsync(requestUri, null);
-
-                // Handle 401 Unauthorized - invalid credentials
-                if (response.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    _logger.LogWarning("Invalid credentials for user: {Username}", username);
-                    return null;
-                }
-
-                // Ensure success status code (200 OK)
-                response.EnsureSuccessStatusCode();
-
-                // Deserialize the response directly to CisUser
-                var responseContent = await response.Content.ReadAsStringAsync();
-                var cisUser = JsonSerializer.Deserialize<CisUser>(responseContent, _jsonOptions);
-
-                if (cisUser == null)
-                {
-                    _logger.LogError("Failed to deserialize CIS API response for user: {Username}", username);
-                    return null;
-                }
-
-                _logger.LogInformation("Successfully validated user: {Username} with {PostCount} posts",
-                    username, cisUser.Posts.Count);
-
-                return cisUser;
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "HTTP request failed while validating credentials for user: {Username}", username);
-                throw new InvalidOperationException(
-                    $"Failed to communicate with CIS Identity API: {ex.Message}", ex);
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogError(ex, "Failed to parse CIS API response for user: {Username}", username);
-                throw new InvalidOperationException(
-                    $"Failed to parse CIS Identity API response: {ex.Message}", ex);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error while validating credentials for user: {Username}", username);
-                throw;
-            }
+            // Use the base class method for unauthenticated requests
+            return await SendUnauthenticatedRequestAsync<CisUser>(
+                HttpMethod.Post,
+                requestUri,
+                operationName: $"ValidateCredentials for user: {username}");
         }
 
         public async Task<bool> ValidatePostAsync(Guid userId, Guid postId, string authCookie)
         {
-            try
-            {
-                _logger.LogInformation("Validating post {PostId} for user {UserId}", postId, userId);
+            var requestUri = $"api/Users/ValidatePost?postId={postId}";
 
-                if (string.IsNullOrEmpty(authCookie))
-                {
-                    _logger.LogError("Auth cookie is missing for ValidatePost call");
-                    throw new InvalidOperationException("Authentication cookie is required");
-                }
-
-                var requestUri = $"api/Users/ValidatePost?postId={postId}";
-
-                var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
-
-                // Forward the Forms Authentication cookie to the CIS API
-                request.Headers.Add("Cookie", authCookie);
-
-                _logger.LogInformation("Request URI: {Uri}", _httpClient.BaseAddress + requestUri);
-                _logger.LogInformation("Request Headers:");
-                foreach (var header in request.Headers)
-                {
-                    _logger.LogInformation("  {Name}: {Value}", header.Key, string.Join(", ", header.Value));
-                }
-
-                var response = await _httpClient.SendAsync(request);
-
-                if (response.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    _logger.LogWarning("Unauthorized: Post {PostId} validation failed for user {UserId}", postId, userId);
-                    return false;
-                }
-
-                if (response.StatusCode == HttpStatusCode.Forbidden)
-                {
-                    _logger.LogWarning("Forbidden: User {UserId} does not have access to post {PostId}", userId, postId);
-                    return false;
-                }
-
-                response.EnsureSuccessStatusCode();
-
-                _logger.LogInformation("Successfully validated post {PostId} for user {UserId}", postId, userId);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error validating post {PostId} for user {UserId}", postId, userId);
-                throw;
-            }
+            // Use the base class method for validation requests
+            return await SendAuthenticatedValidationRequestAsync(
+                HttpMethod.Post,
+                requestUri,
+                authCookie,
+                operationName: $"ValidatePost {postId} for user {userId}");
         }
 
         public async Task<UserDetails?> GetUserDetailsAsync(Guid userId, Guid postId, string authCookie)
         {
-            try
-            {
-                _logger.LogInformation("Fetching user details for UserId: {UserId}, PostId: {PostId}", userId, postId);
+            var requestUri = $"api/Users/CurrentUser";
 
-                if (string.IsNullOrEmpty(authCookie))
-                {
-                    _logger.LogError("Auth cookie is missing for GetUserDetails call");
-                    throw new InvalidOperationException("Authentication cookie is required");
-                }
-
-                var requestUri = $"api/Users/CurrentUser";
-
-                var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
-
-                // Forward the Forms Authentication cookie to the CIS API
-                request.Headers.Add("Cookie", authCookie);
-
-                var response = await _httpClient.SendAsync(request);
-
-                if (response.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    _logger.LogWarning("Unauthorized when fetching user details for UserId: {UserId}", userId);
-                    return null;
-                }
-
-                if (response.StatusCode == HttpStatusCode.NotFound)
-                {
-                    _logger.LogWarning("User not found: {UserId}", userId);
-                    return null;
-                }
-
-                response.EnsureSuccessStatusCode();
-
-                var responseContent = await response.Content.ReadAsStringAsync();
-                var userDetails = JsonSerializer.Deserialize<UserDetails>(responseContent, _jsonOptions);
-
-                if (userDetails == null)
-                {
-                    _logger.LogError("Failed to deserialize user details for UserId: {UserId}", userId);
-                    return null;
-                }
-
-                _logger.LogInformation("Successfully fetched user details for {Username}", userDetails.UserName);
-                return userDetails;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching user details for UserId: {UserId}", userId);
-                throw;
-            }
+            // Use the base class method for authenticated requests
+            return await SendAuthenticatedRequestAsync<UserDetails>(
+                HttpMethod.Get,
+                requestUri,
+                authCookie,
+                operationName: $"GetUserDetails for UserId: {userId}, PostId: {postId}");
         }
     }
 }

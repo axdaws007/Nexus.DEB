@@ -78,13 +78,13 @@ namespace Nexus.DEB.Infrastructure
 
             // Other infrastructure services will be registered here
             services.AddScoped<ILoginService, LoginService>();
-            services.AddScoped<ICurrentUserService, CurrentUserService>();
-            services.AddScoped<ICisService, CisService>();
             services.AddScoped<ICbacService, CbacService>();
             services.AddScoped<IDebService, DebService>();
 
             // Note: PawsService is used by field resolvers and needs to be transient
+            services.AddTransient<ICurrentUserService, CurrentUserService>();
             services.AddTransient<IPawsService, PawsService>();
+            services.AddTransient<ICisService, CisService>();
 
             return services;
         }

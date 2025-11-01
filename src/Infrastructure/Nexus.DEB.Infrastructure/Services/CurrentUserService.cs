@@ -11,7 +11,7 @@ namespace Nexus.DEB.Infrastructure.Services
     public class CurrentUserService : ICurrentUserService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ICisService _userValidationService;
+        private readonly ICisService _cisService;
         private readonly IMemoryCache _memoryCache;
         private readonly ILogger<CurrentUserService> _logger;
         private readonly string _authCookieName;
@@ -24,7 +24,7 @@ namespace Nexus.DEB.Infrastructure.Services
             ILogger<CurrentUserService> logger)
         {
             _httpContextAccessor = httpContextAccessor;
-            _userValidationService = userValidationService;
+            _cisService = userValidationService;
             _memoryCache = memoryCache;
             _logger = logger;
             _authCookieName = configuration["Authentication:CookieName"]
@@ -110,7 +110,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 var cookieHeader = $"{_authCookieName}={authCookie}";
 
                 // Fetch from CIS API
-                var userDetails = await _userValidationService.GetUserDetailsAsync(userId, postId, cookieHeader);
+                var userDetails = await _cisService.GetUserDetailsAsync(userId, postId, cookieHeader);
 
                 if (userDetails != null)
                 {

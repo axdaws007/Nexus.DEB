@@ -4,12 +4,12 @@ using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Infrastructure.Configurations
 {
-    public class ScopeSummaryConfiguration : IEntityTypeConfiguration<ScopeSummary>
+    public class RequirementSummaryConfiguration : IEntityTypeConfiguration<RequirementSummary>
     {
-        public void Configure(EntityTypeBuilder<ScopeSummary> builder)
+        public void Configure(EntityTypeBuilder<RequirementSummary> builder)
         {
             // Map to the database view
-            builder.ToView("vw_ScopeSummary", "deb");
+            builder.ToView("vw_RequirementSummary", "deb");
 
             // This is a read-only view, so it has no key
             // We'll use a composite "key" for EF Core tracking purposes
@@ -20,24 +20,19 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .HasColumnName("Id")
                 .IsRequired();
 
+            builder.Property(e => e.SerialNumber)
+                .HasColumnName("SerialNumber");
+
             builder.Property(e => e.Title)
                 .HasColumnName("Title")
-                .IsRequired();
-
-            builder.Property(e => e.OwnedById)
-                .HasColumnName("OwnedById")
-                .IsRequired();
-
-            builder.Property(e => e.CreatedDate)
-                .HasColumnName("CreatedDate")
                 .IsRequired();
 
             builder.Property(e => e.LastModifiedDate)
                 .HasColumnName("LastModifiedDate")
                 .IsRequired();
 
-            builder.Property(e => e.NumberOfLinkedStandardVersions)
-                .HasColumnName("StandardVersionCount");
+            builder.Property(e => e.SectionReferences)
+                .HasColumnName("SectionReferences");
         }
     }
 }

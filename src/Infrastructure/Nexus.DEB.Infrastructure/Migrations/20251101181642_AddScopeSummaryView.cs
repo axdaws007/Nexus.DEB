@@ -24,7 +24,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                 INNER JOIN [common].[EntityHead] eh on sc.[Id] = eh.[Id]
                 LEFT JOIN [deb].[ScopeRequirement] sr ON sc.[Id] = sr.[ScopeId]
                 LEFT JOIN [deb].[Requirement] r ON sr.[RequirementId] = r.[Id]
-                LEFT JOIN [deb].[StandardVersionRequirement] svr ON r.[Id] = svr.[StandardVersionId]
+                LEFT JOIN [deb].[StandardVersionRequirement] svr ON r.[Id] = svr.[RequirementId]
                 GROUP BY 
                   sc.[Id],
                   eh.[Title],

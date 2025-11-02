@@ -17,6 +17,7 @@ namespace Nexus.DEB.Domain.Models
 
         public virtual ICollection<StandardVersion> StandardVersions { get; set; }
         public virtual ICollection<Statement> Statements { get; set; }
+        public virtual ICollection<Scope> Scopes { get; set; }
 
     }
 }

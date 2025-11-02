@@ -15,7 +15,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
 
             builder
                 .HasMany(x => x.Requirements)
-                .WithMany()
+                .WithMany(x => x.Scopes)
                 .UsingEntity<Dictionary<string, object>>(
                     "ScopeRequirement",
                     // Right side (Requirement)

@@ -1,4 +1,6 @@
-﻿namespace Nexus.DEB.Api.GraphQL.Authentication.Models
+﻿using Nexus.DEB.Application.Common.Models;
+
+namespace Nexus.DEB.Api.GraphQL.Authentication.Models
 {
     public class CurrentUserInfo
     {
@@ -10,6 +12,7 @@
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string PostTitle { get; set; } = string.Empty;
+        public ICollection<CisPost>? Posts { get; set; }
 
         public bool IsAuthenticated { get; set; }
     }

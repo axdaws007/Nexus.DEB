@@ -9,6 +9,7 @@
         public string Email { get; set; } = string.Empty;
         public Guid PostId { get; set; }
         public string PostTitle { get; set; } = string.Empty;
+        public ICollection<CisPost>? Posts { get; set; } 
 
         public string FullName => $"{FirstName} {LastName}".Trim();
     }

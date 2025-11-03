@@ -38,6 +38,7 @@ namespace Nexus.DEB.Api.GraphQL.Authentication
                 Email = userDetails.Email,
                 PostId = userDetails.PostId,
                 PostTitle = userDetails.PostTitle,
+                Posts = userDetails.Posts,
                 IsAuthenticated = currentUserService.IsAuthenticated
             };
         }

@@ -1,0 +1,43 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Nexus.DEB.Domain.Models;
+
+namespace Nexus.DEB.Infrastructure.Configurations
+{
+    public class StatementSummaryConfiguration : IEntityTypeConfiguration<StatementSummary>
+    {
+        public void Configure(EntityTypeBuilder<StatementSummary> builder)
+        {
+            // Map to the database view
+            builder.ToView("vw_StatementSummary", "deb");
+
+            // This is a read-only view, so it has no key
+            // We'll use a composite "key" for EF Core tracking purposes
+            builder.HasNoKey();
+
+            // Column mappings (these should match the view column names)
+            builder.Property(e => e.Id)
+                .HasColumnName("Id")
+                .IsRequired();
+
+            builder.Property(e => e.SerialNumber)
+                .HasColumnName("SerialNumber");
+
+            builder.Property(e => e.Title)
+                .HasColumnName("Title")
+                .IsRequired();
+
+            builder.Property(e => e.LastModifiedDate)
+                .HasColumnName("LastModifiedDate")
+                .IsRequired();
+
+            builder.Property(e => e.OwnedById)
+                .HasColumnName("OwnedById")
+                .IsRequired();
+
+            builder.Property(e => e.RequirementSerialNumbers)
+                .HasColumnName("RequirementSerialNumbers");
+
+        }
+    }
+}

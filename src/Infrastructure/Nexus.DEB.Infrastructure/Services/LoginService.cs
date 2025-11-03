@@ -65,6 +65,7 @@ namespace Nexus.DEB.Infrastructure.Services
             }
 
             Guid postId;
+            string? postTitle = string.Empty;
             List<CisPost>? postsToReturn = null;
 
             if (cisUser.Posts == null || cisUser.Posts.Count == 0)
@@ -76,6 +77,7 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 // Single post - use that post's ID
                 postId = cisUser.Posts[0].PostId;
+                postTitle = cisUser.Posts[0].Title;
             }
             else
             {
@@ -143,7 +145,8 @@ namespace Nexus.DEB.Infrastructure.Services
                 Username = username,
                 Success = true,
                 ExpiresAt = expiresUtc,
-                Posts = postsToReturn  // Will be null unless multiple posts
+                Posts = postsToReturn,  // Will be null unless multiple posts
+                PostTitle = postTitle ?? string.Empty
             };
 
             return Result<LoginResponse>.Success(response);

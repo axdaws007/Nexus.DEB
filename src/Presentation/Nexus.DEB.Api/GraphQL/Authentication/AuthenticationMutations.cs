@@ -40,7 +40,8 @@ namespace Nexus.DEB.Api.GraphQL.Authentication
                     Success = true,
                     Message = "Successfully signed in",
                     ExpiresAt = result.Data.ExpiresAt,
-                    Posts = posts  // Will be null unless user has multiple posts
+                    Posts = posts,  // Will be null unless user has multiple posts
+                    PostTitle = result.Data.PostTitle
                 };
             }
 

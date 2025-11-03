@@ -8,5 +8,6 @@
         public bool Success { get; set; }
         public DateTimeOffset ExpiresAt { get; set; }
         public List<CisPost>? Posts { get; set; }
+        public string PostTitle { get; set; } = string.Empty;
     }
 }

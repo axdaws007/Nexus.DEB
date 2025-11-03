@@ -13,7 +13,6 @@ namespace Nexus.DEB.Infrastructure.Services
         private readonly ICisService _cisService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _configuration;
-        private readonly string _authCookieName;
 
         public LoginService(
             ICisService userValidationService,
@@ -23,9 +22,6 @@ namespace Nexus.DEB.Infrastructure.Services
             _cisService = userValidationService;
             _httpContextAccessor = httpContextAccessor;
             _configuration = configuration;
-
-            _authCookieName = _configuration["Authentication:CookieName"]
-                ?? throw new InvalidOperationException("Authentication:CookieName is not configured");
         }
 
         public async Task<Result<LoginResponse>> SignInAsync(string username, string password, bool rememberMe = false)

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
@@ -91,20 +92,15 @@ namespace Nexus.DEB.Infrastructure.Services
             if (filters != null)
             {
                 // Filter by StandardVersion (using navigation property)
-                if (filters.StandardVersionId.HasValue)
+                if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
                 {
-                    var requirementIds = _dbContext.Set<Requirement>()
-                        .Where(r => r.StandardVersions.Any(sv => sv.EntityId == filters.StandardVersionId.Value))
-                        .Select(r => r.EntityId);
-
-                    query = query.Where(r => requirementIds.Contains(r.EntityId));
                 }
 
                 // Filter by Scope (using navigation property)
-                if (filters.ScopeId.HasValue)
+                if (filters.ScopeIds != null && filters.ScopeIds.Count > 0)
                 {
                     var requirementIds = _dbContext.Set<Requirement>()
-                        .Where(r => r.Scopes.Any(s => s.EntityId == filters.ScopeId.Value))
+                        .Where(r => r.Scopes.Any(s => filters.ScopeIds.Contains(s.EntityId)))
                         .Select(r => r.EntityId);
 
                     query = query.Where(r => requirementIds.Contains(r.EntityId));
@@ -125,6 +121,11 @@ namespace Nexus.DEB.Infrastructure.Services
                 if (filters.ModifiedTo.HasValue)
                 {
                     query = query.Where(r => r.LastModifiedDate <= filters.ModifiedTo.Value);
+                }
+
+                if (filters.StatusIds != null && filters.StatusIds.Count > 0)
+                {
+                    query = query.Where(x => filters.StatusIds.Contains(x.StatusId));
                 }
 
                 // TODO
@@ -183,5 +184,49 @@ namespace Nexus.DEB.Infrastructure.Services
         #endregion StandardVersions
 
         // --------------------------------------------------------------------------------------------------------------
+
+        #region Tasks
+
+        public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
+        {
+            var query = _dbContext.TaskSummaries.AsQueryable();
+
+            if (filters != null)
+            {
+                // Filter by StandardVersion (using navigation property)
+                if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
+                {
+                }
+
+                // Text search on Title
+                if (!string.IsNullOrWhiteSpace(filters.SearchText))
+                {
+                    query = query.Where(r => r.Title.Contains(filters.SearchText));
+                }
+
+                // Date range filter
+                if (filters.DueDateFrom.HasValue)
+                {
+                    query = query.Where(r => r.DueDate >= filters.DueDateFrom.Value);
+                }
+
+                if (filters.DueDateTo.HasValue)
+                {
+                    query = query.Where(r => r.DueDate <= filters.DueDateTo.Value);
+                }
+
+                if (filters.StatusIds != null && filters.StatusIds.Count > 0)
+                {
+                    query = query.Where(x => filters.StatusIds.Contains(x.StatusId));
+                }
+
+                // TODO
+                // OwnedById filter
+            }
+
+            return query;
+
+        }
+        #endregion Tasks
     }
 }

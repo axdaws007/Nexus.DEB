@@ -4,12 +4,12 @@ using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Infrastructure.Configurations
 {
-    public class StatementSummaryConfiguration : IEntityTypeConfiguration<StatementSummary>
+    public class TaskSummaryConfiguration : IEntityTypeConfiguration<TaskSummary>
     {
-        public void Configure(EntityTypeBuilder<StatementSummary> builder)
+        public void Configure(EntityTypeBuilder<TaskSummary> builder)
         {
             // Map to the database view
-            builder.ToView("vw_StatementSummary", "deb");
+            builder.ToView("vw_TaskSummary", "deb");
 
             // This is a read-only view, so it has no key
             // We'll use a composite "key" for EF Core tracking purposes
@@ -27,16 +27,16 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .HasColumnName("Title")
                 .IsRequired();
 
-            builder.Property(e => e.LastModifiedDate)
-                .HasColumnName("LastModifiedDate")
-                .IsRequired();
-
             builder.Property(e => e.OwnedById)
                 .HasColumnName("OwnedById")
                 .IsRequired();
 
-            builder.Property(e => e.RequirementSerialNumbers)
-                .HasColumnName("RequirementSerialNumbers");
+            builder.Property(e => e.DueDate)
+                .HasColumnName("DueDate");
+
+            builder.Property(e => e.TaskTypeTitle)
+                .HasColumnName("TaskTypeTitle")
+                .IsRequired();
 
             builder.Property(e => e.StatusId)
                 .HasColumnName("StatusId");

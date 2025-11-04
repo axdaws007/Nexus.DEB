@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20251104144919_AlterStatementSummaryViewForPaws")]
+    partial class AlterStatementSummaryViewForPaws
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -399,14 +402,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("SerialNumber");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Status");
-
-                    b.Property<int?>("StatusId")
-                        .HasColumnType("int")
-                        .HasColumnName("StatusId");
 
                     b.Property<string>("Title")
                         .IsRequired()

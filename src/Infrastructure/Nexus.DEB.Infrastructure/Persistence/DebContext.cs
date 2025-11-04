@@ -35,6 +35,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<ScopeSummary> ScopeSummaries { get; set; }
         public DbSet<RequirementSummary> RequirementSummaries { get; set; }
         public DbSet<StatementSummary> StatementSummaries { get; set; }
+        public DbSet<TaskSummary> TaskSummaries { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -5,7 +5,7 @@ using Nexus.DEB.Api.GraphQL.Authentication.Models;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 
-namespace Nexus.DEB.Api.GraphQL.Authentication
+namespace Nexus.DEB.Api.GraphQL
 {
     [MutationType]
     public static class AuthenticationMutations

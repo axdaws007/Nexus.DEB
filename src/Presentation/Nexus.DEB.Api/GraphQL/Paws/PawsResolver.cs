@@ -1,6 +1,6 @@
 ﻿using Nexus.DEB.Domain.Interfaces;
 
-namespace Nexus.DEB.Api.GraphQL.Paws
+namespace Nexus.DEB.Api.GraphQL
 {
     public class PawsResolver
     {

@@ -1,10 +1,9 @@
 ﻿using HotChocolate.Authorization;
 using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
-using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
 
-namespace Nexus.DEB.Api.GraphQL.Scope
+namespace Nexus.DEB.Api.GraphQL
 {
     [QueryType]
     public static class ScopeQueries
@@ -19,9 +18,9 @@ namespace Nexus.DEB.Api.GraphQL.Scope
 
         [Authorize]
         [UseSorting]
-        public static IQueryable<FilterItem<Guid>> GetScopesForFilter(
+        public static IQueryable<Scope> GetScopes(
             IDebService debService,
             IResolverContext resolverContext)
-            => debService.GetScopesForFilter();
+            => debService.GetScopes();
     }
 }

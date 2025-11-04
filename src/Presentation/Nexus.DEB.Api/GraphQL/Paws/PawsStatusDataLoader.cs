@@ -1,6 +1,6 @@
 ﻿using Nexus.DEB.Application.Common.Interfaces;
 
-namespace Nexus.DEB.Api.GraphQL.Paws
+namespace Nexus.DEB.Api.GraphQL
 {
     public class PawsStatusDataLoader : BatchDataLoader<Guid, string?>
     {

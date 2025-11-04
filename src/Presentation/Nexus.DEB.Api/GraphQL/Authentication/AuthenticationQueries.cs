@@ -4,7 +4,7 @@ using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using System.Security.Claims;
 
-namespace Nexus.DEB.Api.GraphQL.Authentication
+namespace Nexus.DEB.Api.GraphQL
 {
     /// <summary>
     /// GraphQL queries for authentication and user information.

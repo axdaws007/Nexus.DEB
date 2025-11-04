@@ -1,7 +1,6 @@
-﻿using Nexus.DEB.Api.GraphQL.Paws;
-using Nexus.DEB.Domain.Models;
+﻿using Nexus.DEB.Domain.Models;
 
-namespace Nexus.DEB.Api.GraphQL.Requirement
+namespace Nexus.DEB.Api.GraphQL
 {
     public class RequirementSummaryType : ObjectType<RequirementSummary>
     {

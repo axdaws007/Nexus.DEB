@@ -1,8 +1,6 @@
-﻿using Nexus.DEB.Api.GraphQL.Cis;
-using Nexus.DEB.Api.GraphQL.Paws;
-using Nexus.DEB.Domain.Models;
+﻿using Nexus.DEB.Domain.Models;
 
-namespace Nexus.DEB.Api.GraphQL.Scope
+namespace Nexus.DEB.Api.GraphQL
 {
     public class ScopeSummaryType : ObjectType<ScopeSummary>
     {

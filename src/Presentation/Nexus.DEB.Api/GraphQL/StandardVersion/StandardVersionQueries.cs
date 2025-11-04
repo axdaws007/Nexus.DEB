@@ -1,11 +1,10 @@
 ﻿using HotChocolate.Authorization;
 using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
-using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 
-namespace Nexus.DEB.Api.GraphQL.StandardVersion
+namespace Nexus.DEB.Api.GraphQL
 {
     [QueryType]
     public static class StandardVersionQueries
@@ -21,9 +20,9 @@ namespace Nexus.DEB.Api.GraphQL.StandardVersion
 
         [Authorize]
         [UseSorting]
-        public static IQueryable<FilterItem<Guid>> GetStandardVersionsForFilter(
+        public static IQueryable<StandardVersion> GetStandardVersions(
             IDebService debService,
             IResolverContext resolverContext)
-            => debService.GetStandardVersionsForFilter();
+            => debService.GetStandardVersions();
     }
 }

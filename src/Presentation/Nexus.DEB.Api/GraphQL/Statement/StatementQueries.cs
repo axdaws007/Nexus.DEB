@@ -4,7 +4,7 @@ using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
 
-namespace Nexus.DEB.Api.GraphQL.Statement
+namespace Nexus.DEB.Api.GraphQL
 {
     [QueryType]
     public static class StatementQueries

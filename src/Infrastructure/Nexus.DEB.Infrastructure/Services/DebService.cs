@@ -97,41 +97,30 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
-        public IQueryable<FilterItem<Guid>> GetScopesForFilter()
+        public IQueryable<Scope> GetScopes()
         {
             var query = from s in _dbContext.Scopes
                         where s.IsRemoved == false
-                        select new FilterItem<Guid>()
-                        {
-                            Id = s.EntityId,
-                            Title = s.Title
-                        };
+                        select s;
 
             return query;
         }
 
-        public IQueryable<FilterItem<Guid>> GetStandardVersionsForFilter()
+        public IQueryable<StandardVersion> GetStandardVersions()
         {
-            var query = from sv in _dbContext.StandardVersions.Include(x => x.Standard)
+            var query = from sv in _dbContext.StandardVersions
+                                        .Include(x => x.Standard)
                         where sv.IsRemoved == false
-                        select new FilterItem<Guid>()
-                        {
-                            Id = sv.EntityId,
-                            Title = sv.Standard.Title + ":" + sv.MajorVersion + " - " + sv.Title
-                        };
+                        select sv;
 
             return query;
         }
 
-        public IQueryable<FilterItem<short>> GetStandardsForFilter()
+        public IQueryable<Standard> GetStandards()
         {
             var query = from s in _dbContext.Standards
                         where s.IsEnabled == true
-                        select new FilterItem<short>()
-                        {
-                            Id = s.Id,
-                            Title = s.Title
-                        };
+                        select s;
 
             return query;
         }

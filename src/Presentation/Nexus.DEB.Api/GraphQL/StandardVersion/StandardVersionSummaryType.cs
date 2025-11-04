@@ -1,7 +1,7 @@
 ﻿using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain.Models;
 
-namespace Nexus.DEB.Api.GraphQL.StandardVersion
+namespace Nexus.DEB.Api.GraphQL
 {
     public class StandardVersionSummaryType : ObjectType<StandardVersionSummary>
     {

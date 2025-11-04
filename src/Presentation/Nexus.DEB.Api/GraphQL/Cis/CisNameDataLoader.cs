@@ -1,6 +1,6 @@
 ﻿using Nexus.DEB.Application.Common.Interfaces;
 
-namespace Nexus.DEB.Api.GraphQL.Cis
+namespace Nexus.DEB.Api.GraphQL
 {
     public class CisNameDataLoader : BatchDataLoader<Guid, string?>
     {

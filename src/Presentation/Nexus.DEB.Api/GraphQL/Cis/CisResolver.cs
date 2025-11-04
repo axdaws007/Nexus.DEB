@@ -1,6 +1,6 @@
 ﻿using Nexus.DEB.Domain.Interfaces;
 
-namespace Nexus.DEB.Api.GraphQL.Cis
+namespace Nexus.DEB.Api.GraphQL
 {
     public class CisResolver
     {

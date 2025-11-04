@@ -16,23 +16,28 @@ namespace Nexus.DEB.Infrastructure.Services
             if (filters != null)
             {
                 // Filter by StandardVersion (using navigation property)
-                if (filters.StandardVersionId.HasValue)
+                if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
                 {
                     var requirementIds = _dbContext.Set<Requirement>()
-                        .Where(r => r.StandardVersions.Any(sv => sv.EntityId == filters.StandardVersionId.Value))
+                        .Where(r => r.StandardVersions.Any(sv => filters.StandardVersionIds.Contains(sv.EntityId)))
                         .Select(r => r.EntityId);
 
                     query = query.Where(r => requirementIds.Contains(r.EntityId));
                 }
 
                 // Filter by Scope (using navigation property)
-                if (filters.ScopeId.HasValue)
+                if (filters.ScopeIds != null && filters.ScopeIds.Count > 0)
                 {
                     var requirementIds = _dbContext.Set<Requirement>()
-                        .Where(r => r.Scopes.Any(s => s.EntityId == filters.ScopeId.Value))
+                        .Where(r => r.Scopes.Any(s => filters.ScopeIds.Contains(s.EntityId)))
                         .Select(r => r.EntityId);
 
                     query = query.Where(r => requirementIds.Contains(r.EntityId));
+                }
+
+                if (filters.StatusIds != null && filters.StatusIds.Count > 0)
+                {
+                    query = query.Where(x => filters.StatusIds.Contains(x.StatusId));
                 }
 
                 // Text search on Title

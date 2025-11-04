@@ -6,10 +6,6 @@ namespace Nexus.DEB.Api.GraphQL
     {
         protected override void Configure(IObjectTypeDescriptor<RequirementSummary> descriptor)
         {
-            descriptor
-                .Field("status")
-                .ResolveWith<PawsResolver>(context => context.GetCurrentPawsStatusAsync(default, default, default));
-
             base.Configure(descriptor);
         }
     }

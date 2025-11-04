@@ -21,12 +21,29 @@ namespace Nexus.DEB.Api.GraphQL.Authentication
         }
 
         [Authorize]
-        public static async Task<CurrentUserInfo?> GetCurrentUserProfile(ICurrentUserService currentUserService)
+        public static async Task<CurrentUserInfo?> GetCurrentUserProfile(
+            ICurrentUserService currentUserService,
+            ICbacService cbacApi,
+            IConfiguration configuration)
         {
             var userDetails = await currentUserService.GetUserDetailsAsync();
 
             if (userDetails == null)
                 return null;
+
+            List<CbacCapability>? capabilities = null;
+
+            if (userDetails.PostId != Guid.Empty)
+            {
+                var moduleIdString = configuration["Modules:DEB"] ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");
+
+                if (!Guid.TryParse(moduleIdString, out var moduleId))
+                {
+                    throw new InvalidOperationException("Modules:DEB must be a valid GUID");
+                }
+
+                capabilities = await cbacApi.GetCapabilitiesAsync(moduleId);
+            }
 
             return new CurrentUserInfo
             {
@@ -39,6 +56,7 @@ namespace Nexus.DEB.Api.GraphQL.Authentication
                 PostId = userDetails.PostId,
                 PostTitle = userDetails.PostTitle,
                 Posts = userDetails.Posts,
+                Capabilities = capabilities,
                 IsAuthenticated = currentUserService.IsAuthenticated
             };
         }
@@ -50,8 +68,8 @@ namespace Nexus.DEB.Api.GraphQL.Authentication
         /// from the current HTTP context, so we don't need to pass it here.
         /// </summary>
         public static async Task<List<CbacCapability>> GetCapabilities(
-            [Service] ICbacService cbacApi,
-            [Service] IConfiguration configuration)
+            ICbacService cbacApi,
+            IConfiguration configuration)
         {
             var moduleIdString = configuration["Modules:DEB"]
                 ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");

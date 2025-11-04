@@ -13,6 +13,7 @@ namespace Nexus.DEB.Api.GraphQL.Authentication.Models
         public string Email { get; set; } = string.Empty;
         public string PostTitle { get; set; } = string.Empty;
         public ICollection<CisPost>? Posts { get; set; }
+        public ICollection<CbacCapability>? Capabilities { get; set; }
 
         public bool IsAuthenticated { get; set; }
     }

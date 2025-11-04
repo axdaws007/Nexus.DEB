@@ -12,7 +12,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<Scope> GetScopes();
         IQueryable<ScopeSummary> GetScopesForGrid();
         IQueryable<StandardVersion> GetStandardVersions();
-        IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters);
+        IQueryable<StandardVersionSummary> GetStandardVersionsForExportOrGrid(StandardVersionSummaryFilters? filters);
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);
         IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters);
 

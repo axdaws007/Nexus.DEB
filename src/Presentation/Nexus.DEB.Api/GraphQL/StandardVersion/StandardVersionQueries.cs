@@ -16,7 +16,15 @@ namespace Nexus.DEB.Api.GraphQL
             StandardVersionSummaryFilters? filters,
             IDebService debService,
             IResolverContext resolverContext)
-            => debService.GetStandardVersionsForGrid(filters);
+            => debService.GetStandardVersionsForExportOrGrid(filters);
+
+        [Authorize]
+        [UseSorting]
+        public static IQueryable<StandardVersionSummary> GetStandardVersionsForExport(
+            StandardVersionSummaryFilters? filters,
+            IDebService debService,
+            IResolverContext resolverContext)
+            => debService.GetStandardVersionsForExportOrGrid(filters);
 
         [Authorize]
         [UseSorting]

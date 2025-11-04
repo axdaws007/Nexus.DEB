@@ -157,7 +157,7 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
-        public IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters)
+        public IQueryable<StandardVersionSummary> GetStandardVersionsForExportOrGrid(StandardVersionSummaryFilters? filters)
         {
             var query = _dbContext.StandardVersionSummaries.AsNoTracking();
 
@@ -186,6 +186,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             return query;
         }
+
 
         #endregion StandardVersions
 

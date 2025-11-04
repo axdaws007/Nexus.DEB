@@ -12,10 +12,6 @@ namespace Nexus.DEB.Api.GraphQL
                 .Field("ownedBy")
                 .ResolveWith<CisResolver>(context => context.GetCisOwnedByNameAsync(default, default, default));
 
-            descriptor
-                .Field("status")
-                .ResolveWith<PawsResolver>(context => context.GetCurrentPawsStatusAsync(default, default, default));
-
             base.Configure(descriptor);
         }
     }

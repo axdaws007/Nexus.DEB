@@ -10,5 +10,7 @@ namespace Nexus.DEB.Domain.Models
         public int NumberOfLinkedStandardVersions { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime LastModifiedDate { get; set; }
+        public string? Status { get; set; }
+
     }
 }

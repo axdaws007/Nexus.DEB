@@ -25,6 +25,10 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .HasColumnName("Id")
                 .IsRequired();
 
+            builder.Property(e => e.StandardId)
+                .HasColumnName("StandardId")
+                .IsRequired();
+
             builder.Property(e => e.StandardTitle)
                 .HasColumnName("StandardTitle")
                 .IsRequired();
@@ -47,6 +51,12 @@ namespace Nexus.DEB.Infrastructure.Configurations
             builder.Property(e => e.LastModifiedDate)
                 .HasColumnName("LastModifiedDate")
                 .IsRequired();
+
+            builder.Property(e => e.StatusId)
+                .HasColumnName("StatusId");
+
+            builder.Property(e => e.Status)
+                .HasColumnName("Status");
 
             builder.Property(e => e.NumberOfLinkedScopes)
                 .HasColumnName("ScopeCount")

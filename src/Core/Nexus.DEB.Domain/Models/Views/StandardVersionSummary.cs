@@ -5,6 +5,7 @@ namespace Nexus.DEB.Domain.Models
     public class StandardVersionSummary : IEntity
     {
         public Guid Id { get; set; }
+        public short StandardId { get; set; }
         public string StandardTitle { get; set; }
         public string Version { get; set; }
         public string Title { get; set; }
@@ -12,6 +13,8 @@ namespace Nexus.DEB.Domain.Models
         public DateTime? EffectiveTo { get; set; }
         public DateTime LastModifiedDate { get; set; }
         public int NumberOfLinkedScopes { get; set; }
+        public int? StatusId { get; set; }
+        public string? Status { get; set; }
 
     }
 }

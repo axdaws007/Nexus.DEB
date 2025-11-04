@@ -24,7 +24,25 @@ namespace Nexus.DEB.Infrastructure.Services
 
             if (filters != null)
             {
+                if (filters.StandardId.HasValue)
+                {
+                    query = query.Where(x => x.StandardId == filters.StandardId.Value);
+                }
 
+                if (filters.StatusId.HasValue)
+                {
+                    query = query.Where(x => x.StatusId == filters.StatusId.Value);
+                }
+
+                if (filters.EffectiveFromDate.HasValue)
+                {
+                    query = query.Where(r => r.EffectiveFrom >= filters.EffectiveFromDate.Value);
+                }
+
+                if (filters.EffectiveToDate.HasValue)
+                {
+                    query = query.Where(r => r.EffectiveTo < filters.EffectiveToDate.Value.AddDays(1));
+                }
             }
 
             return query;

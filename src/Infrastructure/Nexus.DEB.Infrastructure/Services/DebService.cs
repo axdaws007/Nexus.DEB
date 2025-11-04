@@ -4,6 +4,7 @@ using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Infrastructure.Persistence;
+using System.Linq;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -24,14 +25,14 @@ namespace Nexus.DEB.Infrastructure.Services
 
             if (filters != null)
             {
-                if (filters.StandardId.HasValue)
+                if (filters.StandardIds != null && filters.StandardIds.Count > 0)
                 {
-                    query = query.Where(x => x.StandardId == filters.StandardId.Value);
+                    query = query.Where(x => filters.StandardIds.Contains(x.StandardId));
                 }
 
-                if (filters.StatusId.HasValue)
+                if (filters.StatusIds != null && filters.StatusIds.Count > 0)
                 {
-                    query = query.Where(x => x.StatusId == filters.StatusId.Value);
+                    query = query.Where(x => filters.StatusIds.Contains(x.StatusId));
                 }
 
                 if (filters.EffectiveFromDate.HasValue)

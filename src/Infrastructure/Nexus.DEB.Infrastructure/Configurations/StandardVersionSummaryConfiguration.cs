@@ -53,7 +53,8 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .IsRequired();
 
             builder.Property(e => e.StatusId)
-                .HasColumnName("StatusId");
+                .HasColumnName("StatusId")
+                .IsRequired();
 
             builder.Property(e => e.Status)
                 .HasColumnName("Status");

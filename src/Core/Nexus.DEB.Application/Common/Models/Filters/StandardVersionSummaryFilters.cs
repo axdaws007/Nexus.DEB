@@ -2,8 +2,8 @@
 {
     public class StandardVersionSummaryFilters
     {
-        public short? StandardId { get; set; }
-        public int? StatusId { get; set; }
+        public ICollection<short>? StandardIds { get; set; }
+        public ICollection<int>? StatusIds { get; set; }
         public DateTime? EffectiveFromDate { get; set; }
         public DateTime? EffectiveToDate { get; set; }
     }

@@ -13,7 +13,7 @@ namespace Nexus.DEB.Domain.Models
         public DateTime? EffectiveTo { get; set; }
         public DateTime LastModifiedDate { get; set; }
         public int NumberOfLinkedScopes { get; set; }
-        public int? StatusId { get; set; }
+        public int StatusId { get; set; }
         public string? Status { get; set; }
 
     }

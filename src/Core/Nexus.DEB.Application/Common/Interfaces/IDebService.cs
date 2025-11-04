@@ -6,7 +6,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 {
     public interface IDebService
     {
-        IQueryable<StandardVersionSummary> GetStandardVersionsForGrid();
+        IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters);
         IQueryable<ScopeSummary> GetScopesForGrid();
         IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters);
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);

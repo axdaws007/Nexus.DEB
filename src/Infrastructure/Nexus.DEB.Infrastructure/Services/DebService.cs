@@ -18,7 +18,17 @@ namespace Nexus.DEB.Infrastructure.Services
         public ValueTask DisposeAsync() => _dbContext.DisposeAsync();
 
         // Start of Service methods
-        public IQueryable<StandardVersionSummary> GetStandardVersionsForGrid() => _dbContext.StandardVersionSummaries.AsNoTracking();
+        public IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters)
+        {
+            var query = _dbContext.StandardVersionSummaries.AsNoTracking();
+
+            if (filters != null)
+            {
+
+            }
+
+            return query;
+        }
 
         public IQueryable<ScopeSummary> GetScopesForGrid() => _dbContext.ScopeSummaries.AsNoTracking();
 

@@ -12,6 +12,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
 
             builder.HasKey(x => x.Id);
 
+            builder.Property(x => x.Id).HasColumnName("EntityID");
             builder.Property(x => x.SerialNumber).HasMaxLength(150);
         }
     }

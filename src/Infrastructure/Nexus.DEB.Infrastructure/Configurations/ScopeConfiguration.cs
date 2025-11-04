@@ -13,6 +13,8 @@ namespace Nexus.DEB.Infrastructure.Configurations
 
             builder.HasBaseType<EntityHead>();
 
+            builder.Property(x => x.Id).HasColumnName("Id");
+
             builder
                 .HasMany(x => x.Requirements)
                 .WithMany(x => x.Scopes)

@@ -14,7 +14,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
 
             builder.HasBaseType<EntityHead>();
 
-            builder.Property(x => x.Id).HasColumnName("Id");
+            builder.Property(x => x.EntityId);
 
             builder
                 .HasOne<TaskType>(x => x.TaskType)

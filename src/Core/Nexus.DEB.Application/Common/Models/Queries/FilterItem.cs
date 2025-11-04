@@ -1,8 +1,8 @@
 ﻿namespace Nexus.DEB.Application.Common.Models
 {
-    public class FilterItem
+    public class FilterItem<T>
     {
-        public Guid Id { get; set; }
+        public T Id { get; set; }
         public string Title { get; set; }
     }
 }

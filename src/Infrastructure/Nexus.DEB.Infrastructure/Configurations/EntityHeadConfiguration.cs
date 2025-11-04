@@ -10,9 +10,9 @@ namespace Nexus.DEB.Infrastructure.Configurations
         {
             builder.ToTable("EntityHead", "common");
 
-            builder.HasKey(x => x.Id);
+            builder.HasKey(x => x.EntityId);
 
-            builder.Property(x => x.Id).HasColumnName("EntityID");
+            builder.Property(x => x.EntityId);
             builder.Property(x => x.SerialNumber).HasMaxLength(150);
         }
     }

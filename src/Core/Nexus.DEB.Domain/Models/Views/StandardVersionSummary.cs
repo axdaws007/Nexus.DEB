@@ -4,7 +4,7 @@ namespace Nexus.DEB.Domain.Models
 {
     public class StandardVersionSummary : IEntity
     {
-        public Guid Id { get; set; }
+        public Guid EntityId { get; set; }
         public short StandardId { get; set; }
         public string StandardTitle { get; set; }
         public string Version { get; set; }

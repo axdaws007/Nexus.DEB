@@ -4,7 +4,7 @@ namespace Nexus.DEB.Domain.Models
 {
     public class RequirementSummary : IEntity
     {
-        public Guid Id { get; set; }
+        public Guid EntityId { get; set; }
         public string? SerialNumber { get; set; }
         public string? SectionReferences { get; set; }
         public string Title { get; set; } = string.Empty;

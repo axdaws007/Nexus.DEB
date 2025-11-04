@@ -6,7 +6,7 @@ namespace Nexus.DEB.Api.GraphQL.Paws
     {
         public async Task<string?> GetCurrentPawsStatusAsync([Parent] IEntity entity, PawsStatusDataLoader dataLoader, CancellationToken cancellationToken)
         {
-            return await dataLoader.LoadAsync(entity.Id, cancellationToken);
+            return await dataLoader.LoadAsync(entity.EntityId, cancellationToken);
         }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20251104120704_AlterIdcolumnToEntityIdOnEntityTables")]
+    partial class AlterIdcolumnToEntityIdOnEntityTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,9 +27,10 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Common.EntityHead", b =>
                 {
-                    b.Property<Guid>("EntityId")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("Id");
 
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uniqueidentifier");
@@ -70,7 +74,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("EntityId");
+                    b.HasKey("Id");
 
                     b.ToTable("EntityHead", "common");
 
@@ -113,9 +117,9 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.RequirementSummary", b =>
                 {
-                    b.Property<Guid>("EntityId")
+                    b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("EntityId");
+                        .HasColumnName("Id");
 
                     b.Property<DateTime>("LastModifiedDate")
                         .HasColumnType("datetime2")
@@ -179,9 +183,9 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("CreatedDate");
 
-                    b.Property<Guid>("EntityId")
+                    b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("EntityId");
+                        .HasColumnName("Id");
 
                     b.Property<DateTime>("LastModifiedDate")
                         .HasColumnType("datetime2")
@@ -320,9 +324,9 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("EffectiveEndDate");
 
-                    b.Property<Guid>("EntityId")
+                    b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("EntityId");
+                        .HasColumnName("Id");
 
                     b.Property<DateTime>("LastModifiedDate")
                         .HasColumnType("datetime2")
@@ -366,9 +370,9 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.StatementSummary", b =>
                 {
-                    b.Property<Guid>("EntityId")
+                    b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("EntityId");
+                        .HasColumnName("Id");
 
                     b.Property<DateTime>("LastModifiedDate")
                         .HasColumnType("datetime2")
@@ -675,7 +679,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                 {
                     b.HasOne("Nexus.DEB.Domain.Models.Common.EntityHead", null)
                         .WithOne()
-                        .HasForeignKey("Nexus.DEB.Domain.Models.Requirement", "EntityId")
+                        .HasForeignKey("Nexus.DEB.Domain.Models.Requirement", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -700,7 +704,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                 {
                     b.HasOne("Nexus.DEB.Domain.Models.Common.EntityHead", null)
                         .WithOne()
-                        .HasForeignKey("Nexus.DEB.Domain.Models.Scope", "EntityId")
+                        .HasForeignKey("Nexus.DEB.Domain.Models.Scope", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -709,7 +713,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                 {
                     b.HasOne("Nexus.DEB.Domain.Models.Common.EntityHead", null)
                         .WithOne()
-                        .HasForeignKey("Nexus.DEB.Domain.Models.StandardVersion", "EntityId")
+                        .HasForeignKey("Nexus.DEB.Domain.Models.StandardVersion", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -726,7 +730,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                 {
                     b.HasOne("Nexus.DEB.Domain.Models.Common.EntityHead", null)
                         .WithOne()
-                        .HasForeignKey("Nexus.DEB.Domain.Models.Statement", "EntityId")
+                        .HasForeignKey("Nexus.DEB.Domain.Models.Statement", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -743,7 +747,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                 {
                     b.HasOne("Nexus.DEB.Domain.Models.Common.EntityHead", null)
                         .WithOne()
-                        .HasForeignKey("Nexus.DEB.Domain.Models.Task", "EntityId")
+                        .HasForeignKey("Nexus.DEB.Domain.Models.Task", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

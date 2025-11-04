@@ -19,7 +19,7 @@ namespace Nexus.DEB.Api.GraphQL.Scope
 
         [Authorize]
         [UseSorting]
-        public static IQueryable<FilterItem> GetScopesForFilter(
+        public static IQueryable<FilterItem<Guid>> GetScopesForFilter(
             IDebService debService,
             IResolverContext resolverContext)
             => debService.GetScopesForFilter();

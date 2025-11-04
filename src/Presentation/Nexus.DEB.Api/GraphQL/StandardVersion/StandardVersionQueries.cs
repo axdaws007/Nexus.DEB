@@ -21,7 +21,7 @@ namespace Nexus.DEB.Api.GraphQL.StandardVersion
 
         [Authorize]
         [UseSorting]
-        public static IQueryable<FilterItem> GetStandardVersionsForFilter(
+        public static IQueryable<FilterItem<Guid>> GetStandardVersionsForFilter(
             IDebService debService,
             IResolverContext resolverContext)
             => debService.GetStandardVersionsForFilter();

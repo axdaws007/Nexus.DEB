@@ -60,20 +60,20 @@ namespace Nexus.DEB.Infrastructure.Services
                 if (filters.StandardVersionId.HasValue)
                 {
                     var requirementIds = _dbContext.Set<Requirement>()
-                        .Where(r => r.StandardVersions.Any(sv => sv.Id == filters.StandardVersionId.Value))
-                        .Select(r => r.Id);
+                        .Where(r => r.StandardVersions.Any(sv => sv.EntityId == filters.StandardVersionId.Value))
+                        .Select(r => r.EntityId);
 
-                    query = query.Where(r => requirementIds.Contains(r.Id));
+                    query = query.Where(r => requirementIds.Contains(r.EntityId));
                 }
 
                 // Filter by Scope (using navigation property)
                 if (filters.ScopeId.HasValue)
                 {
                     var requirementIds = _dbContext.Set<Requirement>()
-                        .Where(r => r.Scopes.Any(s => s.Id == filters.ScopeId.Value))
-                        .Select(r => r.Id);
+                        .Where(r => r.Scopes.Any(s => s.EntityId == filters.ScopeId.Value))
+                        .Select(r => r.EntityId);
 
-                    query = query.Where(r => requirementIds.Contains(r.Id));
+                    query = query.Where(r => requirementIds.Contains(r.EntityId));
                 }
 
                 // Text search on Title
@@ -97,27 +97,40 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
-        public IQueryable<FilterItem> GetScopesForFilter()
+        public IQueryable<FilterItem<Guid>> GetScopesForFilter()
         {
             var query = from s in _dbContext.Scopes
                         where s.IsRemoved == false
-                        select new FilterItem()
+                        select new FilterItem<Guid>()
                         {
-                            Id = s.Id,
+                            Id = s.EntityId,
                             Title = s.Title
                         };
 
             return query;
         }
 
-        public IQueryable<FilterItem> GetStandardVersionsForFilter()
+        public IQueryable<FilterItem<Guid>> GetStandardVersionsForFilter()
         {
             var query = from sv in _dbContext.StandardVersions.Include(x => x.Standard)
                         where sv.IsRemoved == false
-                        select new FilterItem()
+                        select new FilterItem<Guid>()
                         {
-                            Id = sv.Id,
+                            Id = sv.EntityId,
                             Title = sv.Standard.Title + ":" + sv.MajorVersion + " - " + sv.Title
+                        };
+
+            return query;
+        }
+
+        public IQueryable<FilterItem<short>> GetStandardsForFilter()
+        {
+            var query = from s in _dbContext.Standards
+                        where s.IsEnabled == true
+                        select new FilterItem<short>()
+                        {
+                            Id = s.Id,
+                            Title = s.Title
                         };
 
             return query;
@@ -133,20 +146,20 @@ namespace Nexus.DEB.Infrastructure.Services
                 if (filters.StandardVersionId.HasValue)
                 {
                     var requirementIds = _dbContext.Set<Requirement>()
-                        .Where(r => r.StandardVersions.Any(sv => sv.Id == filters.StandardVersionId.Value))
-                        .Select(r => r.Id);
+                        .Where(r => r.StandardVersions.Any(sv => sv.EntityId == filters.StandardVersionId.Value))
+                        .Select(r => r.EntityId);
 
-                    query = query.Where(r => requirementIds.Contains(r.Id));
+                    query = query.Where(r => requirementIds.Contains(r.EntityId));
                 }
 
                 // Filter by Scope (using navigation property)
                 if (filters.ScopeId.HasValue)
                 {
                     var requirementIds = _dbContext.Set<Requirement>()
-                        .Where(r => r.Scopes.Any(s => s.Id == filters.ScopeId.Value))
-                        .Select(r => r.Id);
+                        .Where(r => r.Scopes.Any(s => s.EntityId == filters.ScopeId.Value))
+                        .Select(r => r.EntityId);
 
-                    query = query.Where(r => requirementIds.Contains(r.Id));
+                    query = query.Where(r => requirementIds.Contains(r.EntityId));
                 }
 
                 // Text search on Title

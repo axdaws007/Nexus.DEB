@@ -6,12 +6,12 @@ public abstract class EntityHead : IEntityHead
 {
     protected EntityHead()
     {
-        Id = Guid.NewGuid();
+        EntityId = Guid.NewGuid();
         CreatedDate = DateTime.Now;
         LastModifiedDate = DateTime.Now;
     }
 
-    public Guid Id { get; set; }
+    public Guid EntityId { get; set; }
     public Guid ModuleId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }

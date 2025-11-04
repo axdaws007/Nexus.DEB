@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.11" />
     <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="15.1.11" />
     <PackageReference Include="HotChocolate.AspNetCore.CommandLine" Version="15.1.11" />
@@ -22,10 +23,12 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="HotChocolate.Types.OffsetPagination" Version="15.1.11" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.21" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,6 @@
 using HotChocolate.AspNetCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Nexus.DEB.Api.Restful;
 using Nexus.DEB.Application;
 using Nexus.DEB.Infrastructure;
 using Nexus.DEB.Infrastructure.Authentication;
@@ -150,11 +151,16 @@ builder
     .AddSorting()
     ;
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
@@ -164,5 +170,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapGraphQL();
+app.MapExportEndpoints();
 
 app.RunWithGraphQLCommands(args);

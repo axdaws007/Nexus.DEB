@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
+using System.Linq;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -94,6 +95,11 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Filter by StandardVersion (using navigation property)
                 if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
                 {
+                    var statementIds = _dbContext.Set<Statement>()
+                        .Where(s => s.Requirements.Any(r => r.StandardVersions.Any(sv => filters.StandardVersionIds.Contains(sv.EntityId))))
+                        .Select(s => s.EntityId);
+
+                    query = query.Where(s => statementIds.Contains(s.EntityId));
                 }
 
                 // Filter by Scope (using navigation property)
@@ -196,6 +202,11 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Filter by StandardVersion (using navigation property)
                 if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
                 {
+                    var taskIds = _dbContext.Set<Domain.Models.Task>()
+                        .Where(t => t.Statement.Requirements.Any(r => r.StandardVersions.Any(sv => filters.StandardVersionIds.Contains(sv.EntityId))))
+                        .Select(t => t.EntityId);
+
+                    query = query.Where(t => taskIds.Contains(t.EntityId));
                 }
 
                 // Text search on Title

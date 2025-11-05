@@ -11,7 +11,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(@"
-                ALTER VIEW [deb].[vw_TaskSummary]
+                CREATE VIEW [deb].[vw_TaskSummary]
                 AS
                 SELECT
                     t.[EntityId],

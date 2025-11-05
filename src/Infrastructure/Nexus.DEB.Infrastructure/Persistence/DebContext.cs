@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Domain.Models.Other;
 
 namespace Nexus.DEB.Infrastructure.Persistence
 {
@@ -21,7 +22,9 @@ namespace Nexus.DEB.Infrastructure.Persistence
         DbSet<SectionRequirement> SectionRequirements { get; set; }
 
         // Other
+        public DbSet<ModuleSetting> ModuleSettings { get; set; }
         public DbSet<Section> Sections { get; set; }
+        public DbSet<SettingsType> SettingsTypes { get; set; }
 
         // Entities
         public DbSet<Requirement> Requirements { get; set; }

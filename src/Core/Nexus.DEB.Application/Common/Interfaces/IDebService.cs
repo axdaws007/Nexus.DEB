@@ -24,5 +24,11 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<TaskType> GetTaskTypes();
 
         #endregion
+
+        #region Generic (eventual Framework)
+
+        Task<Guid?> GetWorkflowId(Guid moduleId, string entityType);
+
+        #endregion Generic (eventual Framework)
     }
 }

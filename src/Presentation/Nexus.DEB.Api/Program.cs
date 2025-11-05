@@ -141,7 +141,7 @@ builder
     .AddAuthorization()
     .AddTypes()
     .AddMutationConventions()
-//    .AddGlobalObjectIdentification()
+    .AddGlobalObjectIdentification()
     .ModifyPagingOptions(x =>
     {
         x.MaxPageSize = 200;

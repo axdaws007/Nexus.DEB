@@ -1,6 +1,8 @@
-﻿namespace Nexus.DEB.Domain.Models
+﻿using Nexus.DEB.Domain.Interfaces;
+
+namespace Nexus.DEB.Domain.Models
 {
-    public class TaskSummary
+    public class TaskSummary : IEntity, IOwnedBy
     {
         public Guid EntityId { get; set; }
         public string SerialNumber { get; set; } = string.Empty;

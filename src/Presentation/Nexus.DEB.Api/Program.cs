@@ -142,6 +142,10 @@ builder
     .AddTypes()
     .AddMutationConventions()
     .AddGlobalObjectIdentification()
+    .ModifyCostOptions(options =>
+    {
+        options.MaxFieldCost = 3000;
+    })
     .ModifyPagingOptions(x =>
     {
         x.MaxPageSize = 200;

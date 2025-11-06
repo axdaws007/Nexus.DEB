@@ -4,7 +4,7 @@ namespace Nexus.DEB.Infrastructure.Services
 {
     public partial class DebService
     {
-        public async Task<Guid?> GetWorkflowId(Guid moduleId, string entityType)
+        public async Task<Guid?> GetWorkflowIdAsync(Guid moduleId, string entityType, CancellationToken cancellationToken)
         {
             var settingName = $"PawsWorkFlowID:{entityType}";
 
@@ -12,7 +12,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 .AsNoTracking()
                 .Where(x => x.ModuleId == moduleId && x.Name == settingName)
                 .Select(x => x.Value)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             return Guid.TryParse(value, out var result) ? result : (Guid?)null;
         }

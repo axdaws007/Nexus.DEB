@@ -1,16 +1,18 @@
 ﻿using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Domain.Models.Common;
 
 namespace Nexus.DEB.Application.Common.Interfaces
 {
     public interface IDebService
     {
         #region Entity methods 
-
+        Task<EntityHead?> GetEntityHeadAsync(Guid id, CancellationToken cancellationToken);
         IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters);
         IQueryable<Scope> GetScopes();
         IQueryable<ScopeSummary> GetScopesForGrid();
+        Task<StandardVersion?> GetStandardVersionByIdAsync(Guid id, CancellationToken cancellationToken);
         IQueryable<StandardVersion> GetStandardVersions();
         IQueryable<StandardVersionSummary> GetStandardVersionsForExportOrGrid(StandardVersionSummaryFilters? filters);
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);
@@ -33,7 +35,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         #region Generic (eventual Framework)
 
-        // Task<Guid?> GetWorkflowId(Guid moduleId, string entityType);
+        Task<Guid?> GetWorkflowIdAsync(Guid moduleId, string entityType, CancellationToken cancellationToken);
 
         #endregion Generic (eventual Framework)
     }

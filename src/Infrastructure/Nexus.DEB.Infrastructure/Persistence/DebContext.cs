@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Domain.Models.Common;
 using Nexus.DEB.Domain.Models.Other;
 
 namespace Nexus.DEB.Infrastructure.Persistence
@@ -27,6 +28,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<SettingsType> SettingsTypes { get; set; }
 
         // Entities
+        public DbSet<EntityHead> EntityHeads { get; set; }
         public DbSet<Requirement> Requirements { get; set; }
         public DbSet<Scope> Scopes { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }

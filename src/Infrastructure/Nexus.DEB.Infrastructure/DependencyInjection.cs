@@ -5,6 +5,7 @@ using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Infrastructure.Authentication;
 using Nexus.DEB.Infrastructure.Persistence;
 using Nexus.DEB.Infrastructure.Services;
+using Nexus.DEB.Infrastructure.Validators;
 
 namespace Nexus.DEB.Infrastructure
 {
@@ -47,11 +48,11 @@ namespace Nexus.DEB.Infrastructure
             });
 
 
-            services.AddHttpClient("PawsApi", client =>
+            services.AddHttpClient("WorkflowApi", client =>
             {
-                var baseUrl = configuration["LegacyApis:Paws:BaseUrl"]
-                    ?? throw new InvalidOperationException("LegacyApis:Paws:BaseUrl is not configured");
-                var timeout = int.Parse(configuration["LegacyApis:Paws:Timeout"] ?? "30");
+                var baseUrl = configuration["LegacyApis:PAWS:BaseUrl"]
+                    ?? throw new InvalidOperationException("LegacyApis:PAWS:BaseUrl is not configured");
+                var timeout = int.Parse(configuration["LegacyApis:PAWS:Timeout"] ?? "30");
 
                 client.BaseAddress = new Uri(baseUrl);
                 client.Timeout = TimeSpan.FromSeconds(timeout);
@@ -79,6 +80,14 @@ namespace Nexus.DEB.Infrastructure
             services.AddTransient<ICurrentUserService, CurrentUserService>();
             services.AddTransient<IPawsService, PawsService>();
             services.AddTransient<ICisService, CisService>();
+
+            services.AddScoped<IWorkflowValidationService, WorkflowValidationService>();
+
+            // Register validator registry
+            services.AddScoped<ITransitionValidatorRegistry, TransitionValidatorRegistry>();
+
+            // Register all validators (auto-discovered)
+            services.AddScoped<ITransitionValidator, CheckEffectiveDatesTransitionValidator>();
 
             return services;
         }

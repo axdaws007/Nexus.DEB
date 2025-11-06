@@ -7,6 +7,7 @@ namespace Nexus.DEB.Api.GraphQL
         [ID(nameof(Standard))]
         public ICollection<short>? StandardIds { get; set; }
 
+        [ID]
         public ICollection<int>? StatusIds { get; set; }
 
         public DateTime? EffectiveFromDate { get; set; }

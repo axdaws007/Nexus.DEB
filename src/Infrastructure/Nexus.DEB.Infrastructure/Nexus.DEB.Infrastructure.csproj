@@ -27,4 +27,8 @@
     <ProjectReference Include="..\..\Core\Nexus.DEB.Application\Nexus.DEB.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="SideEffects\" />
+  </ItemGroup>
+
 </Project>

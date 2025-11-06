@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -102,6 +103,76 @@ namespace Nexus.DEB.Infrastructure.Services
                 throw;
             }
             */
+        }
+
+        public async Task<ICollection<PendingActivity>?> GetPendingActivitiesAsync(Guid entityId, Guid workflowId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var response = await SendAuthenticatedRequestAsync<ICollection<PendingActivity>>(
+                HttpMethod.Get,
+                "api/PAWSClient/GetPendingActivities",
+                operationName: $"GetPendingActivities for {entityId} entity and {workflowId} workflow");
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error fetching pending activities");
+                throw;
+            }
+        }
+
+        public async Task<DestinationActivity?> GetDestinationActivitiesAsync(int stepId, int triggerStatusId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var response = await SendAuthenticatedRequestAsync<DestinationActivity>(
+                HttpMethod.Get,
+                $"api/PAWSClient/GetDestinationActivities?stepID={stepId}&triggerStateID={triggerStatusId}",
+                operationName: $"GetDestinationActivities for {stepId} stepId and {triggerStatusId} triggerStatusId");
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error fetching destination activities");
+                throw;
+            }
+        }
+
+        public async Task<TransitionConfigurationInfo?> GetTransitionByTriggerAsync(int sourceActivityId, int triggerStatusId, CancellationToken cancellationToken = default)
+        {
+            TransitionConfigurationInfo info = new TransitionConfigurationInfo()
+            {
+                ActivityTransitionId = sourceActivityId,
+                SourceActivityId = sourceActivityId,
+                DestinationActivityId = sourceActivityId + 1,
+                TriggerStatusId = triggerStatusId,
+                SideEffectNames = new List<string>(),
+                ValidatorNames = new List<string>() { "AllTasksClosed" }
+            };
+
+            return await Task.FromResult(info); ;
+        }
+
+        public async Task<ICollection<WorkflowPseudoState>?> GetPseudoStatesByWorkflowAsync(Guid workflowId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var response = await SendAuthenticatedRequestAsync<ICollection<WorkflowPseudoState>>(
+                HttpMethod.Get,
+                $"api/PAWSClient/GetWorkflowPseudoStates?workflowID={workflowId}",
+                operationName: $"GetWorkflowPseudoStates for {workflowId} workflow");
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error fetching pending activities");
+                throw;
+            }
+
         }
     }
 }

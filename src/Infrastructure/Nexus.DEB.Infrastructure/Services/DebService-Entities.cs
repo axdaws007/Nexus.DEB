@@ -3,12 +3,22 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Domain.Models.Common;
 using System.Linq;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
     public partial class DebService
     {
+        #region EntityHead
+
+        public async Task<EntityHead?> GetEntityHeadAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await _dbContext.EntityHeads.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
+        }
+
+        #endregion
+
         #region Requirements
 
         public IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters)
@@ -159,6 +169,9 @@ namespace Nexus.DEB.Infrastructure.Services
         // --------------------------------------------------------------------------------------------------------------
 
         #region StandardVersions
+
+        public async Task<StandardVersion?> GetStandardVersionByIdAsync(Guid id, CancellationToken cancellationToken)
+            => await _dbContext.StandardVersions.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
 
         public IQueryable<StandardVersion> GetStandardVersions()
         {

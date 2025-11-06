@@ -8,6 +8,7 @@ namespace Nexus.DEB.Domain.Models
         public string SerialNumber { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public Guid OwnedById { get; set; }
+        public string? OwnedBy { get; set; }
         public DateTime? DueDate { get; set; }
         public string TaskTypeTitle { get; set; } = string.Empty;
         public int? StatusId { get; set; }

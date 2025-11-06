@@ -7,13 +7,16 @@ namespace Nexus.DEB.Api.Restful.Maps
     {
         public TaskSummaryMap()
         {
-            Map(m => m.EntityId).Name("EntityId");
-            Map(m => m.TaskTypeTitle).Name("Task Type");
-            Map(m => m.Title).Name("Title");
-            Map(m => m.Status).Name("Status");
+            Map(m => m.EntityId);
+            Map(m => m.SerialNumber).Name("Task ID");
+            Map(m => m.Title);
+            Map(m => m.OwnedBy).Name("Owner");
             Map(m => m.DueDate).Name("Due Date");
+            Map(m => m.TaskTypeTitle).Name("Type");
+            Map(m => m.Status);
 
             Map(m => m.StatusId).Ignore();
+            Map(m => m.OwnedById).Ignore();
         }
     }
 }

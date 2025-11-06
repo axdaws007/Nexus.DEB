@@ -9,14 +9,14 @@ namespace Nexus.DEB.Application.Common.Interfaces
     {
         #region Entity methods 
         Task<EntityHead?> GetEntityHeadAsync(Guid id, CancellationToken cancellationToken);
-        IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters);
+        IQueryable<RequirementSummary> GetRequirementsForExportOrGrid(RequirementSummaryFilters? filters);
         IQueryable<Scope> GetScopes();
-        IQueryable<ScopeSummary> GetScopesForGrid();
+        IQueryable<ScopeSummary> GetScopesForExportOrGrid();
         Task<StandardVersion?> GetStandardVersionByIdAsync(Guid id, CancellationToken cancellationToken);
         IQueryable<StandardVersion> GetStandardVersions();
         IQueryable<StandardVersionSummary> GetStandardVersionsForExportOrGrid(StandardVersionSummaryFilters? filters);
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);
-        IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters);
+        IQueryable<TaskSummary> GetTasksForExportOrGrid(TaskSummaryFilters? filters);
 
         Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(CancellationToken cancellationToken);
         Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(CancellationToken cancellationToken);

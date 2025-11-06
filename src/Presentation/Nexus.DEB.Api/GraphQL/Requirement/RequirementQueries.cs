@@ -16,6 +16,6 @@ namespace Nexus.DEB.Api.GraphQL
             RequirementSummaryFilters? filters,
             IDebService debService,
             IResolverContext resolverContext)
-            => debService.GetRequirementsForGrid(filters);
+            => debService.GetRequirementsForExportOrGrid(filters);
     }
 }

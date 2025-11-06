@@ -38,7 +38,7 @@ namespace Nexus.DEB.Api.GraphQL
                 }
             }
 
-            return debService.GetTasksForGrid(f);
+            return debService.GetTasksForExportOrGrid(f);
         }
     }
 }

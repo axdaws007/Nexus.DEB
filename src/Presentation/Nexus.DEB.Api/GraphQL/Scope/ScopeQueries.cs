@@ -15,7 +15,7 @@ namespace Nexus.DEB.Api.GraphQL
         public static IQueryable<ScopeSummary> GetScopesForGrid(
             IDebService debService,
             IResolverContext resolverContext)
-            => debService.GetScopesForGrid();
+            => debService.GetScopesForExportOrGrid();
 
         [Authorize]
         [UseSorting]

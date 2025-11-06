@@ -1,10 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging.Abstractions;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
-using System.Linq;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -19,9 +17,11 @@ namespace Nexus.DEB.Infrastructure.Services
 
         #endregion
 
+        // --------------------------------------------------------------------------------------------------------------
+
         #region Requirements
 
-        public IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters)
+        public IQueryable<RequirementSummary> GetRequirementsForExportOrGrid(RequirementSummaryFilters? filters)
         {
             var query = _dbContext.RequirementSummaries.AsQueryable();
 
@@ -101,7 +101,7 @@ namespace Nexus.DEB.Infrastructure.Services
         }
 
 
-        public IQueryable<ScopeSummary> GetScopesForGrid() => _dbContext.ScopeSummaries.AsNoTracking();
+        public IQueryable<ScopeSummary> GetScopesForExportOrGrid() => _dbContext.ScopeSummaries.AsNoTracking();
 
         #endregion Scopes
 
@@ -234,7 +234,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
         #region Tasks
 
-        public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
+        public IQueryable<TaskSummary> GetTasksForExportOrGrid(TaskSummaryFilters? filters)
         {
             var query = _dbContext.TaskSummaries.AsQueryable();
 

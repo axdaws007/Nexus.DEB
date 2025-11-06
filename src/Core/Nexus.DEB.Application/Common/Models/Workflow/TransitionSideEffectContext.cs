@@ -1,4 +1,4 @@
-﻿namespace Nexus.DEB.Application.Common.Models.Workflow
+﻿namespace Nexus.DEB.Application.Common.Models
 {
     public class TransitionSideEffectContext
     {

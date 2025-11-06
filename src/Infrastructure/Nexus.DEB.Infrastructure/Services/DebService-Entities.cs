@@ -272,6 +272,11 @@ namespace Nexus.DEB.Infrastructure.Services
                     query = query.Where(x => filters.StatusIds.Contains(x.StatusId));
                 }
 
+                if (filters.StatementId.HasValue)
+                {
+                    query = query.Where(x => x.StatementId == filters.StatementId.Value);
+                }
+
                 // TODO
                 // OwnedById filter
             }

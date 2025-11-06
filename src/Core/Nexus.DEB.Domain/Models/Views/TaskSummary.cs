@@ -12,5 +12,6 @@ namespace Nexus.DEB.Domain.Models
         public string TaskTypeTitle { get; set; } = string.Empty;
         public int? StatusId { get; set; }
         public string? Status { get; set; }
+        public Guid StatementId { get; set; }
     }
 }

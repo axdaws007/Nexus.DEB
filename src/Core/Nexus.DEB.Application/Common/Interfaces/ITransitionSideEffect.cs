@@ -1,5 +1,4 @@
 ﻿using Nexus.DEB.Application.Common.Models;
-using Nexus.DEB.Application.Common.Models.Workflow;
 
 namespace Nexus.DEB.Application.Common.Interfaces
 {

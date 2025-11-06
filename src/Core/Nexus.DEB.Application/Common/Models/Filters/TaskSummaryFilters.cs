@@ -9,5 +9,6 @@
         public ICollection<short>? TaskTypeIds { get; set; }
         public ICollection<Guid>? OwnedById { get; set; }
         public ICollection<int?>? StatusIds { get; set; }
+        public Guid? StatementId { get; set; }
     }
 }

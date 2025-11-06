@@ -1,7 +1,6 @@
 ﻿using HotChocolate.Authorization;
 using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
-using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL
@@ -16,7 +15,17 @@ namespace Nexus.DEB.Api.GraphQL
             StandardVersionSummaryFilters? filters,
             IDebService debService,
             IResolverContext resolverContext)
-            => debService.GetStandardVersionsForExportOrGrid(filters);
+        {
+            Application.Common.Models.Filters.StandardVersionSummaryFilters f = new Application.Common.Models.Filters.StandardVersionSummaryFilters()
+            {
+                StandardIds = filters.StandardIds,
+                EffectiveFromDate = filters.EffectiveFromDate,  
+                EffectiveToDate = filters.EffectiveToDate,  
+                StatusIds = filters.StatusIds
+            };
+
+            return debService.GetStandardVersionsForExportOrGrid(f);
+        }
 
         [Authorize]
         [UseSorting]
@@ -24,7 +33,17 @@ namespace Nexus.DEB.Api.GraphQL
             StandardVersionSummaryFilters? filters,
             IDebService debService,
             IResolverContext resolverContext)
-            => debService.GetStandardVersionsForExportOrGrid(filters);
+        {
+            Application.Common.Models.Filters.StandardVersionSummaryFilters f = new Application.Common.Models.Filters.StandardVersionSummaryFilters()
+            {
+                StandardIds = filters.StandardIds,
+                EffectiveFromDate = filters.EffectiveFromDate,
+                EffectiveToDate = filters.EffectiveToDate,
+                StatusIds = filters.StatusIds
+            };
+
+            return debService.GetStandardVersionsForExportOrGrid(f);
+        }
 
         [Authorize]
         [UseSorting]

@@ -13,5 +13,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<IReadOnlyDictionary<Guid, string?>> GetNamesByIdsAsync(
             List<Guid> ids,
             CancellationToken cancellationToken = default);
+
+        Task<ICollection<PostDetails>?> GetPostsBySearchTextAsync(string searchText, CancellationToken cancellation = default);
     }
 }

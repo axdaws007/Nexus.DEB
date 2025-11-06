@@ -72,6 +72,17 @@ namespace Nexus.DEB.Infrastructure.Services
                 operationName: $"GetUserDetails for UserId: {userId}, PostId: {postId}");
         }
 
+        public async Task<ICollection<PostDetails>?> GetPostsBySearchTextAsync(string searchText, CancellationToken cancellationToken = default)
+        {
+            var requestUri = $"api/Users/PostsBasedUponSearchText?searchText={searchText}";
+
+            // Use authenticated request - cookie retrieved from HttpContext automatically
+            return await SendAuthenticatedRequestAsync<ICollection<PostDetails>>(
+                HttpMethod.Get,
+                requestUri,
+                operationName: $"PostsBasedUponSearchText for searchText: {searchText}");
+        }
+
         public async Task<IReadOnlyDictionary<Guid, string?>> GetNamesByIdsAsync(List<Guid> ids, CancellationToken cancellationToken = default)
         {
             try

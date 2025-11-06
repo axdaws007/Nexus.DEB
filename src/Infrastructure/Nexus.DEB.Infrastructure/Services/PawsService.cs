@@ -153,7 +153,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 ValidatorNames = new List<string>() { "AllTasksClosed" }
             };
 
-            return await Task.FromResult(info); ;
+            return await Task.FromResult(info);
         }
 
         public async Task<ICollection<WorkflowPseudoState>?> GetPseudoStatesByWorkflowAsync(Guid workflowId, CancellationToken cancellationToken = default)

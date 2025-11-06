@@ -1,7 +1,6 @@
 ﻿using HotChocolate.Authorization;
 using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
-using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL
@@ -13,9 +12,22 @@ namespace Nexus.DEB.Api.GraphQL
         [UseOffsetPaging]
         [UseSorting]
         public static IQueryable<RequirementSummary> GetRequirementsForGrid(
-            RequirementSummaryFilters? filters,
-            IDebService debService,
-            IResolverContext resolverContext)
-            => debService.GetRequirementsForExportOrGrid(filters);
+    RequirementSummaryFilters? filters,
+    IDebService debService)
+        {
+            var f = filters is null
+                ? new Application.Common.Models.Filters.RequirementSummaryFilters()
+                : new Application.Common.Models.Filters.RequirementSummaryFilters
+                {
+                    ModifiedFrom = filters.ModifiedFrom,
+                    ModifiedTo = filters.ModifiedTo,
+                    ScopeIds = filters.ScopeIds,
+                    SearchText = filters.SearchText?.Trim(),
+                    StandardVersionIds = filters.StandardVersionIds,
+                    StatusIds = filters.StatusIds
+                };
+
+            return debService.GetRequirementsForExportOrGrid(f);
+        }
     }
 }

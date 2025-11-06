@@ -32,7 +32,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                 INNER JOIN [common].[EntityHead] eh ON t.[EntityId] = eh.[EntityId]
                 INNER JOIN [deb].[TaskType] tt ON t.[TaskTypeId] = tt.[Id]
 				LEFT JOIN [common].[vwPawsState] vw ON eh.[EntityID] = vw.[EntityID]
-				LEFT JOIN [common].[XDB_CIS_View_Post] vp ON eh.[OwnedById] = eh.[OwnedById]
+				LEFT JOIN [common].[XDB_CIS_View_Post] vp ON eh.[OwnedById] = vp.[ID]
             ");
         }
 

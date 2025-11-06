@@ -11,7 +11,7 @@ namespace Nexus.DEB.Api.Restful.Maps
             Map(m => m.SerialNumber).Name("Task ID");
             Map(m => m.Title);
             Map(m => m.OwnedBy).Name("Owner");
-            Map(m => m.DueDate).Name("Due Date");
+            Map(m => m.DueDate).Name("Due Date").TypeConverterOption.Format("yyyy-MM-dd");
             Map(m => m.TaskTypeTitle).Name("Type");
             Map(m => m.Status);
 

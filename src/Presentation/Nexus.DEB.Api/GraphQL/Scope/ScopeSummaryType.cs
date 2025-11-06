@@ -8,9 +8,7 @@ namespace Nexus.DEB.Api.GraphQL
 
         protected override void Configure(IObjectTypeDescriptor<ScopeSummary> descriptor)
         {
-            descriptor
-                .Field("ownedBy")
-                .ResolveWith<CisResolver>(context => context.GetCisOwnedByNameAsync(default, default, default));
+            descriptor.Field(x => x.OwnedById).Ignore();
 
             base.Configure(descriptor);
         }

@@ -17,11 +17,13 @@ namespace Nexus.DEB.Api.GraphQL
             ICisService cisService,
             IResolverContext resolverContext)
         {
-            var f = new Application.Common.Models.Filters.TaskSummaryFilters()
+            var f = filters is null
+            ? new Application.Common.Models.Filters.TaskSummaryFilters()
+            : new Application.Common.Models.Filters.TaskSummaryFilters
             {
                 DueDateFrom = filters.DueDateFrom,
                 DueDateTo = filters.DueDateTo,
-                SearchText = filters.SearchText,
+                SearchText = filters.SearchText?.Trim(),
                 StandardVersionIds = filters.StandardVersionIds,
                 StatementId = filters.StatementId,
                 StatusIds = filters.StatusIds,

@@ -17,7 +17,9 @@ namespace Nexus.DEB.Api.GraphQL
             IDebService debService,
             IResolverContext resolverContext)
         {
-            Application.Common.Models.Filters.StandardVersionSummaryFilters f = new Application.Common.Models.Filters.StandardVersionSummaryFilters()
+            var f = filters is null
+            ? new Application.Common.Models.Filters.StandardVersionSummaryFilters()
+            : new Application.Common.Models.Filters.StandardVersionSummaryFilters
             {
                 StandardIds = filters.StandardIds,
                 EffectiveFromDate = filters.EffectiveFromDate,  

@@ -28,6 +28,9 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .HasColumnName("OwnedById")
                 .IsRequired();
 
+            builder.Property(e => e.OwnedBy)
+                .HasColumnName("OwnedBy");
+
             builder.Property(e => e.CreatedDate)
                 .HasColumnName("CreatedDate")
                 .IsRequired();

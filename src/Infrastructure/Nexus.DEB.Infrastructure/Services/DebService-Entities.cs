@@ -78,6 +78,19 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
+        public async Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(CancellationToken cancellationToken)
+        {
+            return await (from sc in _dbContext.Scopes
+                          orderby sc.Title
+                          select new FilterItemEntity()
+                          {
+                              Id = sc.EntityId,
+                              Value = sc.Title,
+                              IsEnabled = !sc.IsRemoved
+                          }).ToListAsync(cancellationToken);
+        }
+
+
         public IQueryable<ScopeSummary> GetScopesForGrid() => _dbContext.ScopeSummaries.AsNoTracking();
 
         #endregion Scopes
@@ -155,6 +168,20 @@ namespace Nexus.DEB.Infrastructure.Services
                         select sv;
 
             return query;
+        }
+
+        public async Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(CancellationToken cancellationToken)
+        {
+            var results = await (from sv in _dbContext.StandardVersions
+                                               .Include(x => x.Standard)
+                                  select new FilterItemEntity()
+                                  {
+                                      Id = sv.EntityId,
+                                      Value = sv.Standard.Title + " " + sv.Reference,
+                                      IsEnabled = !sv.IsRemoved
+                                  }).ToListAsync(cancellationToken);
+
+            return results.OrderBy(x => x.Value).ToList();
         }
 
         public IQueryable<StandardVersionSummary> GetStandardVersionsForExportOrGrid(StandardVersionSummaryFilters? filters)

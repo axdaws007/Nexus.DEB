@@ -16,18 +16,24 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);
         IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters);
 
+        Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(CancellationToken cancellationToken);
+        Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(CancellationToken cancellationToken);
+
         #endregion Entity methods
 
         #region Lookup methods
 
         IQueryable<Standard> GetStandards();
+        Task<ICollection<FilterItem>> GetStandardsLookupAsync(CancellationToken cancellationToken);
+
         IQueryable<TaskType> GetTaskTypes();
+        Task<ICollection<FilterItem>> GetTaskTypesLookupAsync(CancellationToken cancellationToken);
 
         #endregion
 
         #region Generic (eventual Framework)
 
-        Task<Guid?> GetWorkflowId(Guid moduleId, string entityType);
+        // Task<Guid?> GetWorkflowId(Guid moduleId, string entityType);
 
         #endregion Generic (eventual Framework)
     }

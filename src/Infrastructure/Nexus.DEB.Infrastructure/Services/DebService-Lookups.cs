@@ -1,4 +1,6 @@
-﻿using Nexus.DEB.Domain.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -14,6 +16,19 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
+        public async Task<ICollection<FilterItem>> GetStandardsLookupAsync(CancellationToken cancellationToken)
+        {
+            return await (from s in _dbContext.Standards
+                          orderby s.Ordinal
+                          select new FilterItem()
+                          {
+                              Id = s.Id,
+                              Value = s.Title,
+                              IsEnabled = s.IsEnabled
+                          }).ToListAsync(cancellationToken);
+        }
+
+
         public IQueryable<TaskType> GetTaskTypes()
         {
             var query = from s in _dbContext.TaskTypes
@@ -23,5 +38,18 @@ namespace Nexus.DEB.Infrastructure.Services
 
             return query;
         }
+
+        public async Task<ICollection<FilterItem>> GetTaskTypesLookupAsync(CancellationToken cancellationToken)
+        {
+            return await (from s in _dbContext.TaskTypes
+                          orderby s.Ordinal
+                          select new FilterItem()
+                          {
+                              Id = s.Id,
+                              Value = s.Title,
+                              IsEnabled = s.IsEnabled
+                          }).ToListAsync(cancellationToken);
+        }
+
     }
 }

@@ -1,6 +1,7 @@
 ﻿using HotChocolate.Authorization;
 using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL
@@ -20,5 +21,14 @@ namespace Nexus.DEB.Api.GraphQL
             TaskTypeByIdDataLoader taskTypeByIdDataLoader,
             CancellationToken cancellationToken)
             => await taskTypeByIdDataLoader.LoadAsync(id, cancellationToken);
+
+        [Authorize]
+        public async static Task<ICollection<FilterItem>> GetTaskTypesLookupAsync(
+            IDebService debService,
+            IResolverContext resolverContext,
+            CancellationToken cancellationToken)
+            => await debService.GetTaskTypesLookupAsync(cancellationToken);
+
+
     }
 }

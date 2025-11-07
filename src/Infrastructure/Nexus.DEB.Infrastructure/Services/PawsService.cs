@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using System.Net.Http.Json;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -173,6 +174,42 @@ namespace Nexus.DEB.Infrastructure.Services
                 throw;
             }
 
+        }
+
+        public async Task<bool> CreateWorkflowInstance(Guid workflowID, Guid entityId)
+        {
+            try
+            {
+                // Create request DTO
+                var request = new CreateWorkflowInstanceRequest
+                {
+                    WorkflowID = workflowID,
+                    EntityID = entityId
+                };
+
+                // Create JSON content (JsonOptions from base class)
+                var content = JsonContent.Create(request, options: JsonOptions);
+
+                // Use base class method - it gets the auth cookie from HttpContext automatically!
+                var response = await SendAuthenticatedRequestAsync<bool>(
+                    HttpMethod.Post,
+                    "api/PAWSClient/CreateWorkflowInstance",
+                    operationName: $"CreateWorkflowInstance for {workflowID} workflowId and {entityId} entityId",
+                    content: content);
+
+                //if (response?.Statuses == null)
+                //{
+                //    Logger.LogWarning("API returned null response for batch status request");
+                //    return entityIds.ToDictionary(id => id, id => (string?)null);
+                //}
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error fetching batch workflow statuses");
+                throw;
+            }
         }
     }
 }

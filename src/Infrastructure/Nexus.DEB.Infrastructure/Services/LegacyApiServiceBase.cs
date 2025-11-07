@@ -136,7 +136,7 @@ namespace Nexus.DEB.Infrastructure.Services
             HttpMethod method,
             string requestUri,
             string operationName,
-            HttpContent? content = null) where TResponse : class
+            HttpContent? content = null) where TResponse : notnull
         {
             try
             {
@@ -158,21 +158,21 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     Logger.LogWarning("{OperationName} failed: Unauthorized (401) for {RequestUri}",
                         operationName, requestUri);
-                    return null;
+                    return default;
                 }
 
                 if (response.StatusCode == HttpStatusCode.Forbidden)
                 {
                     Logger.LogWarning("{OperationName} failed: Forbidden (403) for {RequestUri}",
                         operationName, requestUri);
-                    return null;
+                    return default;
                 }
 
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     Logger.LogWarning("{OperationName} failed: Not Found (404) for {RequestUri}",
                         operationName, requestUri);
-                    return null;
+                    return default;
                 }
 
                 response.EnsureSuccessStatusCode();
@@ -184,7 +184,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     Logger.LogError("{OperationName}: Failed to deserialize response from {RequestUri}",
                         operationName, requestUri);
-                    return null;
+                    return default;
                 }
 
                 Logger.LogInformation("{OperationName} completed successfully", operationName);

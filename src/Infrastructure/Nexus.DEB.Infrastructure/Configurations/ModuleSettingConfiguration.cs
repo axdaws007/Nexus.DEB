@@ -10,7 +10,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
         {
             builder.ToTable("ModuleSetting");
 
-            builder.HasKey(x => x.ModuleId);
+            builder.HasKey(x => new { x.ModuleId, x.Name });
             builder.Property(x => x.Name).HasMaxLength(100);
 
             builder.HasOne(x => x.Type)

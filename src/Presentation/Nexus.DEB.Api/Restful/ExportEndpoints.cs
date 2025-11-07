@@ -3,8 +3,11 @@ using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Api.Restful.Maps;
+using Nexus.DEB.Api.Restful.Models;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Domain.Models.Common;
 using System.Globalization;
 using System.Text;
 
@@ -14,37 +17,52 @@ namespace Nexus.DEB.Api.Restful
     {
         public static void MapExportEndpoints(this WebApplication app)
         {
-            var group = app.MapGroup("/api/export")
+            var exportGroup = app.MapGroup("/api/export")
                 .WithTags("Export")
                 .WithOpenApi();
 
-            group.MapPost("/standard-versions-csv", ExportStandardVersionsAsCsv)
+            exportGroup.MapPost("/standard-versions-csv", ExportStandardVersionsAsCsv)
                 .RequireAuthorization()
                 .WithName("ExportStandardVersionsAsCsv")
                 .WithSummary("Export standard versions as CSV file")
                 .Produces<FileResult>(StatusCodes.Status200OK, contentType: "text/csv")
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/tasks-csv", ExportTasksAsCsv)
+            exportGroup.MapPost("/tasks-csv", ExportTasksAsCsv)
                 .RequireAuthorization()
                 .WithName("ExportTasksAsCsv")
                 .WithSummary("Export tasks as CSV file")
                 .Produces<FileResult>(StatusCodes.Status200OK, contentType: "text/csv")
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/scopes-csv", ExportScopesAsCsv)
+            exportGroup.MapPost("/scopes-csv", ExportScopesAsCsv)
                 .RequireAuthorization()
                 .WithName("ExportScopesAsCsv")
                 .WithSummary("Export scopes as CSV file")
                 .Produces<FileResult>(StatusCodes.Status200OK, contentType: "text/csv")
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/requirements-csv", ExportRequirementsAsCsv)
+            exportGroup.MapPost("/requirements-csv", ExportRequirementsAsCsv)
                 .RequireAuthorization()
                 .WithName("ExportRequirementsAsCsv")
                 .WithSummary("Export requirements as CSV file")
                 .Produces<FileResult>(StatusCodes.Status200OK, contentType: "text/csv")
                 .Produces(StatusCodes.Status401Unauthorized);
+
+            if (app.Environment.IsDevelopment())
+            {
+                var testGroup = app.MapGroup("/api/testdata")
+                    .WithTags("TestData")
+                    .WithOpenApi();
+
+                testGroup.MapPost("/statements-and-tasks", GenerateStatementsAndTasks)
+                    .RequireAuthorization()
+                    .WithName("GenerateStatementsAndTasks")
+                    .WithSummary("Generate sample statements and tasks")
+                    .Produces(StatusCodes.Status200OK)
+                    .Produces(StatusCodes.Status401Unauthorized);
+
+            }
         }
 
         private static async Task<IResult> ExportStandardVersionsAsCsv(
@@ -168,6 +186,37 @@ namespace Nexus.DEB.Api.Restful
                     detail: "An error occurred while generating the CSV export. Please try again.",
                     statusCode: StatusCodes.Status500InternalServerError);
             }
+        }
+
+        private static async Task<IResult> GenerateStatementsAndTasks(
+            [FromBody] StatementAndTasksParameters? parameters,
+            [FromServices] IDebService debService,
+            [FromServices] IPawsService pawsService,
+            [FromServices] IConfiguration configuration,
+            [FromServices] ILogger<Program> logger,
+            CancellationToken cancellationToken)
+        {
+            var moduleIdString = configuration["Modules:DEB"] ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");
+
+            if (!Guid.TryParse(moduleIdString, out var moduleId))
+            {
+                throw new InvalidOperationException("Modules:DEB must be a valid GUID");
+            }
+
+            var statementWorkflowId = await debService.GetWorkflowIdAsync(moduleId, EntityTypes.SoC, cancellationToken);
+            var tasksWorkflowId = await debService.GetWorkflowIdAsync(moduleId, EntityTypes.Task, cancellationToken);
+
+            var requirements = debService.GetRequirementsForStandardVersion(parameters.StandardVersionId);
+
+
+            // Create one statement for each requirement
+
+            // Create a random number of tasks per statement ranging from 0 to parameters.MaximumNumberOfTasksPerStatement
+
+            // Save records
+
+
+            return Results.Ok();
         }
     }
 }

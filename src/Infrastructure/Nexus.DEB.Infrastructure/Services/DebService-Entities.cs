@@ -125,6 +125,15 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
+        public IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId)
+        {
+            var query = _dbContext.Requirements.Include(x => x.StandardVersions).AsNoTracking()
+                .Where(r => r.StandardVersions.Any(sv => sv.EntityId == standardVersionId) && r.IsRemoved == false)
+                .Select(r => r);
+
+            return query;
+        }
+
         #endregion Requirements
 
         // --------------------------------------------------------------------------------------------------------------

@@ -11,6 +11,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<EntityHead?> GetEntityHeadAsync(Guid id, CancellationToken cancellationToken);
         IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters);
         IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters);
+        IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId);
         IQueryable<Scope> GetScopes();
         IQueryable<ScopeSummary> GetScopesForGrid();
         IQueryable<ScopeExport> GetScopesForExport();

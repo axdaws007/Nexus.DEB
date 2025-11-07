@@ -27,7 +27,7 @@ namespace Nexus.DEB.Api.GraphQL
                     StatusIds = filters.StatusIds
                 };
 
-            return debService.GetRequirementsForExportOrGrid(f);
+            return debService.GetRequirementsForGrid(f);
         }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20251107094754_AddStandardVersionExportView")]
+    partial class AddStandardVersionExportView
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -163,68 +166,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.ToTable("RequirementCategory", "deb");
                 });
 
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.RequirementExport", b =>
-                {
-                    b.Property<int?>("ComplianceWeighting")
-                        .HasColumnType("int")
-                        .HasColumnName("ComplianceWeighting");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Description");
-
-                    b.Property<DateTime>("EffectiveEndDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("EffectiveEndDate");
-
-                    b.Property<DateTime>("EffectiveStartDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("EffectiveStartDate");
-
-                    b.Property<Guid>("EntityId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("EntityId");
-
-                    b.Property<DateTime>("LastModifiedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("LastModifiedDate");
-
-                    b.Property<string>("RequirementCategoryTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("RequirementCategoryTitle");
-
-                    b.Property<string>("RequirementTypeTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("RequirementTypeTitle");
-
-                    b.Property<string>("SectionReferences")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("SectionReferences");
-
-                    b.Property<string>("SerialNumber")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("SerialNumber");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Status");
-
-                    b.Property<int?>("StatusId")
-                        .HasColumnType("int")
-                        .HasColumnName("StatusId");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Title");
-
-                    b.ToTable((string)null);
-
-                    b.ToView("vw_RequirementExport", "deb");
-                });
-
             modelBuilder.Entity("Nexus.DEB.Domain.Models.RequirementSummary", b =>
                 {
                     b.Property<Guid>("EntityId")
@@ -293,58 +234,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("RequirementType", "deb");
-                });
-
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.ScopeExport", b =>
-                {
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("CreatedDate");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Description");
-
-                    b.Property<Guid>("EntityId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("EntityId");
-
-                    b.Property<DateTime>("LastModifiedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("LastModifiedDate");
-
-                    b.Property<int>("NumberOfLinkedStandardVersions")
-                        .HasColumnType("int")
-                        .HasColumnName("StandardVersionCount");
-
-                    b.Property<string>("OwnedBy")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("OwnedBy");
-
-                    b.Property<Guid>("OwnedById")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("OwnedById");
-
-                    b.Property<string>("SerialNumber")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("SerialNumber");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Status");
-
-                    b.Property<DateTime?>("TargetImplementationDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("TargetImplementationDate");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Title");
-
-                    b.ToTable((string)null);
-
-                    b.ToView("vw_ScopeExport", "deb");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.ScopeSummary", b =>

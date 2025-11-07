@@ -27,7 +27,7 @@ namespace Nexus.DEB.Api.GraphQL
                 StatusIds = filters.StatusIds
             };
 
-            return debService.GetStandardVersionsForExportOrGrid(f);
+            return debService.GetStandardVersionsForGrid(f);
         }
 
         [Authorize]
@@ -45,7 +45,7 @@ namespace Nexus.DEB.Api.GraphQL
                 StatusIds = filters.StatusIds
             };
 
-            return debService.GetStandardVersionsForExportOrGrid(f);
+            return debService.GetStandardVersionsForGrid(f);
         }
 
         [Authorize]

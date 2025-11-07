@@ -4,12 +4,12 @@ using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Infrastructure.Configurations
 {
-    public class StandardVersionSummaryConfiguration : IEntityTypeConfiguration<StandardVersionSummary>
+    public class StandardVersionExportConfiguration : IEntityTypeConfiguration<StandardVersionExport>
     {
-        public void Configure(EntityTypeBuilder<StandardVersionSummary> builder)
+        public void Configure(EntityTypeBuilder<StandardVersionExport> builder)
         {
             // Map to the database view
-            builder.ToView("vw_StandardVersionSummary", "deb");
+            builder.ToView("vw_StandardVersionExport", "deb");
 
             // This is a read-only view, so it has no key
             // We'll use a composite "key" for EF Core tracking purposes
@@ -28,23 +28,29 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .HasColumnName("StandardTitle")
                 .IsRequired();
 
-            builder.Property(e => e.Version)
-                .HasColumnName("Version")
-                .IsRequired();
+            builder.Property(e => e.SerialNumber)
+                .HasColumnName("SerialNumber");
 
             builder.Property(e => e.Title)
                 .HasColumnName("StandardVersionTitle")
                 .IsRequired();
 
-            builder.Property(e => e.EffectiveFrom)
+            builder.Property(e => e.Description)
+                .HasColumnName("Description");
+
+            builder.Property(e => e.EffectiveStartDate)
                 .HasColumnName("EffectiveStartDate")
                 .IsRequired();
 
-            builder.Property(e => e.EffectiveTo)
+            builder.Property(e => e.EffectiveEndDate)
                 .HasColumnName("EffectiveEndDate");
 
             builder.Property(e => e.LastModifiedDate)
                 .HasColumnName("LastModifiedDate")
+                .IsRequired();
+
+            builder.Property(e => e.Reference)
+                .HasColumnName("Reference")
                 .IsRequired();
 
             builder.Property(e => e.StatusId)

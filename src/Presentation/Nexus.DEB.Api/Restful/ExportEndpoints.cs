@@ -55,9 +55,9 @@ namespace Nexus.DEB.Api.Restful
         {
             return await ExportToCsvAsync(
                 entityName: "StandardVersions",
-                getDataQuery: () => debService.GetStandardVersionsForExportOrGrid(filters),
+                getDataQuery: () => debService.GetStandardVersionsForExport(filters),
                 fileNamePrefix: "standard-versions",
-                registerClassMap: csv => csv.Context.RegisterClassMap<StandardVersionSummaryMap>(),
+                registerClassMap: csv => csv.Context.RegisterClassMap<StandardVersionExportMap>(),
                 logger: logger,
                 cancellationToken: cancellationToken);
         }
@@ -70,9 +70,9 @@ namespace Nexus.DEB.Api.Restful
         {
             return await ExportToCsvAsync(
                 entityName: "Tasks",
-                getDataQuery: () => debService.GetTasksForExportOrGrid(filters),
+                getDataQuery: () => debService.GetTasksForExport(filters),
                 fileNamePrefix: "tasks",
-                registerClassMap: csv => csv.Context.RegisterClassMap<TaskSummaryMap>(),
+                registerClassMap: csv => csv.Context.RegisterClassMap<TaskExportMap>(),
                 logger: logger,
                 cancellationToken: cancellationToken);
         }
@@ -84,9 +84,9 @@ namespace Nexus.DEB.Api.Restful
         {
             return await ExportToCsvAsync(
                 entityName: "Scopes",
-                getDataQuery: () => debService.GetScopesForExportOrGrid(),
+                getDataQuery: () => debService.GetScopesForExport(),
                 fileNamePrefix: "scopes",
-                registerClassMap: csv => csv.Context.RegisterClassMap<ScopeSummaryMap>(),
+                registerClassMap: csv => csv.Context.RegisterClassMap<ScopeExportMap>(),
                 logger: logger,
                 cancellationToken: cancellationToken);
         }
@@ -99,9 +99,9 @@ namespace Nexus.DEB.Api.Restful
         {
             return await ExportToCsvAsync(
                 entityName: "Requirements",
-                getDataQuery: () => debService.GetRequirementsForExportOrGrid(filters),
+                getDataQuery: () => debService.GetRequirementsForExport(filters),
                 fileNamePrefix: "requirements",
-                registerClassMap: csv => csv.Context.RegisterClassMap<RequirementSummaryMap>(),
+                registerClassMap: csv => csv.Context.RegisterClassMap<RequirementExportMap>(),
                 logger: logger,
                 cancellationToken: cancellationToken);
         }

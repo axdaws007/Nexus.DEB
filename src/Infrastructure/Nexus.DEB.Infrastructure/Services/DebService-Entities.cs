@@ -21,9 +21,61 @@ namespace Nexus.DEB.Infrastructure.Services
 
         #region Requirements
 
-        public IQueryable<RequirementSummary> GetRequirementsForExportOrGrid(RequirementSummaryFilters? filters)
+        public IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters)
         {
             var query = _dbContext.RequirementSummaries.AsQueryable();
+
+            if (filters != null)
+            {
+                // Filter by StandardVersion (using navigation property)
+                if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
+                {
+                    var requirementIds = _dbContext.Set<Requirement>()
+                        .Where(r => r.StandardVersions.Any(sv => filters.StandardVersionIds.Contains(sv.EntityId)))
+                        .Select(r => r.EntityId);
+
+                    query = query.Where(r => requirementIds.Contains(r.EntityId));
+                }
+
+                // Filter by Scope (using navigation property)
+                if (filters.ScopeIds != null && filters.ScopeIds.Count > 0)
+                {
+                    var requirementIds = _dbContext.Set<Requirement>()
+                        .Where(r => r.Scopes.Any(s => filters.ScopeIds.Contains(s.EntityId)))
+                        .Select(r => r.EntityId);
+
+                    query = query.Where(r => requirementIds.Contains(r.EntityId));
+                }
+
+                if (filters.StatusIds != null && filters.StatusIds.Count > 0)
+                {
+                    query = query.Where(x => filters.StatusIds.Contains(x.StatusId));
+                }
+
+                // Text search on Title
+                if (!string.IsNullOrWhiteSpace(filters.SearchText))
+                {
+                    query = query.Where(r => r.Title.Contains(filters.SearchText));
+                }
+
+                // Date range filter
+                if (filters.ModifiedFrom.HasValue)
+                {
+                    query = query.Where(r => r.LastModifiedDate >= filters.ModifiedFrom.Value);
+                }
+
+                if (filters.ModifiedTo.HasValue)
+                {
+                    query = query.Where(r => r.LastModifiedDate <= filters.ModifiedTo.Value);
+                }
+            }
+
+            return query;
+        }
+
+        public IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters)
+        {
+            var query = _dbContext.RequirementExport.AsNoTracking();
 
             if (filters != null)
             {
@@ -101,7 +153,9 @@ namespace Nexus.DEB.Infrastructure.Services
         }
 
 
-        public IQueryable<ScopeSummary> GetScopesForExportOrGrid() => _dbContext.ScopeSummaries.AsNoTracking();
+        public IQueryable<ScopeSummary> GetScopesForGrid() => _dbContext.ScopeSummaries.AsNoTracking();
+
+        public IQueryable<ScopeExport> GetScopesForExport() => _dbContext.ScopeExport.AsNoTracking();
 
         #endregion Scopes
 
@@ -197,7 +251,7 @@ namespace Nexus.DEB.Infrastructure.Services
             return results.OrderBy(x => x.Value).ToList();
         }
 
-        public IQueryable<StandardVersionSummary> GetStandardVersionsForExportOrGrid(StandardVersionSummaryFilters? filters)
+        public IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters)
         {
             var query = _dbContext.StandardVersionSummaries.AsNoTracking();
 
@@ -227,6 +281,35 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
+        public IQueryable<StandardVersionExport> GetStandardVersionsForExport(StandardVersionSummaryFilters? filters)
+        {
+            var query = _dbContext.StandardVersionExport.AsNoTracking(); 
+
+            if (filters != null)
+            {
+                if (filters.StandardIds != null && filters.StandardIds.Count > 0)
+                {
+                    query = query.Where(x => filters.StandardIds.Contains(x.StandardId));
+                }
+
+                if (filters.StatusIds != null && filters.StatusIds.Count > 0)
+                {
+                    query = query.Where(x => filters.StatusIds.Contains(x.StatusId));
+                }
+
+                if (filters.EffectiveFromDate.HasValue)
+                {
+                    query = query.Where(r => r.EffectiveStartDate >= filters.EffectiveFromDate.Value);
+                }
+
+                if (filters.EffectiveToDate.HasValue)
+                {
+                    query = query.Where(r => r.EffectiveEndDate < filters.EffectiveToDate.Value.AddDays(1));
+                }
+            }
+
+            return query;
+        }
 
         #endregion StandardVersions
 
@@ -234,7 +317,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
         #region Tasks
 
-        public IQueryable<TaskSummary> GetTasksForExportOrGrid(TaskSummaryFilters? filters)
+        public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
         {
             var query = _dbContext.TaskSummaries.AsQueryable();
 
@@ -284,8 +367,60 @@ namespace Nexus.DEB.Infrastructure.Services
             }
 
             return query;
-
         }
+
+        public IQueryable<TaskExport> GetTasksForExport(TaskSummaryFilters? filters)
+        {
+            var query = _dbContext.TaskExport.AsNoTracking();
+
+            if (filters != null)
+            {
+                // Filter by StandardVersion (using navigation property)
+                if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
+                {
+                    var taskIds = _dbContext.Set<Domain.Models.Task>()
+                        .Where(t => t.Statement.Requirements.Any(r => r.StandardVersions.Any(sv => filters.StandardVersionIds.Contains(sv.EntityId))))
+                        .Select(t => t.EntityId);
+
+                    query = query.Where(t => taskIds.Contains(t.EntityId));
+                }
+
+                // Text search on Title
+                if (!string.IsNullOrWhiteSpace(filters.SearchText))
+                {
+                    query = query.Where(r => r.Title.Contains(filters.SearchText));
+                }
+
+                // Date range filter
+                if (filters.DueDateFrom.HasValue)
+                {
+                    query = query.Where(r => r.DueDate >= filters.DueDateFrom.Value);
+                }
+
+                if (filters.DueDateTo.HasValue)
+                {
+                    query = query.Where(r => r.DueDate <= filters.DueDateTo.Value);
+                }
+
+                if (filters.StatusIds != null && filters.StatusIds.Count > 0)
+                {
+                    query = query.Where(x => filters.StatusIds.Contains(x.StatusId));
+                }
+
+                if (filters.StatementId.HasValue)
+                {
+                    query = query.Where(x => x.StatementId == filters.StatementId.Value);
+                }
+
+                if (filters.OwnedByIds != null && filters.OwnedByIds.Count > 0)
+                {
+                    query = query.Where(x => filters.OwnedByIds.Contains(x.OwnedById));
+                }
+            }
+
+            return query;
+        }
+
         #endregion Tasks
     }
 }

@@ -176,4 +176,9 @@ app.UseAuthorization();
 app.MapGraphQL();
 app.MapExportEndpoints();
 
+if (app.Environment.IsDevelopment())
+{
+    app.MapTestDataEndpoints();
+}
+
 app.RunWithGraphQLCommands(args);

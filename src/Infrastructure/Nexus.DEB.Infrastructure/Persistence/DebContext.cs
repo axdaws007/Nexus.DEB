@@ -32,7 +32,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<Requirement> Requirements { get; set; }
         public DbSet<Scope> Scopes { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
-        public DbSet<Statement> Statement { get; set; }
+        public DbSet<Statement> Statements { get; set; }
         public DbSet<Domain.Models.Task> Tasks { get; set; }
 
         // Views
@@ -43,6 +43,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<RequirementSummary> RequirementSummaries { get; set; }
         public DbSet<RequirementExport> RequirementExport { get; set; }
         public DbSet<StatementSummary> StatementSummaries { get; set; }
+        public DbSet<StatementExport> StatementExport { get; set; }
         public DbSet<TaskSummary> TaskSummaries { get; set; }
         public DbSet<TaskExport> TaskExport { get; set; }
 

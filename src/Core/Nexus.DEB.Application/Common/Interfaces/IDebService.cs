@@ -2,6 +2,7 @@
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
+using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Application.Common.Interfaces
 {
@@ -18,6 +19,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<StandardVersion?> GetStandardVersionByIdAsync(Guid id, CancellationToken cancellationToken);
         IQueryable<StandardVersion> GetStandardVersions();
         IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters);
+        IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
         IQueryable<StandardVersionExport> GetStandardVersionsForExport(StandardVersionSummaryFilters? filters);
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);
         IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters);
@@ -43,5 +45,11 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<Guid?> GetWorkflowIdAsync(Guid moduleId, string entityType, CancellationToken cancellationToken);
 
         #endregion Generic (eventual Framework)
+
+        #region Other
+
+        Task SaveStatementsAndTasks(ICollection<Statement> statements, ICollection<Domain.Models.Task> tasks, CancellationToken cancellationToken);
+
+        #endregion Other
     }
 }

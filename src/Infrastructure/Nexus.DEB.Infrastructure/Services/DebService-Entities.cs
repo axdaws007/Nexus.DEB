@@ -122,12 +122,12 @@ namespace Nexus.DEB.Infrastructure.Services
                 }
             }
 
-            return query;
+            return query.OrderBy(x => x.SerialNumber);
         }
 
         public IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId)
         {
-            var query = _dbContext.Requirements.Include(x => x.StandardVersions).AsNoTracking()
+            var query = _dbContext.Requirements.Include(x => x.StandardVersions)
                 .Where(r => r.StandardVersions.Any(sv => sv.EntityId == standardVersionId) && r.IsRemoved == false)
                 .Select(r => r);
 
@@ -220,11 +220,70 @@ namespace Nexus.DEB.Infrastructure.Services
                     query = query.Where(x => filters.StatusIds.Contains(x.StatusId));
                 }
 
-                // TODO
-                // OwnedById filter
+                if (filters.OwnedByIds != null && filters.OwnedByIds.Count > 0)
+                {
+                    query = query.Where(x => filters.OwnedByIds.Contains(x.OwnedById));
+                }
             }
 
             return query;
+        }
+
+        public IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters)
+        {
+            var query = _dbContext.StatementExport.AsNoTracking();
+
+            if (filters != null)
+            {
+                // Filter by StandardVersion (using navigation property)
+                if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
+                {
+                    var statementIds = _dbContext.Set<Statement>()
+                        .Where(s => s.Requirements.Any(r => r.StandardVersions.Any(sv => filters.StandardVersionIds.Contains(sv.EntityId))))
+                        .Select(s => s.EntityId);
+
+                    query = query.Where(s => statementIds.Contains(s.EntityId));
+                }
+
+                // Filter by Scope (using navigation property)
+                if (filters.ScopeIds != null && filters.ScopeIds.Count > 0)
+                {
+                    var requirementIds = _dbContext.Set<Requirement>()
+                        .Where(r => r.Scopes.Any(s => filters.ScopeIds.Contains(s.EntityId)))
+                        .Select(r => r.EntityId);
+
+                    query = query.Where(r => requirementIds.Contains(r.EntityId));
+                }
+
+                // Text search on Title
+                if (!string.IsNullOrWhiteSpace(filters.SearchText))
+                {
+                    query = query.Where(r => r.Title.Contains(filters.SearchText));
+                }
+
+                // Date range filter
+                if (filters.ModifiedFrom.HasValue)
+                {
+                    query = query.Where(r => r.LastModifiedDate >= filters.ModifiedFrom.Value);
+                }
+
+                if (filters.ModifiedTo.HasValue)
+                {
+                    query = query.Where(r => r.LastModifiedDate <= filters.ModifiedTo.Value);
+                }
+
+                if (filters.StatusIds != null && filters.StatusIds.Count > 0)
+                {
+                    query = query.Where(x => filters.StatusIds.Contains(x.StatusId));
+                }
+
+                if (filters.OwnedByIds != null && filters.OwnedByIds.Count > 0)
+                {
+                    query = query.Where(x => filters.OwnedByIds.Contains(x.OwnedById));
+                }
+            }
+
+            return query.OrderBy(x => x.SerialNumber);
         }
 
         #endregion Statements
@@ -427,9 +486,22 @@ namespace Nexus.DEB.Infrastructure.Services
                 }
             }
 
-            return query;
+            return query.OrderBy(x => x.SerialNumber);
         }
 
         #endregion Tasks
+
+        // --------------------------------------------------------------------------------------------------------------
+
+        #region Other
+
+        public async System.Threading.Tasks.Task SaveStatementsAndTasks(ICollection<Statement> statements, ICollection<Domain.Models.Task> tasks, CancellationToken cancellationToken)
+        {
+            await _dbContext.Statements.AddRangeAsync(statements, cancellationToken);
+            await _dbContext.Tasks.AddRangeAsync(tasks, cancellationToken);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        #endregion
     }
 }

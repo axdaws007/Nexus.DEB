@@ -27,9 +27,22 @@ namespace Nexus.DEB.Application.Common.Interfaces
             Guid workflowId, 
             CancellationToken cancellationToken = default);
 
-        Task<bool> CreateWorkflowInstance(
+        Task<bool> CreateWorkflowInstanceAsync(
             Guid workflowID,
-            Guid entityIds);
+            Guid entityId,
+            CancellationToken cancellationToken = default);
+
+        Task<bool> ApproveStepAsync(
+            Guid workflowID,
+            Guid entityId,
+            int stepId,
+            int statusId,
+            int[] destinationActivityID,
+            string? comments = null,
+            Guid? onBehalfOfId = null,
+            string? password = null,
+            Guid[]? defaultOwnerIDs = null,
+            CancellationToken cancellationToken = default);
 
         //// Existing execute transition method...
         //Task<Result<WorkflowTransitionResult>> ExecuteTransitionAsync(

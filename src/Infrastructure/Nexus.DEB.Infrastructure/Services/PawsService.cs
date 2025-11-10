@@ -112,7 +112,7 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 var response = await SendAuthenticatedRequestAsync<ICollection<PendingActivity>>(
                 HttpMethod.Get,
-                "api/PAWSClient/GetPendingActivities",
+                $"api/PAWSClient/GetPendingActivities?entityID={entityId}&workflowID={workflowId}",
                 operationName: $"GetPendingActivities for {entityId} entity and {workflowId} workflow");
 
                 return response;
@@ -176,7 +176,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
         }
 
-        public async Task<bool> CreateWorkflowInstance(Guid workflowID, Guid entityId)
+        public async Task<bool> CreateWorkflowInstanceAsync(Guid workflowID, Guid entityId, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -197,13 +197,66 @@ namespace Nexus.DEB.Infrastructure.Services
                     operationName: $"CreateWorkflowInstance for {workflowID} workflowId and {entityId} entityId",
                     content: content);
 
-                //if (response?.Statuses == null)
-                //{
-                //    Logger.LogWarning("API returned null response for batch status request");
-                //    return entityIds.ToDictionary(id => id, id => (string?)null);
-                //}
-
                 return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error fetching batch workflow statuses");
+                throw;
+            }
+        }
+
+        public async Task<bool> ApproveStepAsync(
+            Guid workflowID, 
+            Guid entityId, 
+            int stepId,
+            int statusId,
+            int[] destinationActivityID,
+            string? comments = null,
+            Guid? onBehalfOfId = null,
+            string? password = null,
+            Guid[]? defaultOwnerIDs = null, 
+            CancellationToken cancellationToken = default)
+        {
+            if (defaultOwnerIDs == null)
+            {
+                defaultOwnerIDs = new Guid[1];
+                defaultOwnerIDs[0] = Guid.Empty;
+            }
+
+            if (comments == null) comments = string.Empty;
+            if (password == null) password = string.Empty;
+            if (onBehalfOfId == null) onBehalfOfId = Guid.Empty;
+
+            try
+            {
+                // Create request DTO
+                var request = new ApproveStepRequest
+                {
+                    WorkflowID = workflowID,
+                    EntityID = entityId,
+                    Comments = comments,
+                    DefaultOwnerID = defaultOwnerIDs,
+                    DestinationActivityID = destinationActivityID,
+                    OnBehalfOfID = onBehalfOfId,
+                    Password = password,
+                    SelectedStateID = statusId,
+                    StepID = stepId
+                };
+
+                // Create JSON content (JsonOptions from base class)
+                var content = JsonContent.Create(request, options: JsonOptions);
+
+                // Use base class method - it gets the auth cookie from HttpContext automatically!
+                var response = await SendAuthenticatedRequestAsync<ApproveStepResponse>(
+                    HttpMethod.Post,
+                    "api/PAWSClient/ApproveStep",
+                    operationName: $"ApproveStep for {workflowID} workflowId and {entityId} entityId",
+                    content: content);
+
+                if (response == null) return false;
+
+                return response.Success;
             }
             catch (Exception ex)
             {

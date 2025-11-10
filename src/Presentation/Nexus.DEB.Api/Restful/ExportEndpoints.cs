@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Api.Restful.Maps;
 using Nexus.DEB.Api.Restful.Models;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
@@ -47,7 +48,15 @@ namespace Nexus.DEB.Api.Restful
                 .WithName("ExportRequirementsAsCsv")
                 .WithSummary("Export requirements as CSV file")
                 .Produces<FileResult>(StatusCodes.Status200OK, contentType: "text/csv")
-                .Produces(StatusCodes.Status401Unauthorized);        }
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            exportGroup.MapPost("/statements-csv", ExportStatementsAsCsv)
+                .RequireAuthorization()
+                .WithName("ExportStatementsAsCsv")
+                .WithSummary("Export statements as CSV file")
+                .Produces<FileResult>(StatusCodes.Status200OK, contentType: "text/csv")
+                .Produces(StatusCodes.Status401Unauthorized);
+        }
 
         private static async Task<IResult> ExportStandardVersionsAsCsv(
             [FromBody] StandardVersionSummaryFilters? filters,
@@ -104,6 +113,21 @@ namespace Nexus.DEB.Api.Restful
                 getDataQuery: () => debService.GetRequirementsForExport(filters),
                 fileNamePrefix: "requirements",
                 registerClassMap: csv => csv.Context.RegisterClassMap<RequirementExportMap>(),
+                logger: logger,
+                cancellationToken: cancellationToken);
+        }
+
+        private static async Task<IResult> ExportStatementsAsCsv(
+            [FromBody] StatementSummaryFilters? filters,
+            [FromServices] IDebService debService,
+            [FromServices] ILogger<Program> logger,
+            CancellationToken cancellationToken)
+        {
+            return await ExportToCsvAsync(
+                entityName: "Statements",
+                getDataQuery: () => debService.GetStatementsForExport(filters),
+                fileNamePrefix: "statements",
+                registerClassMap: csv => csv.Context.RegisterClassMap<StatementExportMap>(),
                 logger: logger,
                 cancellationToken: cancellationToken);
         }

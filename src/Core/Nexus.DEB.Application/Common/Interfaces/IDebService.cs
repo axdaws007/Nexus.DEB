@@ -22,6 +22,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
         IQueryable<StandardVersionExport> GetStandardVersionsForExport(StandardVersionSummaryFilters? filters);
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);
+        Task<StatementDetail?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default);
         IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters);
         IQueryable<TaskExport> GetTasksForExport(TaskSummaryFilters? filters);
 
@@ -43,6 +44,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         #region Generic (eventual Framework)
 
         Task<Guid?> GetWorkflowIdAsync(Guid moduleId, string entityType, CancellationToken cancellationToken);
+        Task<PawsState?> GetWorkflowStatusByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
         #endregion Generic (eventual Framework)
 

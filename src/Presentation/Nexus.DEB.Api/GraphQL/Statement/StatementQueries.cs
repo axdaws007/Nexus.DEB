@@ -17,5 +17,13 @@ namespace Nexus.DEB.Api.GraphQL
             IDebService debService,
             IResolverContext resolverContext)
             => debService.GetStatementsForGrid(filters);
+
+        [Authorize]
+        public static async Task<StatementDetail?> GetStatementById(
+            Guid id,
+            IDebService debService,
+            IResolverContext resolverContext,
+            CancellationToken cancellationToken)
+            => await debService.GetStatementByIdAsync(id, cancellationToken);
     }
 }

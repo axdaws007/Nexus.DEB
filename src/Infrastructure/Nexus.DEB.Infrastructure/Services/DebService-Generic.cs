@@ -1,10 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
     public partial class DebService
     {
-        public async Task<Guid?> GetWorkflowIdAsync(Guid moduleId, string entityType, CancellationToken cancellationToken)
+        public async Task<Guid?> GetWorkflowIdAsync(
+            Guid moduleId, 
+            string entityType, 
+            CancellationToken cancellationToken = default)
         {
             var settingName = $"PawsWorkFlowID:{entityType}";
 
@@ -16,5 +21,10 @@ namespace Nexus.DEB.Infrastructure.Services
 
             return Guid.TryParse(value, out var result) ? result : (Guid?)null;
         }
+
+        public async Task<PawsState?> GetWorkflowStatusByIdAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
+            => await _dbContext.PawsStates.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
     }
 }

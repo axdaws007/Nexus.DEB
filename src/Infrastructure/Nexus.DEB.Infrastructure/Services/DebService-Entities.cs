@@ -286,6 +286,10 @@ namespace Nexus.DEB.Infrastructure.Services
             return query.OrderBy(x => x.SerialNumber);
         }
 
+        public Task<StatementDetail?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default)
+            => _dbContext.StatementDetails.AsNoTracking().FirstOrDefaultAsync(x => x.EntityId == id);
+
+
         #endregion Statements
 
         // --------------------------------------------------------------------------------------------------------------

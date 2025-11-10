@@ -18,7 +18,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public async Task<ICollection<FilterItem>> GetStandardsLookupAsync(CancellationToken cancellationToken)
         {
-            return await (from s in _dbContext.Standards
+            return await (from s in _dbContext.Standards.AsNoTracking()
                           orderby s.Ordinal
                           select new FilterItem()
                           {
@@ -41,7 +41,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public async Task<ICollection<FilterItem>> GetTaskTypesLookupAsync(CancellationToken cancellationToken)
         {
-            return await (from s in _dbContext.TaskTypes
+            return await (from s in _dbContext.TaskTypes.AsNoTracking()
                           orderby s.Ordinal
                           select new FilterItem()
                           {

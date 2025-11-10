@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
@@ -44,8 +45,10 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<RequirementExport> RequirementExport { get; set; }
         public DbSet<StatementSummary> StatementSummaries { get; set; }
         public DbSet<StatementExport> StatementExport { get; set; }
+        public DbSet<StatementDetail> StatementDetails { get; set; }
         public DbSet<TaskSummary> TaskSummaries { get; set; }
         public DbSet<TaskExport> TaskExport { get; set; }
+        public DbSet<PawsState> PawsStates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

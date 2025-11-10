@@ -4,6 +4,7 @@ using Nexus.DEB.Api.GraphQL.Paws.Models;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models.Common;
+using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL.Paws
 {
@@ -35,6 +36,14 @@ namespace Nexus.DEB.Api.GraphQL.Paws
                 }).ToList()
             };
         }
+
+        [Authorize]
+        public static async Task<PawsState?> GetWorkflowStatusByIdAsync(
+            Guid id,
+            IDebService debService,
+            CancellationToken cancellationToken)
+            => await debService.GetWorkflowStatusByIdAsync(id, cancellationToken);
+
 
         [Authorize]
         public static async Task<ICollection<FilterItem>?> GetStandardVersionStatusLookup(

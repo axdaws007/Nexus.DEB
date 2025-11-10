@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20251110155630_AddIndexesToEntityHead")]
+    partial class AddIndexesToEntityHead
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,7 +33,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<short?>("CommentTypeId")
+                    b.Property<short>("CommentTypeId")
                         .HasColumnType("smallint");
 
                     b.Property<Guid?>("CreatedByPostId")
@@ -1271,7 +1274,8 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.HasOne("Nexus.DEB.Domain.Models.CommentType", "CommentType")
                         .WithMany()
                         .HasForeignKey("CommentTypeId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("CommentType");
                 });

@@ -33,5 +33,16 @@ namespace Nexus.DEB.Infrastructure.Services
                         .Where(x => x.EntityId == entityId)
                         .OrderByDescending(x => x.CreatedDate)
                         .ToListAsync(cancellationToken); 
+
+        public async Task<CommentDetail?> CreateCommentAsync(
+            Comment comment,
+            CancellationToken cancellationToken)
+        {
+            await _dbContext.Comments.AddAsync(comment);
+            await _dbContext.SaveChangesAsync();
+
+            return await _dbContext.CommentDetails.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == comment.Id);
+        }
     }
 }

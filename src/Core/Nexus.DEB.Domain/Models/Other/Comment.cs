@@ -8,8 +8,8 @@
         public DateTime CreatedDate { get; set; }
         public Guid? CreatedByPostId { get; set; }
         public Guid? CreatedByUserId { get; set; }
-        public short CommentTypeId { get; set; }
-        public virtual CommentType CommentType { get; set; }
+        public short? CommentTypeId { get; set; }
+        public virtual CommentType? CommentType { get; set; }
         public string? CreatedByUserName { get; set; } = string.Empty;
         public string? CreatedByPostTitle { get; set; } = string.Empty;
     }

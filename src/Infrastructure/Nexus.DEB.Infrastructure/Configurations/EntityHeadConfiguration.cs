@@ -11,8 +11,12 @@ namespace Nexus.DEB.Infrastructure.Configurations
             builder.ToTable("EntityHead", "common");
 
             builder.HasKey(x => x.EntityId);
+            builder.HasIndex(x => x.EntityTypeTitle);
+            builder.HasIndex(x => x.CreatedDate);
+            builder.HasIndex(x => x.LastModifiedDate);
+            builder.HasIndex(x => x.OwnedById);
 
-            builder.Property(x => x.EntityId);
+            builder.Property(x => x.EntityTypeTitle).HasMaxLength(50);
             builder.Property(x => x.SerialNumber).HasMaxLength(150);
         }
     }

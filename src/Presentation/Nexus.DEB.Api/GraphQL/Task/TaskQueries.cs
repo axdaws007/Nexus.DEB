@@ -30,7 +30,7 @@ namespace Nexus.DEB.Api.GraphQL
                 TaskTypeIds = filters.TaskTypeIds
             };
 
-            if (!string.IsNullOrEmpty(filters.OwnedBy))
+            if (!string.IsNullOrEmpty(filters?.OwnedBy))
             {
                 var posts = cisService.GetPostsBySearchTextAsync(filters.OwnedBy).GetAwaiter().GetResult();
 

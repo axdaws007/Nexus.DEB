@@ -9,6 +9,7 @@ namespace Nexus.DEB.Domain.Models
         public string Title { get; set; } = string.Empty;
         public DateTime LastModifiedDate { get; set; }
         public Guid OwnedById { get; set; }
+        public string? OwnedBy { get; set; }
         public string RequirementSerialNumbers { get; set; } = string.Empty;
         public int? StatusId { get; set; }
         public string? Status { get; set; }

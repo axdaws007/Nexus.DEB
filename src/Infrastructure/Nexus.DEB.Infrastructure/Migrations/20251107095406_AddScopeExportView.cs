@@ -27,7 +27,8 @@ namespace Nexus.DEB.Infrastructure.Migrations
 				   FROM [deb].[StandardVersionRequirement] svr
 				   INNER JOIN [deb].[Requirement] r ON svr.[RequirementId] = r.[EntityId]
 				   INNER JOIN [deb].[ScopeRequirement] sr ON r.[EntityId] = sr.RequirementId AND sr.[ScopeId] = sc.[EntityID]
-				  ) AS StandardVersionCount
+				  ) AS StandardVersionCount,
+				  sc.TargetImplementationDate
                 FROM [deb].[Scope] sc
                 INNER JOIN [common].[EntityHead] eh on sc.[EntityId] = eh.[EntityId]
 				LEFT JOIN [common].[vwPawsState] vw ON eh.[EntityID] = vw.[EntityID]

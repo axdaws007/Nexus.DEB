@@ -33,6 +33,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         #region Lookup methods
 
+        IQueryable<CommentType> GetCommentTypes();
         IQueryable<Standard> GetStandards();
         Task<ICollection<FilterItem>> GetStandardsLookupAsync(CancellationToken cancellationToken);
 
@@ -45,6 +46,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task<Guid?> GetWorkflowIdAsync(Guid moduleId, string entityType, CancellationToken cancellationToken);
         Task<PawsState?> GetWorkflowStatusByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+        Task<ICollection<CommentDetail>> GetCommentsForEntityAsync(Guid entityId, CancellationToken cancellationToken);
 
         #endregion Generic (eventual Framework)
 

@@ -6,6 +6,16 @@ namespace Nexus.DEB.Infrastructure.Services
 {
     public partial class DebService
     {
+        public IQueryable<CommentType> GetCommentTypes()
+        {
+            var query = from s in _dbContext.CommentTypes
+                        where s.IsEnabled == true
+                        orderby s.Ordinal
+                        select s;
+
+            return query;
+        }
+
         public IQueryable<Standard> GetStandards()
         {
             var query = from s in _dbContext.Standards

@@ -15,6 +15,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         }
 
         // Lookups
+        public DbSet<CommentType> CommentTypes { get; set; }
         public DbSet<RequirementCategory> RequirementCategories { get; set; }
         public DbSet<RequirementType> RequirementTypes { get; set; }
         public DbSet<Standard> Standards { get; set; }
@@ -27,6 +28,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<ModuleSetting> ModuleSettings { get; set; }
         public DbSet<Section> Sections { get; set; }
         public DbSet<SettingsType> SettingsTypes { get; set; }
+        public DbSet<Comment> Comments { get; set; }
 
         // Entities
         public DbSet<EntityHead> EntityHeads { get; set; }
@@ -49,6 +51,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<TaskSummary> TaskSummaries { get; set; }
         public DbSet<TaskExport> TaskExport { get; set; }
         public DbSet<PawsState> PawsStates { get; set; }
+        public DbSet<CommentDetail> CommentDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -10,6 +10,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
     {
         #region Entity methods 
         Task<EntityHead?> GetEntityHeadAsync(Guid id, CancellationToken cancellationToken);
+        Task<EntityHeadDetail?> GetEntityHeadDetailAsync(Guid id, CancellationToken cancellationToken);
         IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters);
         IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters);
         IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId);

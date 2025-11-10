@@ -15,6 +15,11 @@ namespace Nexus.DEB.Infrastructure.Services
             return await _dbContext.EntityHeads.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
         }
 
+        public async Task<EntityHeadDetail?> GetEntityHeadDetailAsync(Guid id, CancellationToken cancellationToken)
+            => await _dbContext.EntityHeadDetails
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
+            
         #endregion
 
         // --------------------------------------------------------------------------------------------------------------

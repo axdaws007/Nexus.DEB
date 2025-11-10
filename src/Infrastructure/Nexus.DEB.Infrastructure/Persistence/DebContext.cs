@@ -39,6 +39,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<Domain.Models.Task> Tasks { get; set; }
 
         // Views
+        public DbSet<EntityHeadDetail> EntityHeadDetails { get; set; }
         public DbSet<StandardVersionSummary> StandardVersionSummaries { get; set; }
         public DbSet<StandardVersionExport> StandardVersionExport { get; set; }
         public DbSet<ScopeSummary> ScopeSummaries { get; set; }

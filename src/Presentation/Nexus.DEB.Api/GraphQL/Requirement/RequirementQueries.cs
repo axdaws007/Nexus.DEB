@@ -1,7 +1,6 @@
 ﻿using HotChocolate.Authorization;
-using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
-using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Application.Common.Models;
 
 namespace Nexus.DEB.Api.GraphQL
 {

@@ -107,7 +107,7 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 IsPersistent = rememberMe,
                 ExpiresUtc = expiresUtc,
-                AllowRefresh = true
+                AllowRefresh = true,
             };
 
             // Create authentication ticket

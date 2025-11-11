@@ -28,7 +28,34 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters)
         {
-            var query = _dbContext.RequirementSummaries.AsQueryable();
+            var query = _dbContext.Requirements
+                .Include(r => r.SectionRequirements)
+                    .ThenInclude(sr => sr.Section)
+                .Select(r => new RequirementSummary
+                {
+                    EntityId = r.EntityId,
+                    SerialNumber = r.SerialNumber,
+                    Title = r.Title,
+                    LastModifiedDate = r.LastModifiedDate,
+                    Sections = r.SectionRequirements
+                        .Where(sr => sr.IsEnabled) // Only include enabled sections
+                        .OrderBy(sr => sr.Ordinal)  // Maintain the order
+                        .Select(sr => new SectionItem
+                        {
+                            Id = sr.Section.Id,
+                            Reference = sr.Section.Reference ?? string.Empty
+                        })
+                        .ToList(),
+                    StatusId = _dbContext.PawsStates
+                        .Where(ps => ps.EntityId == r.EntityId)
+                        .Select(ps => ps.StatusId)
+                        .FirstOrDefault(),
+                    Status = _dbContext.PawsStates
+                        .Where(ps => ps.EntityId == r.EntityId)
+                        .Select(ps => ps.Status)
+                        .FirstOrDefault()
+                })
+                .AsNoTracking();
 
             if (filters != null)
             {

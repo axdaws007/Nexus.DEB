@@ -3,12 +3,9 @@ using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Api.Restful.Maps;
-using Nexus.DEB.Api.Restful.Models;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
-using Nexus.DEB.Domain.Models;
-using Nexus.DEB.Domain.Models.Common;
 using System.Globalization;
 using System.Text;
 

@@ -14,7 +14,6 @@ namespace Nexus.DEB.Domain.Models
         public virtual RequirementType RequirementType { get; set; }
         public int? ComplianceWeighting { get; set; }
         public virtual ICollection<SectionRequirement> SectionRequirements { get; set; }
-
         public virtual ICollection<StandardVersion> StandardVersions { get; set; }
         public virtual ICollection<Statement> Statements { get; set; }
         public virtual ICollection<Scope> Scopes { get; set; }

@@ -40,7 +40,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     Sections = r.SectionRequirements
                         .Where(sr => sr.IsEnabled) // Only include enabled sections
                         .OrderBy(sr => sr.Ordinal)  // Maintain the order
-                        .Select(sr => new SectionItem
+                        .Select(sr => new ChildItem
                         {
                             Id = sr.Section.Id,
                             Reference = sr.Section.Reference ?? string.Empty
@@ -206,8 +206,38 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters)
         {
-            var query = _dbContext.StatementSummaries.AsQueryable();
+            var query = _dbContext.Statements
+                .Select(s => new StatementSummary
+                {
+                    EntityId = s.EntityId,
+                    SerialNumber = s.SerialNumber,
+                    Title = s.Title,
+                    LastModifiedDate = s.LastModifiedDate,
+                    OwnedById = s.OwnedById,
+                    Requirements = s.Requirements
+                        .OrderBy(r => r.SerialNumber)
+                        .Select(r => new ChildItem
+                        {
+                            Id = r.EntityId,
+                            Reference = r.SerialNumber ?? string.Empty
+                        })
+                        .ToList(),
+                    StatusId = _dbContext.PawsStates
+                        .Where(ps => ps.EntityId == s.EntityId)
+                        .Select(ps => ps.StatusId)
+                        .FirstOrDefault(),
+                    Status = _dbContext.PawsStates
+                        .Where(ps => ps.EntityId == s.EntityId)
+                        .Select(ps => ps.Status)
+                        .FirstOrDefault(),
+                    OwnedBy = _dbContext.ViewPosts
+                        .Where(p => p.Id == s.OwnedById)
+                        .Select(p => p.Title)
+                        .FirstOrDefault()
+                })
+                .AsNoTracking();
 
+            // Apply filters
             if (filters != null)
             {
                 // Filter by StandardVersion (using navigation property)
@@ -223,28 +253,28 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Filter by Scope (using navigation property)
                 if (filters.ScopeIds != null && filters.ScopeIds.Count > 0)
                 {
-                    var requirementIds = _dbContext.Set<Requirement>()
-                        .Where(r => r.Scopes.Any(s => filters.ScopeIds.Contains(s.EntityId)))
-                        .Select(r => r.EntityId);
+                    var statementIds = _dbContext.Set<Statement>()
+                        .Where(s => s.Requirements.Any(r => r.Scopes.Any(sc => filters.ScopeIds.Contains(sc.EntityId))))
+                        .Select(s => s.EntityId);
 
-                    query = query.Where(r => requirementIds.Contains(r.EntityId));
+                    query = query.Where(s => statementIds.Contains(s.EntityId));
                 }
 
                 // Text search on Title
                 if (!string.IsNullOrWhiteSpace(filters.SearchText))
                 {
-                    query = query.Where(r => r.Title.Contains(filters.SearchText));
+                    query = query.Where(s => s.Title.Contains(filters.SearchText));
                 }
 
                 // Date range filter
                 if (filters.ModifiedFrom.HasValue)
                 {
-                    query = query.Where(r => r.LastModifiedDate >= filters.ModifiedFrom.Value);
+                    query = query.Where(s => s.LastModifiedDate >= filters.ModifiedFrom.Value);
                 }
 
                 if (filters.ModifiedTo.HasValue)
                 {
-                    query = query.Where(r => r.LastModifiedDate <= filters.ModifiedTo.Value);
+                    query = query.Where(s => s.LastModifiedDate <= filters.ModifiedTo.Value);
                 }
 
                 if (filters.StatusIds != null && filters.StatusIds.Count > 0)
@@ -260,7 +290,6 @@ namespace Nexus.DEB.Infrastructure.Services
 
             return query;
         }
-
         public IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters)
         {
             var query = _dbContext.StatementExport.AsNoTracking();

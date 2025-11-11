@@ -1,8 +1,8 @@
 ﻿using Nexus.DEB.Domain.Interfaces;
 
-namespace Nexus.DEB.Domain.Models
+namespace Nexus.DEB.Application.Common.Models
 {
-    public class StatementSummary: IEntity, IOwnedBy
+    public class StatementSummary : IEntity, IOwnedBy
     {
         public Guid EntityId { get; set; }
         public string SerialNumber { get; set; } = string.Empty;
@@ -10,7 +10,7 @@ namespace Nexus.DEB.Domain.Models
         public DateTime LastModifiedDate { get; set; }
         public Guid OwnedById { get; set; }
         public string? OwnedBy { get; set; }
-        public string RequirementSerialNumbers { get; set; } = string.Empty;
+        public ICollection<ChildItem> Requirements { get; set; } = new List<ChildItem>();
         public int? StatusId { get; set; }
         public string? Status { get; set; }
     }

@@ -44,15 +44,14 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<StandardVersionExport> StandardVersionExport { get; set; }
         public DbSet<ScopeSummary> ScopeSummaries { get; set; }
         public DbSet<ScopeExport> ScopeExport { get; set; }
-//        public DbSet<RequirementSummary> RequirementSummaries { get; set; }
         public DbSet<RequirementExport> RequirementExport { get; set; }
-        public DbSet<StatementSummary> StatementSummaries { get; set; }
         public DbSet<StatementExport> StatementExport { get; set; }
         public DbSet<StatementDetail> StatementDetails { get; set; }
         public DbSet<TaskSummary> TaskSummaries { get; set; }
         public DbSet<TaskExport> TaskExport { get; set; }
         public DbSet<PawsState> PawsStates { get; set; }
         public DbSet<CommentDetail> CommentDetails { get; set; }
+        public DbSet<ViewPost> ViewPosts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

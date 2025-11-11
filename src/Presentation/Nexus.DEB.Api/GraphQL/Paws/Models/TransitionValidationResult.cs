@@ -1,6 +1,6 @@
 ﻿using Nexus.DEB.Application.Common.Models;
 
-namespace Nexus.DEB.Api.GraphQL.Paws.Models
+namespace Nexus.DEB.Api.GraphQL
 {
     public class TransitionValidationResult
     {

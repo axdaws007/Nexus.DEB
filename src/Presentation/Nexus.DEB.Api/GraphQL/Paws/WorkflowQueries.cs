@@ -1,10 +1,9 @@
 ﻿using HotChocolate.Authorization;
-using Nexus.DEB.Application.Common.Models.Filters;
-using Nexus.DEB.Api.GraphQL.Paws.Models;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
-using Nexus.DEB.Domain.Models.Common;
+using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Domain.Models.Common;
 
 namespace Nexus.DEB.Api.GraphQL.Paws
 {

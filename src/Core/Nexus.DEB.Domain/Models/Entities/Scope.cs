@@ -6,5 +6,7 @@ namespace Nexus.DEB.Domain.Models
     {
         public DateTime? TargetImplementationDate { get; set; }
         public virtual ICollection<Requirement> Requirements { get; set; }
+        public virtual ICollection<StatementRequirementScope> StatementsRequirementsScopes { get; set; }
+
     }
 }

@@ -11,8 +11,8 @@ namespace Nexus.DEB.Api.GraphQL
         [UseOffsetPaging]
         [UseSorting]
         public static IQueryable<RequirementSummary> GetRequirementsForGrid(
-    RequirementSummaryFilters? filters,
-    IDebService debService)
+            RequirementSummaryFilters? filters,
+            IDebService debService)
         {
             var f = filters is null
                 ? new Application.Common.Models.Filters.RequirementSummaryFilters()

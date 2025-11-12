@@ -22,7 +22,8 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<TaskType> TaskTypes { get; set; }
 
         // Linking
-        DbSet<SectionRequirement> SectionRequirements { get; set; }
+        public DbSet<SectionRequirement> SectionRequirements { get; set; }
+        public DbSet<StatementRequirementScope> StatementsRequirementsScopes { get; set; }
 
         // Other
         public DbSet<ModuleSetting> ModuleSettings { get; set; }

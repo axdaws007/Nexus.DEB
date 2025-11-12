@@ -9,6 +9,7 @@ namespace Nexus.DEB.Domain.Models
         public Guid ScopeID { get; set; }
         public virtual Scope Scope { get; set; }
 
+        public virtual ICollection<StatementRequirementScope> StatementsRequirementsScopes { get; set; }
         public virtual ICollection<Requirement> Requirements { get; set; }
         public virtual ICollection<Task> Tasks { get; set; }
     }

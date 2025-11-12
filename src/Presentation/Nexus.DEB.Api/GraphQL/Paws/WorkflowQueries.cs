@@ -1,4 +1,5 @@
 ﻿using HotChocolate.Authorization;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
@@ -118,6 +119,38 @@ namespace Nexus.DEB.Api.GraphQL.Paws
             }).ToList();
 
             return items;
+        }
+
+        [Authorize]
+        public static async Task<WorkflowHistory?> GetWorkflowHistoryAsync(
+            Guid entityId,
+            IDebService debService,
+            IPawsService pawsService,
+            IConfiguration configuration,
+            CancellationToken cancellationToken)
+        {
+            var moduleIdString = configuration["Modules:DEB"] ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");
+
+            if (!Guid.TryParse(moduleIdString, out var moduleId))
+            {
+                throw new InvalidOperationException("Modules:DEB must be a valid GUID");
+            }
+
+            var entity = await debService.GetEntityHeadAsync(entityId, cancellationToken);
+
+            if (entity == null)
+            {
+                throw new InvalidOperationException("EntityID could not be identified");
+            }
+
+            var workflowId = await debService.GetWorkflowIdAsync(moduleId, entity.EntityTypeTitle, cancellationToken);
+
+            if (workflowId.HasValue == false)
+            {
+                throw new InvalidOperationException("WorkflowID could not be identified");
+            }
+
+            return await pawsService.GetWorkflowHistoryAsync(workflowId.Value, entityId, cancellationToken);
         }
 
     }

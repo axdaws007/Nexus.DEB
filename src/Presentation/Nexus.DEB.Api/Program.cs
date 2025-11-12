@@ -175,6 +175,7 @@ app.UseAuthorization();
 
 app.MapGraphQL();
 app.MapExportEndpoints();
+app.MapWorkflowDiagramEndpoints();
 
 if (app.Environment.IsDevelopment())
 {

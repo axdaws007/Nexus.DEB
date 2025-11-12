@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -207,21 +208,21 @@ namespace Nexus.DEB.Infrastructure.Services
         }
 
         public async Task<bool> ApproveStepAsync(
-            Guid workflowID, 
+            Guid workflowId, 
             Guid entityId, 
             int stepId,
             int statusId,
-            int[] destinationActivityID,
+            int[] destinationActivityId,
             string? comments = null,
             Guid? onBehalfOfId = null,
             string? password = null,
-            Guid[]? defaultOwnerIDs = null, 
+            Guid[]? defaultOwnerIds = null, 
             CancellationToken cancellationToken = default)
         {
-            if (defaultOwnerIDs == null)
+            if (defaultOwnerIds == null)
             {
-                defaultOwnerIDs = new Guid[1];
-                defaultOwnerIDs[0] = Guid.Empty;
+                defaultOwnerIds = new Guid[1];
+                defaultOwnerIds[0] = Guid.Empty;
             }
 
             if (comments == null) comments = string.Empty;
@@ -233,11 +234,11 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Create request DTO
                 var request = new ApproveStepRequest
                 {
-                    WorkflowID = workflowID,
+                    WorkflowID = workflowId,
                     EntityID = entityId,
                     Comments = comments,
-                    DefaultOwnerID = defaultOwnerIDs,
-                    DestinationActivityID = destinationActivityID,
+                    DefaultOwnerID = defaultOwnerIds,
+                    DestinationActivityID = destinationActivityId,
                     OnBehalfOfID = onBehalfOfId,
                     Password = password,
                     SelectedStateID = statusId,
@@ -251,7 +252,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 var response = await SendAuthenticatedRequestAsync<ApproveStepResponse>(
                     HttpMethod.Post,
                     "api/PAWSClient/ApproveStep",
-                    operationName: $"ApproveStep for {workflowID} workflowId and {entityId} entityId",
+                    operationName: $"ApproveStep for {workflowId} workflowId and {entityId} entityId",
                     content: content);
 
                 if (response == null) return false;
@@ -264,5 +265,136 @@ namespace Nexus.DEB.Infrastructure.Services
                 throw;
             }
         }
+
+        public async Task<WorkflowHistory>? GetWorkflowHistoryAsync(
+            Guid workflowId,
+            Guid entityId,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var response = await SendAuthenticatedRequestAsync<WorkflowHistory>(
+                HttpMethod.Get,
+                $"api/PAWSClient/GetHistory?entityID={entityId}&workflowID={workflowId}",
+                operationName: $"GetHistory for {entityId} entity and {workflowId} workflow");
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error fetching workflow history");
+                throw;
+            }
+        }
+
+        public async Task<string?> GetWorkflowDiagramHtmlAsync(Guid workflowId, Guid entityId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var requestUri = $"PAWSDiagramViewer/RenderPAWSDiagramViewer?ProcessTemplateID={workflowId}&EntityID={entityId}";
+
+                Logger.LogInformation("Getting workflow diagram HTML for entity {EntityId}", entityId);
+
+                var request = CreateAuthenticatedRequest(HttpMethod.Get, requestUri);
+                var response = await HttpClient.SendAsync(request);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    Logger.LogWarning("Workflow diagram not found for entity {EntityId}", entityId);
+                    return null;
+                }
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+                    response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    Logger.LogWarning("Access denied to workflow diagram for entity {EntityId}: {StatusCode}",
+                        entityId, (int)response.StatusCode);
+                    return null;
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                var html = await response.Content.ReadAsStringAsync();
+
+                // Rewrite image src URLs to point to our BFF proxy instead of the legacy API
+                html = RewriteImageUrls(html);
+
+                Logger.LogInformation("Successfully retrieved workflow diagram HTML for entity {EntityId} ({Length} chars)",
+                    entityId, html.Length);
+
+                return html;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error retrieving workflow diagram HTML for entity {EntityId}", entityId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Gets the actual workflow diagram image from PAWS API.
+        /// </summary>
+        public async Task<byte[]?> GetWorkflowDiagramImageAsync(string cacheKey, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var requestUri = $"PAWSDiagramViewer/GetCachedPAWSDiagram/{cacheKey}";
+
+                Logger.LogInformation("Getting workflow diagram image for cache key {CacheKey}", cacheKey);
+
+                var request = CreateAuthenticatedRequest(HttpMethod.Get, requestUri);
+                var response = await HttpClient.SendAsync(request);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    Logger.LogWarning("Workflow diagram image not found for cache key {CacheKey}", cacheKey);
+                    return null;
+                }
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+                    response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    Logger.LogWarning("Access denied to workflow diagram image for cache key {CacheKey}: {StatusCode}",
+                        cacheKey, (int)response.StatusCode);
+                    return null;
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                var imageBytes = await response.Content.ReadAsByteArrayAsync();
+
+                Logger.LogInformation("Successfully retrieved workflow diagram image for cache key {CacheKey} ({Size} bytes)",
+                    cacheKey, imageBytes.Length);
+
+                return imageBytes;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error retrieving workflow diagram image for cache key {CacheKey}", cacheKey);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Rewrites image src URLs in the HTML to point to our BFF proxy.
+        /// Example: /Nexus.PAWS.WebAPI/PAWSDiagramViewer/GetCachedPAWSDiagram/abc123?t=123456
+        /// Becomes: /api/workflow-diagrams/images/abc123?t=123456
+        /// </summary>
+        private string RewriteImageUrls(string html)
+        {
+            // Pattern to match the PAWS API image URLs
+            var pattern = @"src=""(/Nexus\.PAWS\.WebAPI)?/PAWSDiagramViewer/GetCachedPAWSDiagram/([^""?]+)(\?[^""]*)?""";
+
+            // Replace with our BFF proxy URL
+            var rewritten = Regex.Replace(html, pattern, match =>
+            {
+                var cacheKey = match.Groups[2].Value;
+                var queryString = match.Groups[3].Value;
+                return $@"src=""/api/workflow-diagrams/images/{cacheKey}{queryString}""";
+            });
+
+            return rewritten;
+        }
     }
+
 }

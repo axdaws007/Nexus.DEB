@@ -33,20 +33,24 @@ namespace Nexus.DEB.Application.Common.Interfaces
             CancellationToken cancellationToken = default);
 
         Task<bool> ApproveStepAsync(
-            Guid workflowID,
+            Guid workflowId,
             Guid entityId,
             int stepId,
             int statusId,
-            int[] destinationActivityID,
+            int[] destinationActivityId,
             string? comments = null,
             Guid? onBehalfOfId = null,
             string? password = null,
-            Guid[]? defaultOwnerIDs = null,
+            Guid[]? defaultOwnerIds = null,
             CancellationToken cancellationToken = default);
 
-        //// Existing execute transition method...
-        //Task<Result<WorkflowTransitionResult>> ExecuteTransitionAsync(
-        //    WorkflowTransitionRequest request,
-        //    CancellationToken cancellationToken = default);
+        Task<WorkflowHistory>? GetWorkflowHistoryAsync(
+            Guid workflowId,
+            Guid entityId,
+            CancellationToken cancellationToken = default);
+
+        Task<string?> GetWorkflowDiagramHtmlAsync(Guid workflowId, Guid entityId, CancellationToken cancellationToken);
+
+        Task<byte[]?> GetWorkflowDiagramImageAsync(string cacheKey, CancellationToken cancellationToken);
     }
 }

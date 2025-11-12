@@ -31,6 +31,7 @@ namespace Nexus.DEB.Infrastructure.Services
             var query = _dbContext.Requirements
                 .Include(r => r.SectionRequirements)
                     .ThenInclude(sr => sr.Section)
+                .Include(r => r.Statements)
                 .Select(r => new RequirementSummary
                 {
                     EntityId = r.EntityId,
@@ -53,7 +54,8 @@ namespace Nexus.DEB.Infrastructure.Services
                     Status = _dbContext.PawsStates
                         .Where(ps => ps.EntityId == r.EntityId)
                         .Select(ps => ps.Status)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    StatementIds = r.Statements.Select(x => x.EntityId).ToList()
                 })
                 .AsNoTracking();
 
@@ -99,6 +101,11 @@ namespace Nexus.DEB.Infrastructure.Services
                 if (filters.ModifiedTo.HasValue)
                 {
                     query = query.Where(r => r.LastModifiedDate <= filters.ModifiedTo.Value);
+                }
+
+                if (filters.StatementId.HasValue)
+                {
+                    query = query.Where(r => r.StatementIds.Contains(filters.StatementId.Value));
                 }
             }
 

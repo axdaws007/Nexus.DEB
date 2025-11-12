@@ -10,5 +10,7 @@
 
         [ID]
         public ICollection<int?>? StatusIds { get; set; }
+
+        public Guid? StatementId { get; set; }
     }
 }

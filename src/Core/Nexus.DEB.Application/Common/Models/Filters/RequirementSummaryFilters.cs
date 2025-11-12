@@ -8,5 +8,6 @@
         public DateTime? ModifiedFrom { get; set; }
         public DateTime? ModifiedTo { get; set; }
         public ICollection<int?>? StatusIds { get; set; }
+        public Guid? StatementId { get; set; }
     }
 }

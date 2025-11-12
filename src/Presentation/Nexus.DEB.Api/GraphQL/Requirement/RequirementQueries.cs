@@ -23,6 +23,7 @@ namespace Nexus.DEB.Api.GraphQL
                     ScopeIds = filters.ScopeIds,
                     SearchText = filters.SearchText?.Trim(),
                     StandardVersionIds = filters.StandardVersionIds,
+                    StatementId = filters.StatementId,
                     StatusIds = filters.StatusIds
                 };
 

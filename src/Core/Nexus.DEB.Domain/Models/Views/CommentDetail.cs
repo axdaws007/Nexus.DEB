@@ -6,6 +6,7 @@
         public Guid EntityId { get; set; }
         public string Text { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; }
+        public Guid CreatedByPostId { get; set; }
         public string? CreatedByPost { get; set; }
         public string? CreatedByFirstName { get; set; }
         public string? CreatedByLastName { get; set; }

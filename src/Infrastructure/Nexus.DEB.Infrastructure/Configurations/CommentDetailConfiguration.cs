@@ -43,6 +43,9 @@ namespace Nexus.DEB.Infrastructure.Configurations
 
             builder.Property(e => e.CreatedByLastName)
                 .HasColumnName("CreatedByLastName");
+
+            builder.Property(e => e.CreatedByPostId)
+                .HasColumnName("CreatedByPostId");
         }
     }
 }

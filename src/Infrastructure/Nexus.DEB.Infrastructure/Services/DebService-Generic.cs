@@ -26,13 +26,16 @@ namespace Nexus.DEB.Infrastructure.Services
         public async Task<PawsState?> GetWorkflowStatusByIdAsync(
             Guid id,
             CancellationToken cancellationToken = default)
-            => await _dbContext.PawsStates.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
+            => await _dbContext.PawsStates.AsNoTracking().FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
 
         public async Task<ICollection<CommentDetail>> GetCommentsForEntityAsync(Guid entityId, CancellationToken cancellationToken)
             => await _dbContext.CommentDetails.AsNoTracking()
                         .Where(x => x.EntityId == entityId)
                         .OrderByDescending(x => x.CreatedDate)
-                        .ToListAsync(cancellationToken); 
+                        .ToListAsync(cancellationToken);
+
+        public Task<int> GetCommentsCountForEntityAsync(Guid entityId, CancellationToken cancellationToken)
+            => _dbContext.Comments.AsNoTracking().Where(x => x.EntityId == entityId).CountAsync(cancellationToken);
 
         public async Task<CommentDetail?> CreateCommentAsync(
             Comment comment,

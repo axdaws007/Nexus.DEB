@@ -14,6 +14,8 @@ namespace Nexus.DEB.Api.GraphQL
 
         protected override void Configure(IObjectTypeDescriptor<CommentDetail> descriptor)
         {
+            descriptor.Field(x => x.Id).ID();
+
             descriptor
                 .Field("isOwner")
                 .Resolve(context =>

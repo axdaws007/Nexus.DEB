@@ -40,8 +40,9 @@ namespace Nexus.DEB.Api.GraphQL
         }
 
         [Authorize]
+        [UseMutationConvention(Disable = true)]
         public static async Task<bool> DeleteCommentByIdAsync(
-            long id,
+            [ID]long id,
             IDebService debService,
             CancellationToken cancellationToken)
             => await debService.DeleteCommentByIdAsync(id, cancellationToken);

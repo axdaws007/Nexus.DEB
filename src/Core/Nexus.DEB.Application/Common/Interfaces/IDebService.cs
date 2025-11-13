@@ -2,6 +2,7 @@
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
+using System.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Application.Common.Interfaces
@@ -57,6 +58,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task SaveStatementsAndTasks(ICollection<Statement> statements, ICollection<Domain.Models.Task> tasks, CancellationToken cancellationToken);
         Task<CommentDetail?> CreateCommentAsync(Comment comment, CancellationToken cancellationToken);
+        Task<bool> DeleteCommentByIdAsync(long id, CancellationToken cancellationToken);
 
         #endregion Other
     }

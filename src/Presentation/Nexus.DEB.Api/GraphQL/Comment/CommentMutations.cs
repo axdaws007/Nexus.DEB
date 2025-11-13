@@ -1,4 +1,5 @@
-﻿using Nexus.DEB.Application.Common.Interfaces;
+﻿using HotChocolate.Authorization;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL
@@ -6,6 +7,7 @@ namespace Nexus.DEB.Api.GraphQL
     [MutationType]
     public static class CommentMutations
     {
+        [Authorize]
         public static async Task<CommentDetail?> CreateCommentAsync(
             Guid entityId,
             string text,
@@ -36,5 +38,12 @@ namespace Nexus.DEB.Api.GraphQL
 
             return await debService.CreateCommentAsync(comment, cancellationToken);
         }
+
+        [Authorize]
+        public static async Task<bool> DeleteCommentByIdAsync(
+            long id,
+            IDebService debService,
+            CancellationToken cancellationToken)
+            => await debService.DeleteCommentByIdAsync(id, cancellationToken);
     }
 }

@@ -47,5 +47,11 @@ namespace Nexus.DEB.Infrastructure.Services
             return await _dbContext.CommentDetails.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == comment.Id);
         }
+
+        public async Task<bool> DeleteCommentByIdAsync(
+            long id, 
+            CancellationToken cancellationToken)
+            => (await _dbContext.Comments.Where(x => x.Id == id).ExecuteDeleteAsync(cancellationToken) == 1);
+
     }
 }

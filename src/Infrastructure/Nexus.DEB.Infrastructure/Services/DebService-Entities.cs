@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
+using System.Security.Cryptography;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -221,7 +223,11 @@ namespace Nexus.DEB.Infrastructure.Services
                     Title = s.Title,
                     LastModifiedDate = s.LastModifiedDate,
                     OwnedById = s.OwnedById,
-                    Requirements = s.Requirements
+
+                    // NEW: Get Requirements through StatementRequirementScope linking table
+                    Requirements = s.StatementsRequirementsScopes
+                        .Select(srs => srs.Requirement)
+                        .Distinct() // In case a requirement appears with multiple scopes
                         .OrderBy(r => r.SerialNumber)
                         .Select(r => new ChildItem
                         {
@@ -229,6 +235,7 @@ namespace Nexus.DEB.Infrastructure.Services
                             Reference = r.SerialNumber ?? string.Empty
                         })
                         .ToList(),
+
                     StatusId = _dbContext.PawsStates
                         .Where(ps => ps.EntityId == s.EntityId)
                         .Select(ps => ps.StatusId)
@@ -247,21 +254,24 @@ namespace Nexus.DEB.Infrastructure.Services
             // Apply filters
             if (filters != null)
             {
-                // Filter by StandardVersion (using navigation property)
+                // Filter by StandardVersion (using new linking table)
                 if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
                 {
                     var statementIds = _dbContext.Set<Statement>()
-                        .Where(s => s.Requirements.Any(r => r.StandardVersions.Any(sv => filters.StandardVersionIds.Contains(sv.EntityId))))
+                        .Where(s => s.StatementsRequirementsScopes
+                            .Any(srs => srs.Requirement.StandardVersions
+                                .Any(sv => filters.StandardVersionIds.Contains(sv.EntityId))))
                         .Select(s => s.EntityId);
 
                     query = query.Where(s => statementIds.Contains(s.EntityId));
                 }
 
-                // Filter by Scope (using navigation property)
+                // Filter by Scope (using new linking table)
                 if (filters.ScopeIds != null && filters.ScopeIds.Count > 0)
                 {
                     var statementIds = _dbContext.Set<Statement>()
-                        .Where(s => s.Requirements.Any(r => r.Scopes.Any(sc => filters.ScopeIds.Contains(sc.EntityId))))
+                        .Where(s => s.StatementsRequirementsScopes
+                            .Any(srs => filters.ScopeIds.Contains(srs.ScopeId)))
                         .Select(s => s.EntityId);
 
                     query = query.Where(s => statementIds.Contains(s.EntityId));
@@ -297,6 +307,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             return query;
         }
+
         public IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters)
         {
             var query = _dbContext.StatementExport.AsNoTracking();

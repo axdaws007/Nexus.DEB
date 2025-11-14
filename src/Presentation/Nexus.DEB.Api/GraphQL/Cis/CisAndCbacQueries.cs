@@ -7,6 +7,7 @@ namespace Nexus.DEB.Api.GraphQL.Cis
     public static class CisAndCbacQueries
     {
         public static async Task<ICollection<PostDetails>> GetPosts(
+            string? searchText,
             ICollection<Guid>? roleIds,
             ICisService cisService,
             ICbacService cbacService,
@@ -20,6 +21,9 @@ namespace Nexus.DEB.Api.GraphQL.Cis
 
                 return posts.Where(x => postIds.Contains(x.ID)).ToList();
             }
+
+            if (posts != null && posts.Count > 0 && !string.IsNullOrEmpty(searchText))
+                return posts.Where(x => x.PostTitle.ToLower().Contains(searchText.ToLower())).ToList();
 
             return posts ?? new List<PostDetails>();
         }

@@ -15,5 +15,6 @@ namespace Nexus.DEB.Application.Common.Interfaces
             CancellationToken cancellationToken = default);
 
         Task<ICollection<PostDetails>?> GetPostsBySearchTextAsync(string searchText, CancellationToken cancellation = default);
+        Task<ICollection<PostDetails>?> GetAllPosts();
     }
 }

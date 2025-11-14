@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using System.Net.Http.Json;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -41,6 +42,25 @@ namespace Nexus.DEB.Infrastructure.Services
 
             // Return empty list if null (consistent with original implementation)
             return capabilities ?? new List<CbacCapability>();
+        }
+
+        public async Task<ICollection<Guid>?> GetRolePostIdsAsync(ICollection<Guid> roleIds)
+        {
+            var requestUri = $"api/Roles/PostIdsForRoles";
+
+            // Create JSON content (JsonOptions from base class)
+            var content = JsonContent.Create(roleIds, options: JsonOptions);
+
+            // Use authenticated request - cookie retrieved from HttpContext automatically
+            var postIds = await SendAuthenticatedRequestAsync<ICollection<Guid>>(
+                HttpMethod.Post,
+                requestUri,
+                operationName: $"PostIdsForRoles for roles",
+                content: content
+                );
+
+            // Return empty list if null (consistent with original implementation)
+            return postIds;
         }
     }
 }

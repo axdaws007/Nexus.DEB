@@ -133,5 +133,18 @@ namespace Nexus.DEB.Infrastructure.Services
                 throw;
             }
         }
+
+        public async Task<ICollection<PostDetails>?> GetAllPosts()
+        {
+            var requestUri = $"api/Users/AllPosts";
+
+            // Use authenticated request - cookie retrieved from HttpContext automatically
+            return await SendAuthenticatedRequestAsync<ICollection<PostDetails>>(
+                HttpMethod.Get,
+                requestUri,
+                operationName: $"GetAllPosts");
+        }
+
+
     }
 }

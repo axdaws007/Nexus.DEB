@@ -1,5 +1,4 @@
 ﻿using HotChocolate.Authorization;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
@@ -12,22 +11,29 @@ namespace Nexus.DEB.Api.GraphQL.Paws
     public static class WorkflowQueries
     {
         [Authorize]
-        public static async Task<TransitionValidationResult> ValidateWorkflowTransition(
+        public static async Task<TransitionDetail> ValidateWorkflowTransition(
             Guid entityId,
             int stepId,
             int triggerStatusId,
+            IPawsService pawsService,
             IWorkflowValidationService validationService,
             CancellationToken cancellationToken)
         {
+            var destinationActivity = await pawsService.GetDestinationActivitiesAsync(stepId, triggerStatusId, cancellationToken);
+
             var result = await validationService.ValidateTransitionAsync(
                 entityId,
-                stepId,
                 triggerStatusId,
+                destinationActivity.TargetActivities,
                 cancellationToken);
 
-            return new TransitionValidationResult
+            return new TransitionDetail
             {
-                CanProceed = result.IsSuccess,
+                IsCommentRequired = destinationActivity.IsCommentRequired,
+                RequirePassword = destinationActivity.RequirePassword,
+                ShowSignOffText = destinationActivity.ShowSignoffText,
+                SignOffText = destinationActivity.SignoffText,
+                ValidationSuccessful = result.IsSuccess,
                 ValidationErrors = result.Errors.Select(e => new ValidationError
                 {
                     Message = e.Message,
@@ -43,6 +49,59 @@ namespace Nexus.DEB.Api.GraphQL.Paws
             IDebService debService,
             CancellationToken cancellationToken)
             => await debService.GetWorkflowStatusByIdAsync(id, cancellationToken);
+
+        [Authorize]
+        public static async Task<CurrentWorkflowStatus?> GetCurrentWorkflowStatusForEntityAsync(
+            Guid entityId,
+            IDebService debService,
+            IPawsService pawsService,
+            IConfiguration configuration,
+            CancellationToken cancellationToken)
+        {
+            var moduleIdString = configuration["Modules:DEB"] ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");
+
+            if (!Guid.TryParse(moduleIdString, out var moduleId))
+            {
+                throw new InvalidOperationException("Modules:DEB must be a valid GUID");
+            }
+
+            var entity = await debService.GetEntityHeadAsync(entityId, cancellationToken);
+
+            if (entity == null)
+            {
+                throw new InvalidOperationException("EntityID could not be identified");
+            }
+
+            var workflowId = await debService.GetWorkflowIdAsync(moduleId, entity.EntityTypeTitle, cancellationToken);
+
+            if (workflowId.HasValue == false)
+            {
+                throw new InvalidOperationException("WorkflowID could not be identified");
+            }
+
+            var pawsEntityDetails = await debService.GetCurrentWorkflowStatusForEntityAsync(entityId, cancellationToken);
+
+            var currentWorkflowStatus = new CurrentWorkflowStatus();
+
+            currentWorkflowStatus.ActivityId = pawsEntityDetails.ActivityId;
+            currentWorkflowStatus.ActivityTitle = pawsEntityDetails.ActivityTitle;
+            currentWorkflowStatus.PseudoStateId = pawsEntityDetails.PseudoStateId;
+            currentWorkflowStatus.PseudoStateTitle = pawsEntityDetails.PseudoStateTitle;
+            currentWorkflowStatus.StatusId = pawsEntityDetails.StatusId;
+            currentWorkflowStatus.StatusTitle = pawsEntityDetails.StatusTitle;
+            currentWorkflowStatus.StepId = pawsEntityDetails.StepId;
+
+            if (currentWorkflowStatus.StatusId == 1)
+            {
+                var pendingActivities = await pawsService.GetPendingActivitiesAsync(entityId, workflowId.Value, cancellationToken);
+
+                var selectedPendingActivity = pendingActivities.FirstOrDefault(x => x.ActivityID == currentWorkflowStatus.ActivityId);
+
+                currentWorkflowStatus.AvailableTriggerStates = selectedPendingActivity.AvailableTriggerStates;
+            }
+
+            return currentWorkflowStatus;
+        }
 
 
         [Authorize]

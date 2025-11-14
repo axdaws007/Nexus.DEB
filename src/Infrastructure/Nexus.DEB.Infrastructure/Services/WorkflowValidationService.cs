@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 
@@ -8,20 +7,17 @@ namespace Nexus.DEB.Infrastructure.Services
     public class WorkflowValidationService : IWorkflowValidationService
     {
         private readonly IDebService _debService;
-        private readonly IPawsService _pawsService;
         private readonly ITransitionValidatorRegistry _validatorRegistry;
         private readonly ICurrentUserService _currentUserService;
         private readonly ILogger<WorkflowValidationService> _logger;
 
         public WorkflowValidationService(
             IDebService debService,
-            IPawsService pawsService,
             ITransitionValidatorRegistry validatorRegistry,
             ICurrentUserService currentUserService,
             ILogger<WorkflowValidationService> logger)
         {
             _debService = debService;
-            _pawsService = pawsService;
             _validatorRegistry = validatorRegistry;
             _currentUserService = currentUserService;
             _logger = logger;
@@ -29,30 +25,30 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public async Task<Result> ValidateTransitionAsync(
             Guid entityId,
-            int stepId,
             int triggerStatusId,
+            ICollection<TargetActivity>? targetActivities,
             CancellationToken cancellationToken = default)
         {
             _logger.LogInformation(
-                "Validating transition {TriggerStatusId} for {stepId}",
-                triggerStatusId, stepId);
+                "Validating transition {TriggerStatusId} for {entityId}",
+                triggerStatusId, entityId);
 
             var entityHead = await _debService.GetEntityHeadAsync(entityId, cancellationToken);
 
             // 1. Get current workflow state for the entity
-            var destinationActivity = await _pawsService.GetDestinationActivitiesAsync(
-                stepId, triggerStatusId, cancellationToken);
+            //var destinationActivity = await _pawsService.GetDestinationActivitiesAsync(
+            //    stepId, triggerStatusId, cancellationToken);
 
-            if (destinationActivity == null)
-            {
-                return Result.Failure(new ValidationError
-                {
-                    Message = "Destination activity could not be found",
-                    Code = "DESTINATION_NOT_FOUND"
-                });
-            }
+            //if (destinationActivity == null)
+            //{
+            //    return Result.Failure(new ValidationError
+            //    {
+            //        Message = "Destination activity could not be found",
+            //        Code = "DESTINATION_NOT_FOUND"
+            //    });
+            //}
 
-            var validatorNames = destinationActivity.TargetActivities
+            var validatorNames = targetActivities
                     .SelectMany(t => t.ValidatorTags)
                     .Distinct()
                     .ToList();
@@ -67,7 +63,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             var allErrors = new List<ValidationError>();
 
-            foreach (var targetActivity in destinationActivity.TargetActivities)
+            foreach (var targetActivity in targetActivities)
             {
                 var context = new TransitionValidationContext
                 {

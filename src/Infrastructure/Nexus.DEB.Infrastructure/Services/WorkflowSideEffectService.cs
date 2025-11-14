@@ -1,12 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
-using Nexus.DEB.Domain.Models.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Nexus.DEB.Infrastructure.Services
 {

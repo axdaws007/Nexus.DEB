@@ -2,7 +2,7 @@
 
 namespace Nexus.DEB.Api.GraphQL
 {
-    public class TransitionApprovalResult
+    public class StepApprovalResult
     {
 
         public bool IsApproved { get; set; }

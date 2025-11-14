@@ -84,9 +84,11 @@ namespace Nexus.DEB.Infrastructure
 
 
             services.AddScoped<IWorkflowValidationService, WorkflowValidationService>();
+            services.AddScoped<IWorkflowSideEffectService, WorkflowSideEffectService>();
 
             // Register validator registry
             services.AddScoped<ITransitionValidatorRegistry, TransitionValidatorRegistry>();
+            services.AddScoped<ITransitionSideEffectRegistry, TransitionSideEffectRegistry>();
 
             // Register all validators (auto-discovered)
             services.AddScoped<ITransitionValidator, CheckEffectiveDatesTransitionValidator>();

@@ -53,6 +53,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<PawsState> PawsStates { get; set; }
         public DbSet<CommentDetail> CommentDetails { get; set; }
         public DbSet<ViewPost> ViewPosts { get; set; }
+        public DbSet<PawsEntityDetail> PawsEntityDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,10 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -13,20 +8,50 @@ namespace Nexus.DEB.Infrastructure.Services
         private readonly Dictionary<string, ITransitionSideEffect> _sideEffects;
         private readonly ILogger<TransitionSideEffectRegistry> _logger;
 
-        public TransitionSideEffectRegistry(Dictionary<string, ITransitionSideEffect> sideEffects, ILogger<TransitionSideEffectRegistry> logger)
+        public TransitionSideEffectRegistry(
+            IEnumerable<ITransitionSideEffect> sideEffects, 
+            ILogger<TransitionSideEffectRegistry> logger)
         {
-            _sideEffects = sideEffects;
             _logger = logger;
+
+            // Build dictionary of validators by name
+            _sideEffects = sideEffects.ToDictionary(
+                v => v.Name,
+                v => v,
+                StringComparer.OrdinalIgnoreCase);
+
+            _logger.LogInformation(
+                "Registered {Count} transition validators: {Names}",
+                _sideEffects.Count,
+                string.Join(", ", _sideEffects.Keys));
         }
 
         public ITransitionSideEffect? GetSideEffect(string name)
         {
-            throw new NotImplementedException();
+            _sideEffects.TryGetValue(name, out var sideEffect);
+            return sideEffect;
         }
 
         public IEnumerable<ITransitionSideEffect> GetSideEffects(IEnumerable<string> names)
         {
-            throw new NotImplementedException();
+            var result = new List<ITransitionSideEffect>();
+
+            foreach (var name in names)
+            {
+                var sideEffect = GetSideEffect(name);
+                if (sideEffect != null)
+                {
+                    result.Add(sideEffect);
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Side Effect '{Name}' not found in registry. Check configuration.",
+                        name);
+                }
+            }
+
+            return result;
         }
     }
 }

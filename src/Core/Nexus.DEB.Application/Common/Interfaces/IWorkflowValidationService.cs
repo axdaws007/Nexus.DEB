@@ -6,8 +6,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
     {
         Task<Result> ValidateTransitionAsync(
             Guid entityId,
-            int stepId,
             int triggerStatusId,
+            ICollection<TargetActivity>? targetActivities,
             CancellationToken cancellationToken = default);
     }
 }

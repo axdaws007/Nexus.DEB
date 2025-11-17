@@ -209,14 +209,14 @@ namespace Nexus.DEB.Api.Restful
 
                 var comments = (string?)null;
 
-                if (destinationSteps.IsCommentRequired)
-                {
-                    comments = f.Lorem.Sentence();
-                }
-
                 var nextStep = destinationSteps?.TargetActivities?.FirstOrDefault();
                 if (nextStep == null)
                     break;
+
+                if (nextStep.IsCommentRequired)
+                {
+                    comments = f.Lorem.Sentence();
+                }
 
                 var approved = await pawsService.ApproveStepAsync(
                     workflowId,

@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 namespace Nexus.DEB.Infrastructure.Services
 {
     /// <summary>
-    /// Service for interacting with the Workflow API (PAWS - Parallel Approval Workflow System).
+    /// Service for interacting with the Workflow API (PAWS).
     /// 
     /// SECURITY: Authentication cookies are retrieved from HttpContext (request-scoped),
     /// ensuring cookies are NEVER shared across different user requests.

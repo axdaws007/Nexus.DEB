@@ -29,7 +29,6 @@ namespace Nexus.DEB.Api.GraphQL.Paws
 
             return new TransitionDetail
             {
-                IsCommentRequired = destinationActivity.IsCommentRequired,
                 RequirePassword = destinationActivity.RequirePassword,
                 ShowSignOffText = destinationActivity.ShowSignoffText,
                 SignOffText = destinationActivity.SignoffText,

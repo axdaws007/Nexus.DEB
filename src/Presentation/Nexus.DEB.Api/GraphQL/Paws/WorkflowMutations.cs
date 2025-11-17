@@ -8,7 +8,7 @@ namespace Nexus.DEB.Api.GraphQL.Paws
     public static class WorkflowMutations
     {
         [Authorize]
-        public static async Task<StepApprovalResult> ApproveStepAsync(
+        public static async Task<CurrentWorkflowStatus> ApproveStepAsync(
             Guid entityId,
             int stepId,
             int triggerStatusId,
@@ -93,11 +93,28 @@ namespace Nexus.DEB.Api.GraphQL.Paws
                 throw BuildException(result);
             }
 
-            // TODO
-            return new StepApprovalResult()
+            var pawsEntityDetails = await debService.GetCurrentWorkflowStatusForEntityAsync(entityId, cancellationToken);
+
+            var currentWorkflowStatus = new CurrentWorkflowStatus();
+
+            currentWorkflowStatus.ActivityId = pawsEntityDetails.ActivityId;
+            currentWorkflowStatus.ActivityTitle = pawsEntityDetails.ActivityTitle;
+            currentWorkflowStatus.PseudoStateId = pawsEntityDetails.PseudoStateId;
+            currentWorkflowStatus.PseudoStateTitle = pawsEntityDetails.PseudoStateTitle;
+            currentWorkflowStatus.StatusId = pawsEntityDetails.StatusId;
+            currentWorkflowStatus.StatusTitle = pawsEntityDetails.StatusTitle;
+            currentWorkflowStatus.StepId = pawsEntityDetails.StepId;
+
+            if (currentWorkflowStatus.StatusId == 1)
             {
-                IsApproved = true
-            };
+                var pendingActivities = await pawsService.GetPendingActivitiesAsync(entityId, workflowId.Value, cancellationToken);
+
+                var selectedPendingActivity = pendingActivities.FirstOrDefault(x => x.ActivityID == currentWorkflowStatus.ActivityId);
+
+                currentWorkflowStatus.AvailableTriggerStates = selectedPendingActivity.AvailableTriggerStates;
+            }
+
+            return currentWorkflowStatus;
         }
 
         private static GraphQLException BuildException(Result result)

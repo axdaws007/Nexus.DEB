@@ -4,8 +4,7 @@
     {
         public int StepID { get; set; }
         public int TriggerStatusID { get; set; }
-        public string CurrentPostTitle { get; set; }
-        public bool IsCommentRequired { get; set; }
+        public string CurrentPostTitle { get; set; } = string.Empty;
         public bool ShowSignoffText { get; set; }
         public string? SignoffText { get; set; }
         public bool RequirePassword { get; set; }

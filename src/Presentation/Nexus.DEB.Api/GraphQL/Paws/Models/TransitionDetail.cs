@@ -11,5 +11,7 @@ namespace Nexus.DEB.Api.GraphQL
         public bool RequirePassword { get; set; }
 
         public List<ValidationError> ValidationErrors { get; set; } = new();
+        public ICollection<TargetActivity>? TargetActivities { get; set; }
+
     }
 }

@@ -33,6 +33,7 @@ namespace Nexus.DEB.Api.GraphQL.Paws
                 RequirePassword = destinationActivity.RequirePassword,
                 ShowSignOffText = destinationActivity.ShowSignoffText,
                 SignOffText = destinationActivity.SignoffText,
+                TargetActivities = destinationActivity.TargetActivities,
                 ValidationSuccessful = result.IsSuccess,
                 ValidationErrors = result.Errors.Select(e => new ValidationError
                 {

@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 var environment = builder.Environment;
 var configuration = builder.Configuration;
 var allowedOrigins = configuration["CORS:AllowedOrigins"];
+var useLocalNitro = configuration.GetValue<bool>("UseLocalNitro", false);
 
 builder.Services.AddCors(options =>
 {
@@ -173,7 +174,14 @@ app.UseCors("GraphQLPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGraphQL();
+app.MapGraphQL().WithOptions(new GraphQLServerOptions
+{
+    Tool =
+    {
+        ServeMode = (useLocalNitro) ? GraphQLToolServeMode.Embedded : GraphQLToolServeMode.Latest
+    }
+});
+
 app.MapExportEndpoints();
 app.MapWorkflowDiagramEndpoints();
 

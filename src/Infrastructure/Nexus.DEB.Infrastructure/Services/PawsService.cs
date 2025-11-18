@@ -382,15 +382,26 @@ namespace Nexus.DEB.Infrastructure.Services
         /// </summary>
         private string RewriteImageUrls(string html)
         {
-            // Pattern to match the PAWS API image URLs
-            var pattern = @"src=""(/Nexus\.PAWS\.WebAPI)?/PAWSDiagramViewer/GetCachedPAWSDiagram/([^""?]+)(\?[^""]*)?""";
+            // Get the base path from the current HTTP context
+            var context = _httpContextAccessor.HttpContext;
+            var pathBase = context?.Request.PathBase.Value ?? string.Empty;
 
-            // Replace with our BFF proxy URL
+            // Ensure pathBase doesn't have a trailing slash
+            pathBase = pathBase.TrimEnd('/');
+
+            Logger.LogDebug("Rewriting image URLs with base path: '{PathBase}'", pathBase);
+
+            // Pattern to match PAWS diagram image URLs
+            // Matches any path that contains /PAWSDiagramViewer/GetCachedPAWSDiagram/{cacheKey}
+            // The prefix before /PAWSDiagramViewer can be anything (or nothing)
+            var pattern = @"src=""[^""]*?/PAWSDiagramViewer/GetCachedPAWSDiagram/([^""?]+)(\?[^""]*)?""";
+
+            // Replace with our BFF proxy URL, including the base path
             var rewritten = Regex.Replace(html, pattern, match =>
             {
-                var cacheKey = match.Groups[2].Value;
-                var queryString = match.Groups[3].Value;
-                return $@"src=""/api/workflow-diagrams/images/{cacheKey}{queryString}""";
+                var cacheKey = match.Groups[1].Value;  // First capture group
+                var queryString = match.Groups[2].Value;  // Second capture group
+                return $@"src=""{pathBase}/api/workflow-diagrams/images/{cacheKey}{queryString}""";
             });
 
             return rewritten;

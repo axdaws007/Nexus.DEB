@@ -91,7 +91,7 @@ namespace Nexus.DEB.Infrastructure
             services.AddScoped<ITransitionSideEffectRegistry, TransitionSideEffectRegistry>();
 
             // Register all validators (auto-discovered)
-            services.AddScoped<ITransitionValidator, CheckEffectiveDatesTransitionValidator>();
+            services.AddScoped<ITransitionValidator, ValidateReviewDateTransitionValidator>();
 
             return services;
         }

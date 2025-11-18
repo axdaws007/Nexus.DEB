@@ -20,7 +20,7 @@ namespace Nexus.DEB.Infrastructure.Services
         protected readonly HttpClient HttpClient;
         protected readonly ILogger<TService> Logger;
         protected readonly JsonSerializerOptions JsonOptions;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        protected readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string _authCookieName;
 
         /// <summary>

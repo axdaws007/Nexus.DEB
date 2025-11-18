@@ -219,7 +219,7 @@ namespace Nexus.DEB.Infrastructure.Services
             Guid[]? defaultOwnerIds = null, 
             CancellationToken cancellationToken = default)
         {
-            if (defaultOwnerIds == null)
+            if (defaultOwnerIds == null || defaultOwnerIds.Count() == 0)
             {
                 defaultOwnerIds = new Guid[1];
                 defaultOwnerIds[0] = Guid.Empty;

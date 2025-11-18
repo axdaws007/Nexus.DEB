@@ -60,7 +60,7 @@ namespace Nexus.DEB.Api.GraphQL.Paws
             }
 
             var destinationActivityIds = activitiesToApprove.Select(x => x.ActivityId).ToArray();
-            var defaultOwnerIds = activitiesToApprove.Select(x => x.DefaultOwnerId).ToArray();
+            var defaultOwnerIds = activitiesToApprove.Where(x => x.DefaultOwnerId.HasValue).Select(x => x.DefaultOwnerId.Value).ToArray();
 
             var approved = await pawsService.ApproveStepAsync(
                 workflowId.Value,

@@ -87,7 +87,6 @@ namespace Nexus.DEB.Api.Restful
                 .RuleFor(s => s.StatementText, f => f.Lorem.Paragraphs(2, 4))
                 .RuleFor(s => s.SerialNumber, f => $"SoC-" + (f.IndexFaker + 1).ToString("D3"))
                 .RuleFor(s => s.ReviewDate, f => f.Date.Future(1))
-                .RuleFor(s => s.ScopeID, f => f.PickRandom(scopes).Id)
                 .RuleFor(s => s.OwnedById, f => f.PickRandom(possibleOwnerIds))
                 .RuleFor(s => s.OwnedByGroupId, (Guid?)null)
                 .RuleFor(s => s.CreatedById, f => f.PickRandom(possibleOwnerIds))
@@ -124,7 +123,7 @@ namespace Nexus.DEB.Api.Restful
             {
                 var statement = statementFaker.Generate();
 
-                statement.Requirements = [requirement];
+                //statement.Requirements = [requirement];
 
                 statementsToCreate.Add(statement);
 

@@ -1,10 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
-using System.Security.Cryptography;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -33,7 +31,7 @@ namespace Nexus.DEB.Infrastructure.Services
             var query = _dbContext.Requirements
                 .Include(r => r.SectionRequirements)
                     .ThenInclude(sr => sr.Section)
-                .Include(r => r.Statements)
+                .Include(r => r.StatementsRequirementsScopes)
                 .Select(r => new RequirementSummary
                 {
                     EntityId = r.EntityId,
@@ -57,7 +55,10 @@ namespace Nexus.DEB.Infrastructure.Services
                         .Where(ps => ps.EntityId == r.EntityId)
                         .Select(ps => ps.Status)
                         .FirstOrDefault(),
-                    StatementIds = r.Statements.Select(x => x.EntityId).ToList()
+                    StatementIds = r.StatementsRequirementsScopes
+                        .Select(srs => srs.StatementId)
+                        .Distinct()
+                        .ToList()
                 })
                 .AsNoTracking();
 
@@ -269,10 +270,10 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Filter by Scope (using new linking table)
                 if (filters.ScopeIds != null && filters.ScopeIds.Count > 0)
                 {
-                    var statementIds = _dbContext.Set<Statement>()
-                        .Where(s => s.StatementsRequirementsScopes
-                            .Any(srs => filters.ScopeIds.Contains(srs.ScopeId)))
-                        .Select(s => s.EntityId);
+                    var statementIds = _dbContext.Set<StatementRequirementScope>()
+                        .Where(r => filters.ScopeIds.Contains(r.ScopeId))
+                        .Select(r => r.StatementId)
+                        .Distinct();
 
                     query = query.Where(s => statementIds.Contains(s.EntityId));
                 }
@@ -317,9 +318,9 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Filter by StandardVersion (using navigation property)
                 if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
                 {
-                    var statementIds = _dbContext.Set<Statement>()
-                        .Where(s => s.Requirements.Any(r => r.StandardVersions.Any(sv => filters.StandardVersionIds.Contains(sv.EntityId))))
-                        .Select(s => s.EntityId);
+                    var statementIds = _dbContext.Set<StatementRequirementScope>()
+                        .Where(s => s.Requirement.StandardVersions.Any(sv => filters.StandardVersionIds.Contains(sv.EntityId)))
+                        .Select(s => s.StatementId);
 
                     query = query.Where(s => statementIds.Contains(s.EntityId));
                 }
@@ -327,11 +328,12 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Filter by Scope (using navigation property)
                 if (filters.ScopeIds != null && filters.ScopeIds.Count > 0)
                 {
-                    var requirementIds = _dbContext.Set<Requirement>()
-                        .Where(r => r.Scopes.Any(s => filters.ScopeIds.Contains(s.EntityId)))
-                        .Select(r => r.EntityId);
+                    var statementIds = _dbContext.Set<StatementRequirementScope>()
+                        .Where(r => filters.ScopeIds.Contains(r.ScopeId))
+                        .Select(r => r.StatementId)
+                        .Distinct();
 
-                    query = query.Where(r => requirementIds.Contains(r.EntityId));
+                    query = query.Where(r => statementIds.Contains(r.EntityId));
                 }
 
                 // Text search on Title
@@ -478,7 +480,9 @@ namespace Nexus.DEB.Infrastructure.Services
                 if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
                 {
                     var taskIds = _dbContext.Set<Domain.Models.Task>()
-                        .Where(t => t.Statement.Requirements.Any(r => r.StandardVersions.Any(sv => filters.StandardVersionIds.Contains(sv.EntityId))))
+                        .Where(t => t.Statement.StatementsRequirementsScopes
+                            .Any(srs => srs.Requirement.StandardVersions
+                                .Any(sv => filters.StandardVersionIds.Contains(sv.EntityId))))
                         .Select(t => t.EntityId);
 
                     query = query.Where(t => taskIds.Contains(t.EntityId));
@@ -530,7 +534,9 @@ namespace Nexus.DEB.Infrastructure.Services
                 if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
                 {
                     var taskIds = _dbContext.Set<Domain.Models.Task>()
-                        .Where(t => t.Statement.Requirements.Any(r => r.StandardVersions.Any(sv => filters.StandardVersionIds.Contains(sv.EntityId))))
+                        .Where(t => t.Statement.StatementsRequirementsScopes
+                            .Any(srs => srs.Requirement.StandardVersions
+                                .Any(sv => filters.StandardVersionIds.Contains(sv.EntityId))))
                         .Select(t => t.EntityId);
 
                     query = query.Where(t => taskIds.Contains(t.EntityId));

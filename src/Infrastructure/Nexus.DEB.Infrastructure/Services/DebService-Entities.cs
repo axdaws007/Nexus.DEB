@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Mapster;
+using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Application.Common.Models.Core;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
@@ -369,8 +371,33 @@ namespace Nexus.DEB.Infrastructure.Services
             return query.OrderBy(x => x.SerialNumber);
         }
 
-        public Task<StatementDetail?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default)
-            => _dbContext.StatementDetails.AsNoTracking().FirstOrDefaultAsync(x => x.EntityId == id);
+        public async Task<StatementDetail?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var statement = await _dbContext.StatementDetails.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
+
+            if (statement == null)
+                return null;
+
+            var statementDetail = statement.Adapt<StatementDetail>();
+
+            statementDetail.RequirementScopeCombinations = await _dbContext.StatementsRequirementsScopes
+                                                                    .Include(x => x.Requirement)
+                                                                    .Include(x => x.Scope)
+                                                                    .Where(x => x.StatementId == id)
+                                                                    .Select(x => new RequirementScopeDetail()
+                                                                    {
+                                                                        RequirementId = x.RequirementId,
+                                                                        RequirementSerialNumber = x.Requirement.SerialNumber,
+                                                                        RequirementTitle = x.Requirement.Title,
+                                                                        ScopeId = x.ScopeId,
+                                                                        ScopeSerialNumber = x.Scope.SerialNumber,
+                                                                        ScopeTitle = x.Scope.Title
+                                                                    }).ToListAsync(cancellationToken);
+
+            return statementDetail;
+        }
+
+            
 
 
         #endregion Statements

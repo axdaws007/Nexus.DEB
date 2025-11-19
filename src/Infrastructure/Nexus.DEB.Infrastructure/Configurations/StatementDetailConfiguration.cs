@@ -4,9 +4,9 @@ using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Infrastructure.Configurations
 {
-    public class StatementDetailConfiguration : IEntityTypeConfiguration<StatementDetail>
+    public class StatementDetailConfiguration : IEntityTypeConfiguration<StatementDetailView>
     {
-        public void Configure(EntityTypeBuilder<StatementDetail> builder)
+        public void Configure(EntityTypeBuilder<StatementDetailView> builder)
         {
             // Map to the database view
             builder.ToView("vw_StatementDetail", "deb");

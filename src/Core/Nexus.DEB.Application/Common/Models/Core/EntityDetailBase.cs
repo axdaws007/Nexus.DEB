@@ -1,4 +1,4 @@
-﻿namespace Nexus.DEB.Domain.Models
+﻿namespace Nexus.DEB.Application.Common.Models
 {
     public abstract class EntityDetailBase
     {

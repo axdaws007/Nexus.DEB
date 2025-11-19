@@ -47,7 +47,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<ScopeExport> ScopeExport { get; set; }
         public DbSet<RequirementExport> RequirementExport { get; set; }
         public DbSet<StatementExport> StatementExport { get; set; }
-        public DbSet<StatementDetail> StatementDetails { get; set; }
+        public DbSet<StatementDetailView> StatementDetails { get; set; }
         public DbSet<TaskSummary> TaskSummaries { get; set; }
         public DbSet<TaskExport> TaskExport { get; set; }
         public DbSet<PawsState> PawsStates { get; set; }

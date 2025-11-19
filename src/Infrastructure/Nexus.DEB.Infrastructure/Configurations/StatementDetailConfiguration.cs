@@ -53,13 +53,6 @@ namespace Nexus.DEB.Infrastructure.Configurations
             builder.Property(e => e.ReviewDate)
                 .HasColumnName("ReviewDate");
 
-            builder.Property(e => e.ScopeID)
-                .HasColumnName("ScopeID")
-                .IsRequired();
-
-            builder.Property(e => e.Scope)
-                .HasColumnName("Scope");
-
             builder.Property(e => e.StatementText)
                 .HasColumnName("StatementText")
                 .IsRequired();
@@ -72,6 +65,9 @@ namespace Nexus.DEB.Infrastructure.Configurations
 
             builder.Property(e => e.OwnedBy)
                 .HasColumnName("OwnedBy");
+
+            builder.Property(e => e.OwnedById)
+                .HasColumnName("OwnedById");
         }
     }
 }

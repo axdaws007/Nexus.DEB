@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20251119154745_AddSerialNumberTable")]
+    partial class AddSerialNumberTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -882,13 +885,17 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("OwnedBy");
 
-                    b.Property<Guid>("OwnedById")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("OwnedById");
-
                     b.Property<DateTime?>("ReviewDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("ReviewDate");
+
+                    b.Property<string>("Scope")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Scope");
+
+                    b.Property<Guid>("ScopeID")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ScopeID");
 
                     b.Property<string>("SerialNumber")
                         .HasColumnType("nvarchar(max)")

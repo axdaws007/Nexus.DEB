@@ -2,6 +2,7 @@
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -57,6 +58,129 @@ namespace Nexus.DEB.Infrastructure.Services
             long id, 
             CancellationToken cancellationToken)
             => (await _dbContext.Comments.Where(x => x.Id == id).ExecuteDeleteAsync(cancellationToken) == 1);
+
+        public async Task<string> GenerateSerialNumberAsync(
+            Guid moduleId,
+            Guid instanceId,
+            string entityType,
+            Dictionary<string, object>? tokenValues = null,
+            CancellationToken cancellationToken = default)
+        {
+            var results = await GenerateSerialNumbersAsync(
+                moduleId,
+                instanceId,
+                entityType,
+                1,
+                _ => tokenValues,
+                cancellationToken);
+
+            return results[0];
+        }
+
+        public async Task<List<string>> GenerateSerialNumbersAsync(
+            Guid moduleId,
+            Guid instanceId,
+            string entityType,
+            int numberToGenerate,
+            Func<int, Dictionary<string, object>?>? tokenValuesFactory = null,
+            CancellationToken cancellationToken = default)
+        {
+            var config = await _dbContext.SerialNumbers
+                .Where(x => x.ModuleId == moduleId &&
+                            x.InstanceId == instanceId &&
+                            x.EntityType == entityType)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (config == null)
+            {
+                throw new Exception("damn it");
+            }
+
+            var serialNumbers = new List<string>();
+            var startCounter = config.NextValue;
+
+            for (int i = 0; i < numberToGenerate; i++)
+            {
+                var currentCounter = startCounter + i;
+
+                var tokenValues = tokenValuesFactory?.Invoke(i) ?? new Dictionary<string, object>();
+
+                tokenValues["counter"] = currentCounter;
+
+                var serialNumber = FormatSerialNumber(config.Format, tokenValues);
+                serialNumbers.Add(serialNumber);
+            }
+
+            config.NextValue = startCounter + numberToGenerate;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return serialNumbers;
+        }
+
+        private string FormatSerialNumber(string template, Dictionary<string, object> tokenValues)
+        {
+            var result = template;
+
+            // Process all tokens in the format {tokenName} or {tokenName:format}
+            var matches = System.Text.RegularExpressions.Regex.Matches(
+                template,
+                @"\{([^}:]+)(?::([^}]+))?\}");
+
+            foreach (System.Text.RegularExpressions.Match match in matches)
+            {
+                var tokenName = match.Groups[1].Value;
+                var format = match.Groups[2].Value;
+
+                // Support nested property access with dot notation (e.g., parent.serialNumber)
+                var value = GetTokenValue(tokenValues, tokenName);
+
+                if (value == null)
+                {
+                    throw new Exception(
+                        $"Token '{tokenName}' not found in provided values. Available tokens: {string.Join(", ", tokenValues.Keys)}");
+                }
+
+                string formattedValue;
+                if (!string.IsNullOrEmpty(format) && value is IFormattable formattable)
+                {
+                    formattedValue = formattable.ToString(format, System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    formattedValue = value.ToString() ?? string.Empty;
+                }
+
+                result = result.Replace(match.Value, formattedValue);
+            }
+
+            return result;
+        }
+
+        private object? GetTokenValue(Dictionary<string, object> tokenValues, string tokenName)
+        {
+            // Support nested property access (e.g., "parent.serialNumber")
+            var parts = tokenName.Split('.');
+
+            if (parts.Length == 1)
+            {
+                return tokenValues.TryGetValue(tokenName, out var value) ? value : null;
+            }
+
+            // Navigate through nested properties
+            object? current = tokenValues.TryGetValue(parts[0], out var rootValue) ? rootValue : null;
+
+            for (int i = 1; i < parts.Length && current != null; i++)
+            {
+                var property = current.GetType().GetProperty(parts[i]);
+                if (property == null)
+                {
+                    return null;
+                }
+                current = property.GetValue(current);
+            }
+
+            return current;
+        }
 
     }
 }

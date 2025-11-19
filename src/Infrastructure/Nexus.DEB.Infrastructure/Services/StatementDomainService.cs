@@ -54,7 +54,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 ModuleId = this.moduleId,
                 OwnedById = ownerId,
                 ReviewDate = reviewDate,
-                SerialNumber = "SoC-xxx",
+                SerialNumber = await debService.GenerateSerialNumberAsync(moduleId, Guid.Parse("00000000-0000-0000-0000-000000000001"), EntityTypes.SoC),
                 StatementText = statementText,
                 Title = title
             };

@@ -30,6 +30,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<Section> Sections { get; set; }
         public DbSet<SettingsType> SettingsTypes { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<SerialNumber> SerialNumbers { get; set; }
 
         // Entities
         public DbSet<EntityHead> EntityHeads { get; set; }

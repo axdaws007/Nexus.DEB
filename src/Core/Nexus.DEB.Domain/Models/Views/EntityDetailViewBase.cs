@@ -14,5 +14,6 @@
         public string? CreatedBy { get; set; }
         public string? LastModifiedBy { get; set; }
         public string? OwnedBy { set; get; }
+        public Guid OwnedById { set; get; }
     }
 }

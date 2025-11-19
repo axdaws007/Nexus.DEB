@@ -70,6 +70,21 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task<bool> DeleteCommentByIdAsync(long id, CancellationToken cancellationToken);
 
+        Task<string> GenerateSerialNumberAsync(
+            Guid moduleId,
+            Guid instanceId,
+            string entityType,
+            Dictionary<string, object>? tokenValues = null,
+            CancellationToken cancellationToken = default);
+
+        Task<List<string>> GenerateSerialNumbersAsync(
+            Guid moduleId,
+            Guid instanceId,
+            string entityType,
+            int numberToGenerate,
+            Func<int, Dictionary<string, object>?>? tokenValuesFactory = null,
+            CancellationToken cancellationToken = default);
+
         #endregion Other
     }
 }

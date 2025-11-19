@@ -169,7 +169,9 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId)
         {
-            var query = _dbContext.Requirements.Include(x => x.StandardVersions)
+            var query = _dbContext.Requirements
+                .Include(x => x.StandardVersions)
+                .Include(x => x.Scopes)
                 .Where(r => r.StandardVersions.Any(sv => sv.EntityId == standardVersionId) && r.IsRemoved == false)
                 .Select(r => r);
 
@@ -584,9 +586,14 @@ namespace Nexus.DEB.Infrastructure.Services
 
         #region Other
 
-        public async System.Threading.Tasks.Task SaveStatementsAndTasks(ICollection<Statement> statements, ICollection<Domain.Models.Task> tasks, CancellationToken cancellationToken)
+        public async System.Threading.Tasks.Task SaveStatementsAndTasks(
+            ICollection<Statement> statements,
+            ICollection<StatementRequirementScope> statementRequirmementScopes,
+            ICollection<Domain.Models.Task> tasks, 
+            CancellationToken cancellationToken)
         {
             await _dbContext.Statements.AddRangeAsync(statements, cancellationToken);
+            await _dbContext.StatementsRequirementsScopes.AddRangeAsync(statementRequirmementScopes, cancellationToken);
             await _dbContext.Tasks.AddRangeAsync(tasks, cancellationToken);
 
             await _dbContext.SaveChangesAsync(cancellationToken);

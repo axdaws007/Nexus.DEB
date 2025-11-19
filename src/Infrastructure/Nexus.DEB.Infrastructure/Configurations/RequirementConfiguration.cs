@@ -24,6 +24,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .WithMany()
                 .HasForeignKey(x => x.RequirementTypeId)
                 .OnDelete(DeleteBehavior.NoAction);
+
         }
     }
 }

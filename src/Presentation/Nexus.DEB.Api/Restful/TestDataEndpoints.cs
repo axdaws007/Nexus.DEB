@@ -67,9 +67,6 @@ namespace Nexus.DEB.Api.Restful
             if (!taskTypes.Any())
                 return Results.BadRequest("No enabled task types found in the system");
 
-            // Get scope (you'll need to determine which scope to use - perhaps from parameters?)
-            var scopes = await debService.GetScopesLookupAsync(cancellationToken);
-
             // Determine possible owner IDs
             var possibleOwnerIds = parameters.PossiblePostIds ?? new List<Guid> { currentPostId };
 
@@ -117,15 +114,24 @@ namespace Nexus.DEB.Api.Restful
 
             var statementsToCreate = new List<Statement>();
             var tasksToCreate = new List<Domain.Models.Task>();
+            var statementRequirementScopesToCreate = new List<StatementRequirementScope>();
 
             // Create one statement for each requirement
             foreach (var requirement in requirements)
             {
+                var possibleScopes = requirement.Scopes.ToList();
+
                 var statement = statementFaker.Generate();
 
-                //statement.Requirements = [requirement];
 
                 statementsToCreate.Add(statement);
+
+                var statementRequirementScope = new StatementRequirementScope();
+                statementRequirementScope.Statement = statement;
+                statementRequirementScope.Requirement = requirement;
+                statementRequirementScope.Scope = f.PickRandom(possibleScopes);
+
+                statementRequirementScopesToCreate.Add(statementRequirementScope);
 
                 await CreateRandomWorkflowSteps(statementWorkflowId.Value, statement.EntityId, pawsService, f, cancellationToken);
 
@@ -149,7 +155,7 @@ namespace Nexus.DEB.Api.Restful
             // Save to database
             try
             {
-                await debService.SaveStatementsAndTasks(statementsToCreate, tasksToCreate, cancellationToken);
+                await debService.SaveStatementsAndTasks(statementsToCreate, statementRequirementScopesToCreate, tasksToCreate, cancellationToken);
 
                 logger.LogInformation(
                     "Successfully created {StatementCount} statements and {TaskCount} tasks",

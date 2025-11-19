@@ -57,8 +57,14 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         #region Other
 
-        Task SaveStatementsAndTasks(ICollection<Statement> statements, ICollection<Domain.Models.Task> tasks, CancellationToken cancellationToken);
+        Task SaveStatementsAndTasks(
+            ICollection<Statement> statements,
+            ICollection<StatementRequirementScope> statementRequirementScopes,
+            ICollection<Domain.Models.Task> tasks, 
+            CancellationToken cancellationToken);
+
         Task<CommentDetail?> CreateCommentAsync(Comment comment, CancellationToken cancellationToken);
+
         Task<bool> DeleteCommentByIdAsync(long id, CancellationToken cancellationToken);
 
         #endregion Other

@@ -27,7 +27,6 @@ namespace Nexus.DEB.Infrastructure.Services
             ICollection<RequirementScopePair>? RequirementScopeCombinations,
             CancellationToken cancellationToken)
         {
-
             // Validate ownerId
             await ValidateOwnerAsync(ownerId);
 
@@ -59,6 +58,51 @@ namespace Nexus.DEB.Infrastructure.Services
                 StatementText = statementText,
                 Title = title
             };
+
+            return Result<Statement>.Success(statement);
+        }
+
+        public async Task<Result<Statement>> ValidateExistingStatementAsync(
+            Guid id,
+            Guid ownerId,
+            string title,
+            string statementText,
+            DateTime? reviewDate,
+            ICollection<RequirementScopePair>? requirementScopeCombinations,
+            CancellationToken cancellationToken)
+        {
+            var statement = await debService.GetStatementByIdAsync(id);
+
+            if (statement == null)
+            {
+                return Result<Statement>.Failure(new ValidationError()
+                {
+                    Code = "INVALID_STATEMENT_ID",
+                    Field = nameof(id),
+                    Message = "Statement does not exist"
+                });
+            }
+
+            await ValidateOwnerAsync(ownerId);
+
+            // Validate title
+            ValidateTitle(title);
+
+            // Validate statement text
+            ValidateStatementText(statementText);
+
+            // Validate review date
+            ValidateReviewDate(reviewDate);
+
+            if (validationErrors.Count > 0)
+            {
+                return Result<Statement>.Failure(validationErrors);
+            }
+
+            statement.OwnedById = ownerId;
+            statement.Title = title;
+            statement.StatementText = statementText;
+            statement.ReviewDate = reviewDate;
 
             return Result<Statement>.Success(statement);
         }

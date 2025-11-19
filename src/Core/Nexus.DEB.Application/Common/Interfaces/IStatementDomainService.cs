@@ -12,5 +12,15 @@ namespace Nexus.DEB.Application.Common.Interfaces
             DateTime? reviewDate,
             ICollection<RequirementScopePair>? RequirementScopeCombinations,
             CancellationToken cancellationToken);
+
+        Task<Result<Statement>> ValidateExistingStatementAsync(
+            Guid id,
+            Guid ownerId,
+            string title,
+            string statementText,
+            DateTime? reviewDate,
+            ICollection<RequirementScopePair>? requirementScopeCombinations,
+            CancellationToken cancellationToken);
+
     }
 }

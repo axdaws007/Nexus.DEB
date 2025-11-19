@@ -49,6 +49,6 @@ namespace Nexus.DEB.Api.GraphQL
             IDebService debService,
             IResolverContext resolverContext,
             CancellationToken cancellationToken)
-            => await debService.GetStatementByIdAsync(id, cancellationToken);
+            => await debService.GetStatementDetailByIdAsync(id, cancellationToken);
     }
 }

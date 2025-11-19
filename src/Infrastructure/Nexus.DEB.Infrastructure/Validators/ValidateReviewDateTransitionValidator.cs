@@ -34,7 +34,7 @@ namespace Nexus.DEB.Infrastructure.Validators
                 "Validating review date for {EntityId}",
                 context.EntityId);
 
-            var statement = await _debService.GetStatementByIdAsync(context.EntityId, cancellationToken);
+            var statement = await _debService.GetStatementDetailByIdAsync(context.EntityId, cancellationToken);
 
             if (statement.ReviewDate.HasValue == false || statement.ReviewDate.Value < _dateTimeProvider.Now.AddDays(7))
             {

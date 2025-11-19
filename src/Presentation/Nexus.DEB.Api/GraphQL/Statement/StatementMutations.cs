@@ -32,7 +32,37 @@ namespace Nexus.DEB.Api.GraphQL
                 throw BuildException(result);
             }
 
-            return await debService.SaveStatementAsync(result.Data, cancellationToken);
+            return await debService.CreateStatementAsync(result.Data, cancellationToken);
+        }
+
+        [Authorize]
+        public static async Task<Statement?> UpdateStatementAsync(
+            Guid id,
+            Guid ownerId,
+            string title,
+            string statementText,
+            DateTime? reviewDate,
+            ICollection<RequirementScopePair>? requirementScopeCombinations,
+            IStatementDomainService statementService,
+            IDebService debService,
+            CancellationToken cancellationToken = default)
+        {
+
+            var result = await statementService.ValidateExistingStatementAsync(
+                id,
+                ownerId,
+                title,
+                statementText,
+                reviewDate,
+                requirementScopeCombinations,
+                cancellationToken);
+
+            if (!result.IsSuccess)
+            {
+                throw BuildException(result);
+            }
+
+            return await debService.UpdateStatementAsync(result.Data, cancellationToken);
         }
 
         private static GraphQLException BuildException(Result result)

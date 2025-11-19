@@ -370,7 +370,7 @@ namespace Nexus.DEB.Infrastructure.Services
             return query.OrderBy(x => x.SerialNumber);
         }
 
-        public async Task<StatementDetail?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<StatementDetail?> GetStatementDetailByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var statement = await _dbContext.StatementDetails.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
 
@@ -396,12 +396,24 @@ namespace Nexus.DEB.Infrastructure.Services
             return statementDetail;
         }
 
-            
-        public async Task<Statement> SaveStatementAsync(
+
+        public async Task<Statement?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default)
+            => await _dbContext.Statements.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
+
+        public async Task<Statement> CreateStatementAsync(
             Statement statement,
             CancellationToken cancellationToken = default)
         {
             await _dbContext.Statements.AddAsync(statement, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return statement;
+        }
+
+        public async Task<Statement> UpdateStatementAsync(
+            Statement statement, 
+            CancellationToken cancellationToken = default)
+        {
             await _dbContext.SaveChangesAsync(cancellationToken);
 
             return statement;

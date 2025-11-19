@@ -24,8 +24,10 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
         IQueryable<StandardVersionExport> GetStandardVersionsForExport(StandardVersionSummaryFilters? filters);
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);
-        Task<StatementDetail?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default);
-        Task<Statement> SaveStatementAsync(Statement statement, CancellationToken cancellationToken = default);
+        Task<StatementDetail?> GetStatementDetailByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<Statement?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<Statement> CreateStatementAsync(Statement statement, CancellationToken cancellationToken = default);
+        Task<Statement> UpdateStatementAsync(Statement statement, CancellationToken cancellationToken = default);
         IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters);
         IQueryable<TaskExport> GetTasksForExport(TaskSummaryFilters? filters);
 

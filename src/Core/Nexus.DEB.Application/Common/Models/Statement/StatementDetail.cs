@@ -1,6 +1,4 @@
-﻿using Nexus.DEB.Application.Common.Models.Core;
-
-namespace Nexus.DEB.Application.Common.Models
+﻿namespace Nexus.DEB.Application.Common.Models
 {
     public class StatementDetail : EntityDetailBase
     {

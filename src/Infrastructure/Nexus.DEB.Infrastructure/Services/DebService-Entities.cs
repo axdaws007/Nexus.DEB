@@ -1,7 +1,6 @@
 ﻿using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Models;
-using Nexus.DEB.Application.Common.Models.Core;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
@@ -398,7 +397,15 @@ namespace Nexus.DEB.Infrastructure.Services
         }
 
             
+        public async Task<Statement> SaveStatementAsync(
+            Statement statement,
+            CancellationToken cancellationToken = default)
+        {
+            await _dbContext.Statements.AddAsync(statement, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
+            return statement;
+        }
 
         #endregion Statements
 

@@ -1,4 +1,4 @@
-﻿namespace Nexus.DEB.Application.Common.Models.Core
+﻿namespace Nexus.DEB.Application.Common.Models
 {
     public class RequirementScopeDetail
     {

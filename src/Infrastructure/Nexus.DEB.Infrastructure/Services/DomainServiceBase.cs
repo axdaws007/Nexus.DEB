@@ -8,7 +8,6 @@ namespace Nexus.DEB.Infrastructure.Services
     {
         protected readonly ICbacService cbacService;
         protected readonly ICisService cisService;
-        protected readonly IConfiguration configuration;
         protected readonly ICurrentUserService currentUserService;
         protected readonly IDateTimeProvider dateTimeProvider;
         protected readonly IDebService debService;
@@ -29,7 +28,6 @@ namespace Nexus.DEB.Infrastructure.Services
         {
             this.cisService = cisService;
             this.cbacService = cbacService;
-            this.configuration = configuration;
             this.currentUserService = currentUserService;
             this.dateTimeProvider = dateTimeProvider;
             this.debService = debService;

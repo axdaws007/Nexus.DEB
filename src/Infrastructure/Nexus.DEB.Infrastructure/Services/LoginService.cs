@@ -105,7 +105,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             var authProperties = new AuthenticationProperties
             {
-                IsPersistent = rememberMe,
+                IsPersistent = false,
                 ExpiresUtc = expiresUtc,
                 AllowRefresh = true,
             };

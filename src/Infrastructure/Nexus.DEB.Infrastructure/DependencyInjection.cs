@@ -81,6 +81,7 @@ namespace Nexus.DEB.Infrastructure
             services.AddTransient<IPawsService, PawsService>();
             services.AddTransient<ICisService, CisService>();
             services.AddTransient<IDateTimeProvider, DateTimeProvider>();
+            services.AddTransient<IApplicationSettingsService, ApplicationSettingsService>();
 
 
             services.AddScoped<IWorkflowValidationService, WorkflowValidationService>();

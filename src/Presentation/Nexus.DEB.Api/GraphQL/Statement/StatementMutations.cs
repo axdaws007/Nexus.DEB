@@ -2,6 +2,7 @@
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Domain.Models.Common;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -17,8 +18,13 @@ namespace Nexus.DEB.Api.GraphQL
             ICollection<RequirementScopePair>? requirementScopeCombinations,
             IStatementDomainService statementService,
             IDebService debService,
+            IPawsService pawsService,
+            IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken = default)
         {
+            var moduleId = applicationSettingsService.GetModuleId("DEB");
+            var workflowId = await debService.GetWorkflowIdAsync(moduleId, EntityTypes.SoC, cancellationToken);
+
             var result = await statementService.ValidateNewStatementAsync(
                 ownerId,
                 title,
@@ -32,7 +38,11 @@ namespace Nexus.DEB.Api.GraphQL
                 throw BuildException(result);
             }
 
-            return await debService.CreateStatementAsync(result.Data, cancellationToken);
+            var statement = await debService.CreateStatementAsync(result.Data, cancellationToken);
+
+            pawsService.CreateWorkflowInstanceAsync(workflowId.Value, statement.EntityId, cancellationToken);
+
+            return statement;
         }
 
         [Authorize]

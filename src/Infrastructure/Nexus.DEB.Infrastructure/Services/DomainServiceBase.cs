@@ -22,12 +22,10 @@ namespace Nexus.DEB.Infrastructure.Services
         public DomainServiceBase(
             ICisService cisService,
             ICbacService cbacService,
-            IConfiguration configuration,
+            IApplicationSettingsService applicationSettingsService,
             ICurrentUserService currentUserService,
             IDateTimeProvider dateTimeProvider,
-
-            IDebService debService,
-            IApplicationSettingsService applicationSettingsService)
+            IDebService debService)
         {
             this.cisService = cisService;
             this.cbacService = cbacService;

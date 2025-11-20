@@ -15,7 +15,7 @@ namespace Nexus.DEB.Infrastructure.Services
             IDebService debService,
             ICurrentUserService currentUserService,
             IDateTimeProvider dateTimeProvider,
-            IConfiguration configuration) : base(cisService, cbacService, configuration, currentUserService, dateTimeProvider, debService)
+            IApplicationSettingsService applicationSettingsService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService)
         {
         }
 

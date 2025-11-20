@@ -1,22 +1,21 @@
-﻿using Microsoft.Extensions.Configuration;
-using Nexus.DEB.Application.Common.Interfaces;
+﻿using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
     public abstract class DomainServiceBase
     {
-        protected readonly ICbacService cbacService;
-        protected readonly ICisService cisService;
-        protected readonly ICurrentUserService currentUserService;
-        protected readonly IDateTimeProvider dateTimeProvider;
-        protected readonly IDebService debService;
-        protected readonly IApplicationSettingsService applicationSettingsService;
+        protected readonly ICbacService CbacService;
+        protected readonly ICisService CisService;
+        protected readonly ICurrentUserService CurrentUserService;
+        protected readonly IDateTimeProvider DateTimeProvider;
+        protected readonly IDebService DebService;
+        protected readonly IApplicationSettingsService ApplicationSettingsService;
 
-        protected List<ValidationError> validationErrors = new List<ValidationError>();
+        protected List<ValidationError> ValidationErrors = new List<ValidationError>();
 
-        protected Guid moduleId { get; private set; }
-        protected Guid instanceId { get; private set; }
+        protected Guid ModuleId { get; private set; }
+        protected Guid InstanceId { get; private set; }
 
         public DomainServiceBase(
             ICisService cisService,
@@ -26,16 +25,16 @@ namespace Nexus.DEB.Infrastructure.Services
             IDateTimeProvider dateTimeProvider,
             IDebService debService)
         {
-            this.cisService = cisService;
-            this.cbacService = cbacService;
-            this.currentUserService = currentUserService;
-            this.dateTimeProvider = dateTimeProvider;
-            this.debService = debService;
-            this.applicationSettingsService = applicationSettingsService;
+            this.CisService = cisService;
+            this.CbacService = cbacService;
+            this.CurrentUserService = currentUserService;
+            this.DateTimeProvider = dateTimeProvider;
+            this.DebService = debService;
+            this.ApplicationSettingsService = applicationSettingsService;
 
 
-            this.moduleId = this.applicationSettingsService.GetModuleId("DEB");
-            this.instanceId = this.applicationSettingsService.GetInstanceId();
+            this.ModuleId = this.ApplicationSettingsService.GetModuleId("DEB");
+            this.InstanceId = this.ApplicationSettingsService.GetInstanceId();
         }
     }
 }

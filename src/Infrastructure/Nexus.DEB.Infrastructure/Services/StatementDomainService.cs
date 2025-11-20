@@ -39,22 +39,22 @@ namespace Nexus.DEB.Infrastructure.Services
             // Validate review date
             ValidateReviewDate(reviewDate);
 
-            if (validationErrors.Count > 0)
+            if (ValidationErrors.Count > 0)
             {
-                return Result<Statement>.Failure(validationErrors);
+                return Result<Statement>.Failure(ValidationErrors);
             }
 
             var statement = new Statement()
             {
-                CreatedById = currentUserService.PostId,
-                CreatedDate = dateTimeProvider.Now,
+                CreatedById = CurrentUserService.PostId,
+                CreatedDate = DateTimeProvider.Now,
                 EntityTypeTitle = EntityTypes.SoC,
-                LastModifiedById = currentUserService.PostId,
-                LastModifiedDate = dateTimeProvider.Now,
-                ModuleId = this.moduleId,
+                LastModifiedById = CurrentUserService.PostId,
+                LastModifiedDate = DateTimeProvider.Now,
+                ModuleId = this.ModuleId,
                 OwnedById = ownerId,
                 ReviewDate = reviewDate,
-                SerialNumber = await debService.GenerateSerialNumberAsync(moduleId, Guid.Parse("00000000-0000-0000-0000-000000000001"), EntityTypes.SoC),
+                SerialNumber = await DebService.GenerateSerialNumberAsync(ModuleId, Guid.Parse("00000000-0000-0000-0000-000000000001"), EntityTypes.SoC),
                 StatementText = statementText,
                 Title = title
             };
@@ -71,7 +71,7 @@ namespace Nexus.DEB.Infrastructure.Services
             ICollection<RequirementScopePair>? requirementScopeCombinations,
             CancellationToken cancellationToken)
         {
-            var statement = await debService.GetStatementByIdAsync(id);
+            var statement = await DebService.GetStatementByIdAsync(id);
 
             if (statement == null)
             {
@@ -94,9 +94,9 @@ namespace Nexus.DEB.Infrastructure.Services
             // Validate review date
             ValidateReviewDate(reviewDate);
 
-            if (validationErrors.Count > 0)
+            if (ValidationErrors.Count > 0)
             {
-                return Result<Statement>.Failure(validationErrors);
+                return Result<Statement>.Failure(ValidationErrors);
             }
 
             statement.OwnedById = ownerId;
@@ -109,11 +109,11 @@ namespace Nexus.DEB.Infrastructure.Services
 
         private async Task ValidateOwnerAsync(Guid ownerId)
         {
-            var posts = await cisService.GetAllPosts();
+            var posts = await CisService.GetAllPosts();
 
             if (posts != null && posts.FirstOrDefault(x => x.ID == ownerId) == null)
             {
-                validationErrors.Add(
+                ValidationErrors.Add(
                     new ValidationError()
                     {
                         Code = "INVALID_OWNER",
@@ -127,7 +127,7 @@ namespace Nexus.DEB.Infrastructure.Services
         {
             if (string.IsNullOrWhiteSpace(title))
             {
-                validationErrors.Add(
+                ValidationErrors.Add(
                     new ValidationError()
                     {
                         Code = "INVALID_TITLE",
@@ -141,7 +141,7 @@ namespace Nexus.DEB.Infrastructure.Services
         {
             if (string.IsNullOrWhiteSpace(statementText))
             {
-                validationErrors.Add(
+                ValidationErrors.Add(
                     new ValidationError()
                     {
                         Code = "INVALID_STATEMENT_TEXT",
@@ -155,9 +155,9 @@ namespace Nexus.DEB.Infrastructure.Services
         {
             if (reviewDate.HasValue)
             {
-                if (reviewDate.Value < dateTimeProvider.Now)
+                if (reviewDate.Value < DateTimeProvider.Now)
                 {
-                    validationErrors.Add(
+                    ValidationErrors.Add(
                         new ValidationError()
                         {
                             Code = "INVALID_REVIEW_DATE",

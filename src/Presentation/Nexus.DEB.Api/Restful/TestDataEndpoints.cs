@@ -34,17 +34,14 @@ namespace Nexus.DEB.Api.Restful
             [FromServices] IConfiguration configuration,
             [FromServices] ILogger<Program> logger,
             [FromServices] IHttpContextAccessor httpContextAccessor, // For current user
+            [FromServices] IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
         {
             // Validation
             if (parameters == null)
                 return Results.BadRequest("Parameters are required");
 
-            var moduleIdString = configuration["Modules:DEB"]
-                ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");
-
-            if (!Guid.TryParse(moduleIdString, out var moduleId))
-                throw new InvalidOperationException("Modules:DEB must be a valid GUID");
+            var moduleId = applicationSettingsService.GetModuleId("DEB");
 
             // Get current user ID (adjust based on your auth setup)
             var currentPostId = currentUserService.PostId;

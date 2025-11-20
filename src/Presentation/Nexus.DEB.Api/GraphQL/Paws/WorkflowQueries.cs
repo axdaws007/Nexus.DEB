@@ -55,16 +55,10 @@ namespace Nexus.DEB.Api.GraphQL.Paws
             Guid entityId,
             IDebService debService,
             IPawsService pawsService,
-            IConfiguration configuration,
+            IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
         {
-            var moduleIdString = configuration["Modules:DEB"] ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");
-
-            if (!Guid.TryParse(moduleIdString, out var moduleId))
-            {
-                throw new InvalidOperationException("Modules:DEB must be a valid GUID");
-            }
-
+            var moduleId = applicationSettingsService.GetModuleId("DEB");
             var entity = await debService.GetEntityHeadAsync(entityId, cancellationToken);
 
             if (entity == null)
@@ -108,55 +102,50 @@ namespace Nexus.DEB.Api.GraphQL.Paws
         public static async Task<ICollection<FilterItem>?> GetStandardVersionStatusLookup(
             IDebService debService,
             IPawsService pawsService,
-            IConfiguration configuration,
+            IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
-            => await GetStatusLookup(EntityTypes.StandardVersion, debService, pawsService, configuration, cancellationToken);
+            => await GetStatusLookup(EntityTypes.StandardVersion, debService, pawsService, applicationSettingsService, cancellationToken);
 
         [Authorize]
         public static async Task<ICollection<FilterItem>?> GetStatementStatusLookup(
             IDebService debService,
             IPawsService pawsService,
-            IConfiguration configuration,
+            IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
-            => await GetStatusLookup(EntityTypes.SoC, debService, pawsService, configuration, cancellationToken);
+            => await GetStatusLookup(EntityTypes.SoC, debService, pawsService, applicationSettingsService, cancellationToken);
 
         [Authorize]
         public static async Task<ICollection<FilterItem>?> GetScopeStatusLookup(
             IDebService debService,
             IPawsService pawsService,
-            IConfiguration configuration,
+            IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
-            => await GetStatusLookup(EntityTypes.Scope, debService, pawsService, configuration, cancellationToken);
+            => await GetStatusLookup(EntityTypes.Scope, debService, pawsService, applicationSettingsService, cancellationToken);
 
         [Authorize]
         public static async Task<ICollection<FilterItem>?> GetRequirementStatusLookup(
             IDebService debService,
             IPawsService pawsService,
-            IConfiguration configuration,
+            IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
-            => await GetStatusLookup(EntityTypes.Requirement, debService, pawsService, configuration, cancellationToken);
+            => await GetStatusLookup(EntityTypes.Requirement, debService, pawsService, applicationSettingsService, cancellationToken);
 
         [Authorize]
         public static async Task<ICollection<FilterItem>?> GetTaskStatusLookup(
             IDebService debService,
             IPawsService pawsService,
-            IConfiguration configuration,
+            IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
-            => await GetStatusLookup(EntityTypes.Task, debService, pawsService, configuration, cancellationToken);
+            => await GetStatusLookup(EntityTypes.Task, debService, pawsService, applicationSettingsService, cancellationToken);
 
         private static async Task<ICollection<FilterItem>?> GetStatusLookup(
             string entityType,
             IDebService debService,
             IPawsService pawsService,
-            IConfiguration configuration,
+            IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
         {
-            var moduleIdString = configuration["Modules:DEB"] ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");
-
-            if (!Guid.TryParse(moduleIdString, out var moduleId))
-            {
-                throw new InvalidOperationException("Modules:DEB must be a valid GUID");
-            }
+            var moduleId = applicationSettingsService.GetModuleId("DEB");
 
             var workflowId = await debService.GetWorkflowIdAsync(moduleId, entityType, cancellationToken);
 
@@ -185,15 +174,10 @@ namespace Nexus.DEB.Api.GraphQL.Paws
             Guid entityId,
             IDebService debService,
             IPawsService pawsService,
-            IConfiguration configuration,
+            IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
         {
-            var moduleIdString = configuration["Modules:DEB"] ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");
-
-            if (!Guid.TryParse(moduleIdString, out var moduleId))
-            {
-                throw new InvalidOperationException("Modules:DEB must be a valid GUID");
-            }
+            var moduleId = applicationSettingsService.GetModuleId("DEB");
 
             var entity = await debService.GetEntityHeadAsync(entityId, cancellationToken);
 

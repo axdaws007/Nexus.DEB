@@ -19,17 +19,12 @@ namespace Nexus.DEB.Api.GraphQL.Paws
             IDebService debService,
             IPawsService pawsService,
             IWorkflowSideEffectService workflowSideEffectService,
-            IConfiguration configuration,
+            IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
         {
             Result result;
 
-            var moduleIdString = configuration["Modules:DEB"] ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");
-
-            if (!Guid.TryParse(moduleIdString, out var moduleId))
-            {
-                throw new InvalidOperationException("Modules:DEB must be a valid GUID");
-            }
+            var moduleId = applicationSettingsService.GetModuleId("DEB");
 
             var entity = await debService.GetEntityHeadAsync(entityId, cancellationToken);
 

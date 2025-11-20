@@ -36,18 +36,14 @@ namespace Nexus.DEB.Api.Restful
             [FromServices] IPawsService pawsService,
             [FromServices] IConfiguration configuration,
             [FromServices] ILogger<Program> logger,
+            [FromServices] IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
         {
             try
             {
                 logger.LogInformation("Workflow diagram HTML request received for entity: {EntityId}", entityId);
 
-                var moduleIdString = configuration["Modules:DEB"] ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");
-
-                if (!Guid.TryParse(moduleIdString, out var moduleId))
-                {
-                    throw new InvalidOperationException("Modules:DEB must be a valid GUID");
-                }
+                var moduleId = applicationSettingsService.GetModuleId("DEB");
 
                 var entity = await debService.GetEntityHeadAsync(entityId, cancellationToken);
 

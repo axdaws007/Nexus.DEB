@@ -24,7 +24,7 @@ namespace Nexus.DEB.Api.GraphQL
         public static async Task<CurrentUserInfo?> GetCurrentUserProfile(
             ICurrentUserService currentUserService,
             ICbacService cbacApi,
-            IConfiguration configuration)
+            IApplicationSettingsService appSettingsService)
         {
             var userDetails = await currentUserService.GetUserDetailsAsync();
 
@@ -35,12 +35,7 @@ namespace Nexus.DEB.Api.GraphQL
 
             if (userDetails.PostId != Guid.Empty)
             {
-                var moduleIdString = configuration["Modules:DEB"] ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");
-
-                if (!Guid.TryParse(moduleIdString, out var moduleId))
-                {
-                    throw new InvalidOperationException("Modules:DEB must be a valid GUID");
-                }
+                var moduleId = appSettingsService.GetModuleId("DEB");
 
                 capabilities = await cbacApi.GetCapabilitiesAsync(moduleId);
             }
@@ -69,15 +64,9 @@ namespace Nexus.DEB.Api.GraphQL
         /// </summary>
         public static async Task<List<CbacCapability>> GetCapabilities(
             ICbacService cbacApi,
-            IConfiguration configuration)
+            IApplicationSettingsService applicationSettingsService)
         {
-            var moduleIdString = configuration["Modules:DEB"]
-                ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");
-
-            if (!Guid.TryParse(moduleIdString, out var moduleId))
-            {
-                throw new InvalidOperationException("Modules:DEB must be a valid GUID");
-            }
+            var moduleId = applicationSettingsService.GetModuleId("DEB");
 
             // CbacService will automatically get the auth cookie from HttpContext!
             // No need to manually extract it anymore.

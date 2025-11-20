@@ -12,10 +12,12 @@ namespace Nexus.DEB.Infrastructure.Services
         protected readonly ICurrentUserService currentUserService;
         protected readonly IDateTimeProvider dateTimeProvider;
         protected readonly IDebService debService;
+        protected readonly IApplicationSettingsService applicationSettingsService;
 
         protected List<ValidationError> validationErrors = new List<ValidationError>();
 
         protected Guid moduleId { get; private set; }
+        protected Guid instanceId { get; private set; }
 
         public DomainServiceBase(
             ICisService cisService,
@@ -23,7 +25,9 @@ namespace Nexus.DEB.Infrastructure.Services
             IConfiguration configuration,
             ICurrentUserService currentUserService,
             IDateTimeProvider dateTimeProvider,
-            IDebService debService)
+
+            IDebService debService,
+            IApplicationSettingsService applicationSettingsService)
         {
             this.cisService = cisService;
             this.cbacService = cbacService;
@@ -31,15 +35,11 @@ namespace Nexus.DEB.Infrastructure.Services
             this.currentUserService = currentUserService;
             this.dateTimeProvider = dateTimeProvider;
             this.debService = debService;
+            this.applicationSettingsService = applicationSettingsService;
 
-            var moduleIdString = configuration["Modules:DEB"] ?? throw new InvalidOperationException("Modules:DEB not configured in appsettings");
 
-            if (!Guid.TryParse(moduleIdString, out var moduleId))
-            {
-                throw new InvalidOperationException("Modules:DEB must be a valid GUID");
-            }
-
-            this.moduleId = moduleId;
+            this.moduleId = this.applicationSettingsService.GetModuleId("DEB");
+            this.instanceId = this.applicationSettingsService.GetInstanceId();
         }
     }
 }

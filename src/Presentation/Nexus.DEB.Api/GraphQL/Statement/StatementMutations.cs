@@ -40,7 +40,7 @@ namespace Nexus.DEB.Api.GraphQL
 
             var statement = await debService.CreateStatementAsync(result.Data, cancellationToken);
 
-            pawsService.CreateWorkflowInstanceAsync(workflowId.Value, statement.EntityId, cancellationToken);
+            await pawsService.CreateWorkflowInstanceAsync(workflowId.Value, statement.EntityId, cancellationToken);
 
             return statement;
         }

@@ -54,6 +54,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task<ICollection<CommentDetail>> GetCommentsForEntityAsync(Guid entityId, CancellationToken cancellationToken);
         Task<int> GetCommentsCountForEntityAsync(Guid entityId, CancellationToken cancellationToken);
+        Task<Comment?> GetCommentByIdAsync(long id, CancellationToken cancellationToken);
         Task<PawsEntityDetail?> GetCurrentWorkflowStatusForEntityAsync(Guid entityId, CancellationToken cancellationToken);
 
         #endregion Generic (eventual Framework)

@@ -40,8 +40,11 @@ namespace Nexus.DEB.Infrastructure.Services
                         .OrderByDescending(x => x.CreatedDate)
                         .ToListAsync(cancellationToken);
 
-        public Task<int> GetCommentsCountForEntityAsync(Guid entityId, CancellationToken cancellationToken)
-            => _dbContext.Comments.AsNoTracking().Where(x => x.EntityId == entityId).CountAsync(cancellationToken);
+        public async Task<int> GetCommentsCountForEntityAsync(Guid entityId, CancellationToken cancellationToken)
+            => await _dbContext.Comments.AsNoTracking().Where(x => x.EntityId == entityId).CountAsync(cancellationToken);
+
+        public async Task<Comment?> GetCommentByIdAsync(long id, CancellationToken cancellationToken = default)
+            => await _dbContext.Comments.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         public async Task<CommentDetail?> CreateCommentAsync(
             Comment comment,

@@ -1,7 +1,9 @@
 using HotChocolate.AspNetCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Nexus.DEB.Api.Restful;
+using Nexus.DEB.Api.Security;
 using Nexus.DEB.Application;
+using Nexus.DEB.Domain;
 using Nexus.DEB.Infrastructure;
 using Nexus.DEB.Infrastructure.Authentication;
 
@@ -135,7 +137,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(DebHelper.Policies.CanAddComments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllEditCommentCapabilities));
+});
 
 builder
     .AddGraphQL()
@@ -172,6 +177,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("GraphQLPolicy");
 app.UseAuthentication();
+app.UseMiddleware<CapabilitiesHttpRequestInterceptor>();
 app.UseAuthorization();
 
 app.MapGraphQL().WithOptions(new GraphQLServerOptions

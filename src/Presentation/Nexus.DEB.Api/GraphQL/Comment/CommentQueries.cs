@@ -15,6 +15,7 @@ namespace Nexus.DEB.Api.GraphQL
             CancellationToken cancellationToken)
             => await debService.GetCommentsForEntityAsync(entityId, cancellationToken);
 
+        [Authorize]
         public static async Task<int> GetCommentsCountForEntity(
             Guid entityId,
             IDebService debService,

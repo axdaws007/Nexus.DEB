@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Infrastructure.Authentication;
 using Nexus.DEB.Infrastructure.Persistence;
@@ -15,7 +17,10 @@ namespace Nexus.DEB.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
-            services.AddMemoryCache();
+            services.AddMemoryCache(options =>
+            {
+                options.SizeLimit = 1024; // Limit number of entries (optional)
+            });
 
             services.AddSingleton<AspNetTicketDataFormat>(provider =>
             {
@@ -73,13 +78,34 @@ namespace Nexus.DEB.Infrastructure
 
             // Other infrastructure services will be registered here
             services.AddScoped<ILoginService, LoginService>();
-            services.AddScoped<ICbacService, CbacService>();
-            services.AddScoped<IDebService, DebService>();
+            services.AddScoped<IDebService, DebService>(); 
+
+            services.AddScoped<CbacService>();
+            services.AddScoped<ICbacService>(provider =>
+            {
+                var innerService = provider.GetRequiredService<CbacService>();
+                var cache = provider.GetRequiredService<IMemoryCache>();
+                var currentUserService = provider.GetRequiredService<ICurrentUserService>();
+                var configuration = provider.GetRequiredService<IConfiguration>();
+                var logger = provider.GetRequiredService<ILogger<CachedCbacService>>();
+
+                return new CachedCbacService(innerService, cache, currentUserService, configuration, logger);
+            });
+
+            services.AddTransient<CisService>();
+            services.AddTransient<ICisService>(provider =>
+            {
+                var innerService = provider.GetRequiredService<CisService>();
+                var cache = provider.GetRequiredService<IMemoryCache>();
+                var configuration = provider.GetRequiredService<IConfiguration>();
+                var logger = provider.GetRequiredService<ILogger<CachedCisService>>();
+
+                return new CachedCisService(innerService, cache, configuration, logger);
+            });
 
             // Note: PawsService is used by field resolvers and needs to be transient
             services.AddTransient<ICurrentUserService, CurrentUserService>();
             services.AddTransient<IPawsService, PawsService>();
-            services.AddTransient<ICisService, CisService>();
             services.AddTransient<IDateTimeProvider, DateTimeProvider>();
             services.AddTransient<IApplicationSettingsService, ApplicationSettingsService>();
 

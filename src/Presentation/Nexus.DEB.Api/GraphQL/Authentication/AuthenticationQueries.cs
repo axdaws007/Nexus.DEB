@@ -24,6 +24,7 @@ namespace Nexus.DEB.Api.GraphQL
         public static async Task<CurrentUserInfo?> GetCurrentUserProfile(
             ICurrentUserService currentUserService,
             ICbacService cbacApi,
+            ClaimsPrincipal claimsPrincipal,
             IApplicationSettingsService appSettingsService)
         {
             var userDetails = await currentUserService.GetUserDetailsAsync();
@@ -31,13 +32,11 @@ namespace Nexus.DEB.Api.GraphQL
             if (userDetails == null)
                 return null;
 
-            List<CbacCapability>? capabilities = null;
+            List<string> capabilities = new List<string>();
 
             if (userDetails.PostId != Guid.Empty)
             {
-                var moduleId = appSettingsService.GetModuleId("DEB");
-
-                capabilities = await cbacApi.GetCapabilitiesAsync(moduleId);
+                capabilities = claimsPrincipal.Claims.Where(x => x.Type == "Capability").Select(x => x.Value).ToList();
             }
 
             return new CurrentUserInfo

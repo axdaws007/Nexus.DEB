@@ -109,7 +109,8 @@ namespace Nexus.DEB.Infrastructure.Services
                     var cacheOptions = new MemoryCacheEntryOptions
                     {
                         AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5),
-                        SlidingExpiration = TimeSpan.FromMinutes(2)
+                        SlidingExpiration = TimeSpan.FromMinutes(2),
+                        Size = 1
                     };
 
                     _memoryCache.Set(cacheKey, userDetails, cacheOptions);

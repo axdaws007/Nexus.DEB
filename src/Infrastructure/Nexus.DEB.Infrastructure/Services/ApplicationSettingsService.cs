@@ -34,7 +34,27 @@ namespace Nexus.DEB.Infrastructure.Services
             if (value == null)
                 throw new KeyNotFoundException($"Configuration key '{appsettingIdentifier}' not found.");
 
-            return (T)Convert.ChangeType(value, typeof(T));
+            try
+            {
+                var targetType = typeof(T);
+                var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+                // Use TypeDescriptor which handles Guid, TimeSpan, and many other types
+                var converter = System.ComponentModel.TypeDescriptor.GetConverter(underlyingType);
+
+                if (converter.CanConvertFrom(typeof(string)))
+                {
+                    return (T)converter.ConvertFromInvariantString(value)!;
+                }
+
+                // Fallback to Convert.ChangeType for basic types
+                return (T)Convert.ChangeType(value, underlyingType);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to convert configuration value '{value}' for key '{appsettingIdentifier}' to type {typeof(T).Name}.", ex);
+            }
         }
     }
 }

@@ -62,6 +62,7 @@ namespace Nexus.DEB.Api.GraphQL
         /// SECURITY: CbacService automatically retrieves the authentication cookie
         /// from the current HTTP context, so we don't need to pass it here.
         /// </summary>
+        [Authorize]
         public static async Task<List<CbacCapability>> GetCapabilities(
             ICbacService cbacApi,
             IApplicationSettingsService applicationSettingsService)

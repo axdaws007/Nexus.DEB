@@ -379,19 +379,41 @@ namespace Nexus.DEB.Infrastructure.Services
 
             var statementDetail = statement.Adapt<StatementDetail>();
 
-            statementDetail.RequirementScopeCombinations = await _dbContext.StatementsRequirementsScopes
-                                                                    .Include(x => x.Requirement)
-                                                                    .Include(x => x.Scope)
-                                                                    .Where(x => x.StatementId == id)
-                                                                    .Select(x => new RequirementScopeDetail()
-                                                                    {
-                                                                        RequirementId = x.RequirementId,
-                                                                        RequirementSerialNumber = x.Requirement.SerialNumber,
-                                                                        RequirementTitle = x.Requirement.Title,
-                                                                        ScopeId = x.ScopeId,
-                                                                        ScopeSerialNumber = x.Scope.SerialNumber,
-                                                                        ScopeTitle = x.Scope.Title
-                                                                    }).ToListAsync(cancellationToken);
+            // Get the flat list of combinations first
+            var combinations = await _dbContext.StatementsRequirementsScopes
+                .Include(x => x.Requirement)
+                    .ThenInclude(r => r.StandardVersions)
+                        .ThenInclude(sv => sv.Standard)
+                .Include(x => x.Scope)
+                .Where(x => x.StatementId == id)
+                .ToListAsync(cancellationToken);
+
+            statementDetail.Requirements = combinations
+                .GroupBy(x => x.Requirement)
+                .Select(g =>
+                {
+                    var requirement = g.Key;
+                    var standardVersion = requirement.StandardVersions.First(); // Assume only one
+
+                    return new RequirementWithScopes
+                    {
+                        RequirementId = requirement.EntityId,
+                        SerialNumber = requirement.SerialNumber,
+                        Title = requirement.Title,
+
+                        // StandardVersion info (single values)
+                        StandardVersionReference = standardVersion.Reference,
+
+                        // All scopes for this requirement (from this statement)
+                        Scopes = g.Select(x => new ScopeDetail
+                        {
+                            ScopeId = x.ScopeId,
+                            SerialNumber = x.Scope.SerialNumber,
+                            Title = x.Scope.Title
+                        }).ToList()
+                    };
+                })
+                .ToList();
 
             return statementDetail;
         }

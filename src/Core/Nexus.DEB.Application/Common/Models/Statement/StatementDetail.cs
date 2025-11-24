@@ -5,6 +5,6 @@
         public string StatementText { get; set; } = string.Empty;
         public DateTime? ReviewDate { get; set; }
 
-        public ICollection<RequirementScopeDetail> RequirementScopeCombinations { get; set; }
+        public List<RequirementWithScopes> Requirements { get; set; } = new();
     }
 }

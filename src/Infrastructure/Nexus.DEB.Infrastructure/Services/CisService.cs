@@ -145,6 +145,8 @@ namespace Nexus.DEB.Infrastructure.Services
                 operationName: $"GetAllPosts");
         }
 
-
+        public void InvalidateUserDetailsCache(Guid userId, Guid postId)
+        {
+        }
     }
 }

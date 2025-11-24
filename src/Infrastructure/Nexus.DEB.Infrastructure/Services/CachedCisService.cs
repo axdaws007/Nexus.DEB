@@ -82,5 +82,13 @@ namespace Nexus.DEB.Infrastructure.Services
         {
             return await _innerCisService.ValidatePostAsync(userId, postId);
         }
+
+        public void InvalidateUserDetailsCache(Guid userId, Guid postId)
+        {
+            var cacheKey = $"user_details_{userId}_{postId}";
+            _cache.Remove(cacheKey);
+            _logger.LogInformation("Invalidated capabilities cache for UserId={UserId}, PostId={PostId}",
+                userId, postId);
+        }
     }
 }

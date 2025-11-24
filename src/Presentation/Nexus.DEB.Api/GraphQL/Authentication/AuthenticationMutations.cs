@@ -1,7 +1,9 @@
 ﻿using HotChocolate.Authorization;
+using HotChocolate.Resolvers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Nexus.DEB.Api.GraphQL.Authentication.Models;
+using Nexus.DEB.Api.Security;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 
@@ -71,8 +73,13 @@ namespace Nexus.DEB.Api.GraphQL
         /// Sign out mutation - removes the Forms Authentication cookie
         /// </summary>
         public static async Task<SignOutPayload> SignOut(
-            [Service] IHttpContextAccessor httpContextAccessor)
+            ICisService cisService,
+            IResolverContext resolverContext,
+            IHttpContextAccessor httpContextAccessor)
         {
+            var debUser = new DebUser(resolverContext.GetUser());
+            cisService.InvalidateUserDetailsCache(debUser.UserId, debUser.PostId);
+
             var httpContext = httpContextAccessor.HttpContext;
 
             if (httpContext == null)

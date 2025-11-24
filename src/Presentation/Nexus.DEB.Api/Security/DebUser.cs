@@ -28,7 +28,7 @@ namespace Nexus.DEB.Api.Security
                           where claim.Type == DebHelper.ClaimTypes.UserId
                           select Guid.Parse(claim.Value)).First();
 
-                UserId = (from claim in claimsPrincipal.Claims
+                PostId = (from claim in claimsPrincipal.Claims
                           where claim.Type == DebHelper.ClaimTypes.PostId
                           select Guid.Parse(claim.Value)).First();
 

@@ -27,22 +27,26 @@ namespace Nexus.DEB.Api.Security
                 if (result.IsSuccess)
                 {
                     var (postId, userId) = result.Data;
-                    var userDetails = await cisService.GetUserDetailsAsync(userId, postId);
 
-                    claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.UserId, userId.ToString()));
-                    claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.PostId, postId.ToString()));
-                    claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.FirstName, userDetails.FirstName));
-                    claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.LastName, userDetails.LastName));
-                    claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.UserName, userDetails.UserName));
-                    claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.PostTitle, userDetails.PostTitle));
+                    if (userId != Guid.Empty && postId != Guid.Empty)
+                    {
+                        var userDetails = await cisService.GetUserDetailsAsync(userId, postId);
 
-                    var moduleId = applicationSettingsService.GetModuleId("DEB");
-                    var capabilities = await cbacService.GetCapabilitiesAsync(moduleId);
+                        claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.UserId, userId.ToString()));
+                        claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.PostId, postId.ToString()));
+                        claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.FirstName, userDetails.FirstName));
+                        claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.LastName, userDetails.LastName));
+                        claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.UserName, userDetails.UserName));
+                        claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.PostTitle, userDetails.PostTitle));
 
-                    foreach (var capability in capabilities)
-                        claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.Capability, capability.CapabilityName));
+                        var moduleId = applicationSettingsService.GetModuleId("DEB");
+                        var capabilities = await cbacService.GetCapabilitiesAsync(moduleId);
 
-                    context.User.AddIdentity(claimsIdentity);
+                        foreach (var capability in capabilities)
+                            claimsIdentity.AddClaim(new Claim(DebHelper.ClaimTypes.Capability, capability.CapabilityName));
+
+                        context.User.AddIdentity(claimsIdentity);
+                    }
                 }
             }
 

@@ -1,5 +1,6 @@
 ﻿using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain;
+using Nexus.DEB.Infrastructure.Helpers;
 using System.Security.Claims;
 
 namespace Nexus.DEB.Api.Security
@@ -24,33 +25,38 @@ namespace Nexus.DEB.Api.Security
             {
                 IsAuthenticated = true;
 
-                UserId = (from claim in claimsPrincipal.Claims
-                          where claim.Type == DebHelper.ClaimTypes.UserId
-                          select Guid.Parse(claim.Value)).First();
+                var result = TokenParser.ParseCookieToken(claimsPrincipal?.Identity?.Name);
 
-                PostId = (from claim in claimsPrincipal.Claims
-                          where claim.Type == DebHelper.ClaimTypes.PostId
-                          select Guid.Parse(claim.Value)).First();
+                if (result.IsSuccess)
+                {
+                    var (postId, userId) = result.Data;
 
-                UserName = (from claim in claimsPrincipal.Claims
-                            where claim.Type == DebHelper.ClaimTypes.UserName
-                            select claim.Value).First();
+                    UserId = userId;
+                    PostId = postId;
 
-                FirstName = (from claim in claimsPrincipal.Claims
-                             where claim.Type == DebHelper.ClaimTypes.FirstName
-                             select claim.Value).First();
+                    if (userId != Guid.Empty && postId != Guid.Empty)
+                    {
+                        UserName = (from claim in claimsPrincipal.Claims
+                                    where claim.Type == DebHelper.ClaimTypes.UserName
+                                    select claim.Value).First();
 
-                LastName = (from claim in claimsPrincipal.Claims
-                            where claim.Type == DebHelper.ClaimTypes.LastName
-                            select claim.Value).First();
+                        FirstName = (from claim in claimsPrincipal.Claims
+                                     where claim.Type == DebHelper.ClaimTypes.FirstName
+                                     select claim.Value).First();
 
-                PostTitle = (from claim in claimsPrincipal.Claims
-                            where claim.Type == DebHelper.ClaimTypes.PostTitle
-                            select claim.Value).First();
+                        LastName = (from claim in claimsPrincipal.Claims
+                                    where claim.Type == DebHelper.ClaimTypes.LastName
+                                    select claim.Value).First();
 
-                Capabilities = (from claim in claimsPrincipal.Claims
-                                where claim.Type == DebHelper.ClaimTypes.Capability
-                                select claim.Value).ToList();
+                        PostTitle = (from claim in claimsPrincipal.Claims
+                                     where claim.Type == DebHelper.ClaimTypes.PostTitle
+                                     select claim.Value).First();
+
+                        Capabilities = (from claim in claimsPrincipal.Claims
+                                        where claim.Type == DebHelper.ClaimTypes.Capability
+                                        select claim.Value).ToList();
+                    }
+                }
             }
         }
     }

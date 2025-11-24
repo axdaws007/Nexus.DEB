@@ -133,6 +133,39 @@ namespace Nexus.DEB.Infrastructure.Services
                 claimsPrincipal,
                 authProperties);
 
+            var rememberMeCookieName = _configuration["Authentication:RememberMeCookieName"] ?? ".DEBUSER";
+
+            if (rememberMe)
+            {
+                var cookieDomain = _configuration["Authentication:CookieDomain"];
+                var requireHttps = true;
+                if (bool.TryParse(_configuration["Authentication:RequireHttps"], out var configHttps))
+                {
+                    requireHttps = configHttps;
+                }
+
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = false,  // Allow JavaScript/React to read this cookie
+                    Secure = requireHttps,  // Use HTTPS in production
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTimeOffset.UtcNow.AddDays(30),  // Remember for 30 days
+                    Path = "/"
+                };
+
+                if (!string.IsNullOrEmpty(cookieDomain))
+                {
+                    cookieOptions.Domain = cookieDomain;
+                }
+
+                httpContext.Response.Cookies.Append(rememberMeCookieName, username, cookieOptions);
+            }
+            else
+            {
+                // If rememberMe is false, clear any existing remembered username
+                httpContext.Response.Cookies.Delete(rememberMeCookieName);
+            }
+
             // Return success response
             var response = new LoginResponse
             {

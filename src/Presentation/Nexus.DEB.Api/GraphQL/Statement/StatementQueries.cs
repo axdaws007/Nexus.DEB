@@ -50,5 +50,12 @@ namespace Nexus.DEB.Api.GraphQL
             IResolverContext resolverContext,
             CancellationToken cancellationToken)
             => await debService.GetStatementDetailByIdAsync(id, cancellationToken);
+
+        [Authorize]
+        public static async Task<StatementChildCounts> GetChildCountsForStatement(
+            Guid id,
+            IDebService debService,
+            CancellationToken cancellationToken)
+            => await debService.GetChildCountsForStatementAsync(id, cancellationToken);
     }
 }

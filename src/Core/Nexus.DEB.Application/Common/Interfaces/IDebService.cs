@@ -26,6 +26,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);
         Task<StatementDetail?> GetStatementDetailByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<Statement?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<StatementChildCounts> GetChildCountsForStatementAsync(Guid id, CancellationToken cancellationToken);
+
         Task<Statement> CreateStatementAsync(Statement statement, CancellationToken cancellationToken = default);
         Task<Statement> UpdateStatementAsync(Statement statement, CancellationToken cancellationToken = default);
         IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters);

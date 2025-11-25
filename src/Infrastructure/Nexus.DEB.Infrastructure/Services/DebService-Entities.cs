@@ -422,6 +422,18 @@ namespace Nexus.DEB.Infrastructure.Services
         public async Task<Statement?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default)
             => await _dbContext.Statements.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
 
+        public async Task<StatementChildCounts> GetChildCountsForStatementAsync(Guid id, CancellationToken cancellationToken)
+        {
+            // TODO - need to add in the count of Evidences once we get to adding them to the schema
+
+            var numberOfTasks = await _dbContext.Tasks.CountAsync(x => x.StatementId == id && x.IsRemoved == false, cancellationToken);
+
+            return new StatementChildCounts()
+            {
+                TasksCount = numberOfTasks
+            };
+        }    
+
         public async Task<Statement> CreateStatementAsync(
             Statement statement,
             CancellationToken cancellationToken = default)

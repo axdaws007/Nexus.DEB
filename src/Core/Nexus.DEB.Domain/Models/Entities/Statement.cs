@@ -4,7 +4,6 @@ namespace Nexus.DEB.Domain.Models
 {
     public class Statement : EntityHead
     {
-        public string StatementText { get; set; }
         public DateTime? ReviewDate { get; set; }
 
         public virtual ICollection<StatementRequirementScope> StatementsRequirementsScopes { get; set; }

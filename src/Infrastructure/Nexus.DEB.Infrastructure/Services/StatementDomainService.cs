@@ -55,7 +55,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 OwnedById = ownerId,
                 ReviewDate = reviewDate,
                 SerialNumber = await DebService.GenerateSerialNumberAsync(ModuleId, Guid.Parse("00000000-0000-0000-0000-000000000001"), EntityTypes.SoC),
-                StatementText = statementText,
+                Description = statementText,
                 Title = title
             };
 
@@ -101,7 +101,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             statement.OwnedById = ownerId;
             statement.Title = title;
-            statement.StatementText = statementText;
+            statement.Description = statementText;
             statement.ReviewDate = reviewDate;
 
             return Result<Statement>.Success(statement);

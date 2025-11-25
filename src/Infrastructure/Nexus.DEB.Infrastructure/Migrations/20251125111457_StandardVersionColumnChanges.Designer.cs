@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20251125111457_StandardVersionColumnChanges")]
+    partial class StandardVersionColumnChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -242,40 +245,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.ToTable((string)null);
 
                     b.ToView("vw_EntityHeadDetail", "common");
-                });
-
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ModuleInfo", b =>
-                {
-                    b.Property<Guid>("ModuleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AssemblyName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<bool>("Enabled")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("IOCName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<bool>("IsIssueLinkable")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ModuleName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("SchemaName")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("ModuleId");
-
-                    b.ToTable("ModuleInfo", (string)null);
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ModuleSetting", b =>
@@ -1318,19 +1287,11 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ModuleSetting", b =>
                 {
-                    b.HasOne("Nexus.DEB.Domain.Models.Other.ModuleInfo", "ModuleInfo")
-                        .WithMany("ModuleSettings")
-                        .HasForeignKey("ModuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Nexus.DEB.Domain.Models.Other.SettingsType", "Type")
                         .WithMany()
                         .HasForeignKey("TypeId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
-
-                    b.Navigation("ModuleInfo");
 
                     b.Navigation("Type");
                 });
@@ -1512,11 +1473,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.Navigation("Statement");
 
                     b.Navigation("TaskType");
-                });
-
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ModuleInfo", b =>
-                {
-                    b.Navigation("ModuleSettings");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Section", b =>

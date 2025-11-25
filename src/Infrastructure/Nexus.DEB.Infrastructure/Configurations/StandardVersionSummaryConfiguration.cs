@@ -33,8 +33,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .IsRequired();
 
             builder.Property(e => e.Title)
-                .HasColumnName("StandardVersionTitle")
-                .IsRequired();
+                .HasColumnName("StandardVersionTitle");
 
             builder.Property(e => e.EffectiveFrom)
                 .HasColumnName("EffectiveStartDate")

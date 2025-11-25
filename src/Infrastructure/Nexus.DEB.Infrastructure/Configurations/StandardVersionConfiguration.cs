@@ -13,6 +13,8 @@ namespace Nexus.DEB.Infrastructure.Configurations
 
             builder.HasBaseType<EntityHead>();
 
+            builder.Property(x => x.Delimiter).HasDefaultValue(string.Empty).HasMaxLength(5);
+
             builder
                 .HasOne<Standard>(x => x.Standard)
                 .WithMany()

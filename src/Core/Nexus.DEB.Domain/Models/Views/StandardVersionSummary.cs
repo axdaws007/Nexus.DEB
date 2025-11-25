@@ -6,9 +6,9 @@ namespace Nexus.DEB.Domain.Models
     {
         public Guid EntityId { get; set; }
         public short StandardId { get; set; }
-        public string StandardTitle { get; set; }
-        public string Version { get; set; }
-        public string Title { get; set; }
+        public string StandardTitle { get; set; } = string.Empty;
+        public string Version { get; set; } = string.Empty;
+        public string? Title { get; set; }
         public DateTime EffectiveFrom { get; set; }
         public DateTime? EffectiveTo { get; set; }
         public DateTime LastModifiedDate { get; set; }

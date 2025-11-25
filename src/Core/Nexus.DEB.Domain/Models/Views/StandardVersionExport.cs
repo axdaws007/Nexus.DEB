@@ -11,7 +11,7 @@
         public DateTime EffectiveStartDate { get; set; }
         public DateTime? EffectiveEndDate { get; set; }
         public DateTime LastModifiedDate { get; set; }
-        public string Reference { get; set; } = string.Empty;
+        public string Delimiter { get; set; } = string.Empty;
         public int? MajorVersion { get; set; }
         public int? MinorVersion { get; set; }
         public int StatusId { get; set; }

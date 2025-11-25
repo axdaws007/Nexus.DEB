@@ -402,7 +402,7 @@ namespace Nexus.DEB.Infrastructure.Services
                         Title = requirement.Title,
 
                         // StandardVersion info (single values)
-                        StandardVersionReference = standardVersion.Reference,
+                        StandardVersionReference = standardVersion.Standard.Title + standardVersion.Delimiter + standardVersion.Title,
 
                         // All scopes for this requirement (from this statement)
                         Scopes = g.Select(x => new ScopeDetail
@@ -467,7 +467,7 @@ namespace Nexus.DEB.Infrastructure.Services
                                   select new FilterItemEntity()
                                   {
                                       Id = sv.EntityId,
-                                      Value = sv.Standard.Title + " " + sv.Reference,
+                                      Value = sv.Standard.Title + sv.Delimiter + sv.Title,
                                       IsEnabled = !sv.IsRemoved
                                   }).ToListAsync(cancellationToken);
 

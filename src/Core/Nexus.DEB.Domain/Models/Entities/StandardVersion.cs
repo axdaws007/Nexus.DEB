@@ -11,10 +11,9 @@ namespace Nexus.DEB.Domain.Models
 
         public DateTime EffectiveStartDate { get; set; }
         public DateTime? EffectiveEndDate { get; set; }
-        public string Reference { get; set; }
+        public string Delimiter { get; set; } = string.Empty;
         public int? MajorVersion { get; set; }
         public int? MinorVersion { get; set; }
-        public bool UseVersionPrefix { get; set; }
 
         public short StandardId { get; set; }
         public virtual Standard Standard { get; set; }

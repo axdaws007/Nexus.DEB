@@ -49,8 +49,8 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .HasColumnName("LastModifiedDate")
                 .IsRequired();
 
-            builder.Property(e => e.Reference)
-                .HasColumnName("Reference")
+            builder.Property(e => e.Delimiter)
+                .HasColumnName("Delimiter")
                 .IsRequired();
 
             builder.Property(e => e.StatusId)

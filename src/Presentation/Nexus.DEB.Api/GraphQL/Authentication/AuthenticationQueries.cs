@@ -62,7 +62,7 @@ namespace Nexus.DEB.Api.GraphQL
         /// from the current HTTP context, so we don't need to pass it here.
         /// </summary>
         [Authorize]
-        public static async Task<List<CbacCapability>> GetCapabilities(
+        public static async Task<List<string>> GetCapabilities(
             ICbacService cbacApi,
             IApplicationSettingsService applicationSettingsService)
         {
@@ -70,7 +70,9 @@ namespace Nexus.DEB.Api.GraphQL
 
             // CbacService will automatically get the auth cookie from HttpContext!
             // No need to manually extract it anymore.
-            return await cbacApi.GetCapabilitiesAsync(moduleId);
+            var capabilities = await cbacApi.GetCapabilitiesAsync(moduleId);
+
+            return capabilities.Select(x => x.CapabilityName).ToList();
         }
     }
 }

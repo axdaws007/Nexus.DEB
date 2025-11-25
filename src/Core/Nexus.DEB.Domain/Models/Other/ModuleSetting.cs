@@ -10,5 +10,7 @@
         public bool IsNullable { get; set; }
         public string? Description { get; set; }
         public bool IsCustomerSet { get; set; }
-    }
+
+		public virtual ModuleInfo ModuleInfo { get; set; }
+	}
 }

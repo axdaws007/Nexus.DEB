@@ -13,7 +13,11 @@ namespace Nexus.DEB.Infrastructure.Configurations
             builder.HasKey(x => new { x.ModuleId, x.Name });
             builder.Property(x => x.Name).HasMaxLength(100);
 
-            builder.HasOne(x => x.Type)
+            builder.HasOne(builder => builder.ModuleInfo)
+				.WithMany(module => module.ModuleSettings)
+				.HasForeignKey(builder => builder.ModuleId);
+
+			builder.HasOne(x => x.Type)
                 .WithMany()
                 .HasForeignKey(x => x.TypeId)
                 .OnDelete(DeleteBehavior.NoAction);

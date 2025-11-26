@@ -428,9 +428,12 @@ namespace Nexus.DEB.Infrastructure.Services
 
             var numberOfTasks = await _dbContext.Tasks.CountAsync(x => x.StatementId == id && x.IsRemoved == false, cancellationToken);
 
+            var numberOfComments = await GetCommentsCountForEntityAsync(id, cancellationToken);
+
             return new StatementChildCounts()
             {
-                TasksCount = numberOfTasks
+                TasksCount = numberOfTasks,
+                CommentsCount = numberOfComments
             };
         }    
 

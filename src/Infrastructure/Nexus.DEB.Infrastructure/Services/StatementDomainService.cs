@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Nexus.DEB.Application.Common.Interfaces;
+﻿using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
@@ -15,54 +14,56 @@ namespace Nexus.DEB.Infrastructure.Services
             IDebService debService,
             ICurrentUserService currentUserService,
             IDateTimeProvider dateTimeProvider,
-            IApplicationSettingsService applicationSettingsService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService)
+            IApplicationSettingsService applicationSettingsService,
+            IPawsService pawsService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, EntityTypes.SoC)
         {
         }
 
-        public async Task<Result<Statement>> ValidateNewStatementAsync(
+        public async Task<Result<Statement>> CreateStatementAsync(
             Guid ownerId,
             string title,
             string statementText,
             DateTime? reviewDate,
-            ICollection<RequirementScopePair>? RequirementScopeCombinations,
+            ICollection<RequirementScopePair>? requirementScopeCombinations,
             CancellationToken cancellationToken)
         {
-            // Validate ownerId
-            await ValidateOwnerAsync(ownerId);
-
-            // Validate title
-            ValidateTitle(title);
-
-            // Validate statement text
-            ValidateStatementText(statementText);
-
-            // Validate review date
-            ValidateReviewDate(reviewDate);
+            await ValidateFieldsAsync(ownerId, title, statementText, reviewDate, requirementScopeCombinations);
 
             if (ValidationErrors.Count > 0)
             {
                 return Result<Statement>.Failure(ValidationErrors);
             }
 
-            var statement = new Statement()
+            try
             {
-                CreatedById = CurrentUserService.PostId,
-                CreatedDate = DateTimeProvider.Now,
-                EntityTypeTitle = EntityTypes.SoC,
-                LastModifiedById = CurrentUserService.PostId,
-                LastModifiedDate = DateTimeProvider.Now,
-                ModuleId = this.ModuleId,
-                OwnedById = ownerId,
-                ReviewDate = reviewDate,
-                SerialNumber = await DebService.GenerateSerialNumberAsync(ModuleId, Guid.Parse("00000000-0000-0000-0000-000000000001"), EntityTypes.SoC),
-                Description = statementText,
-                Title = title
-            };
+                var statement = new Statement()
+                {
+                    CreatedById = CurrentUserService.PostId,
+                    CreatedDate = DateTimeProvider.Now,
+                    EntityTypeTitle = EntityTypes.SoC,
+                    LastModifiedById = CurrentUserService.PostId,
+                    LastModifiedDate = DateTimeProvider.Now,
+                    ModuleId = this.ModuleId,
+                    OwnedById = ownerId,
+                    ReviewDate = reviewDate,
+                    SerialNumber = await DebService.GenerateSerialNumberAsync(this.ModuleId, this.InstanceId, EntityTypes.SoC),
+                    Description = statementText,
+                    Title = title
+                };
 
-            return Result<Statement>.Success(statement);
+                statement = await this.DebService.CreateStatementAsync(statement, cancellationToken);
+
+                await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, statement.EntityId, cancellationToken);
+
+                return Result<Statement>.Success(statement);
+            }
+            catch (Exception ex)
+            {
+                return Result<Statement>.Failure($"An error occurred creating the Statement: {ex.Message}");
+            }
         }
 
-        public async Task<Result<Statement>> ValidateExistingStatementAsync(
+        public async Task<Result<Statement>> UpdateStatementAsync(
             Guid id,
             Guid ownerId,
             string title,
@@ -83,16 +84,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 });
             }
 
-            await ValidateOwnerAsync(ownerId);
-
-            // Validate title
-            ValidateTitle(title);
-
-            // Validate statement text
-            ValidateStatementText(statementText);
-
-            // Validate review date
-            ValidateReviewDate(reviewDate);
+            await ValidateFieldsAsync(ownerId, title, statementText, reviewDate, requirementScopeCombinations);
 
             if (ValidationErrors.Count > 0)
             {
@@ -104,7 +96,35 @@ namespace Nexus.DEB.Infrastructure.Services
             statement.Description = statementText;
             statement.ReviewDate = reviewDate;
 
-            return Result<Statement>.Success(statement);
+            try
+            {
+                await this.DebService.UpdateStatementAsync(statement, cancellationToken);
+
+                return Result<Statement>.Success(statement);
+            }
+            catch(Exception ex)
+            {
+                return Result<Statement>.Failure($"An error occurred updating the Statement: {ex.Message}");
+            }
+        }
+
+        private async Task ValidateFieldsAsync(
+            Guid ownerId,
+            string title,
+            string statementText,
+            DateTime? reviewDate,
+            ICollection<RequirementScopePair>? RequirementScopeCombinations)
+        {
+            await ValidateOwnerAsync(ownerId);
+
+            // Validate title
+            ValidateTitle(title);
+
+            // Validate statement text
+            ValidateStatementText(statementText);
+
+            // Validate review date
+            ValidateReviewDate(reviewDate);
         }
 
         private async Task ValidateOwnerAsync(Guid ownerId)

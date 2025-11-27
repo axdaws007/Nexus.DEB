@@ -91,6 +91,9 @@ namespace Nexus.DEB.Infrastructure.Services
                 new Claim(ClaimTypes.Authentication, "Forms")
             };
 
+            
+            _cisService.InvalidateUserCache(cisUser.UserId, postId);
+
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
 
@@ -240,7 +243,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 });
             }
 
-            _cisService.InvalidateUserDetailsCache(userId, postId);
+            _cisService.InvalidateUserCache(userId, postId);
 
             // Get existing authentication properties to preserve rememberMe and expiration
             var existingAuthResult = await httpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);

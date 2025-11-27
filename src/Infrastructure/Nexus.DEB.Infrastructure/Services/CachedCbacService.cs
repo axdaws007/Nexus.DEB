@@ -38,6 +38,7 @@ namespace Nexus.DEB.Infrastructure.Services
         {
             // Get current user ID for cache key
             var userId = _currentUserService.UserId;
+            var postId = _currentUserService.PostId;
 
             if (userId == Guid.Empty)
             {
@@ -46,19 +47,19 @@ namespace Nexus.DEB.Infrastructure.Services
                 return await _innerCbacService.GetCapabilitiesAsync(moduleId);
             }
 
-            // Create cache key: userId + moduleId ensures isolation per user and module
-            var cacheKey = $"cbac_capabilities_{userId}_{moduleId}";
+            // Create cache key: userId + moduleId ensures isolation per user and postId
+            var cacheKey = $"cbac_capabilities_{userId}_{postId}";
 
             // Try to get from cache
             if (_cache.TryGetValue<List<CbacCapability>>(cacheKey, out var cachedCapabilities))
             {
-                _logger.LogDebug("Cache hit for capabilities: UserId={UserId}, ModuleId={ModuleId}",
-                    userId, moduleId);
+                _logger.LogInformation("Invalidated capabilities cache for UserId={UserId}, PostId={PostId}",
+                    userId, postId);
                 return cachedCapabilities!;
             }
 
-            _logger.LogDebug("Cache miss for capabilities: UserId={UserId}, ModuleId={ModuleId}",
-                userId, moduleId);
+            _logger.LogDebug("Cache miss for capabilities: UserId={UserId}, PostId={PostId}",
+                userId, postId);
 
             // Fetch from API
             var capabilities = await _innerCbacService.GetCapabilitiesAsync(moduleId);

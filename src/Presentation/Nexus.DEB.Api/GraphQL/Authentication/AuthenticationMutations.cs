@@ -27,7 +27,7 @@ namespace Nexus.DEB.Api.GraphQL
                 List<CisPost>? posts = null;
                 if (result.Data.Posts != null && result.Data.Posts.Any())
                 {
-                    posts = result.Data.Posts.Select(p => new CisPost
+                    posts = result.Data.Posts.OrderBy(x => x.Title).Select(p => new CisPost
                     {
                         PostId = p.PostId,
                         Title = p.Title
@@ -74,11 +74,13 @@ namespace Nexus.DEB.Api.GraphQL
         /// </summary>
         public static async Task<SignOutPayload> SignOut(
             ICisService cisService,
+            ICbacService cbacService,
             IResolverContext resolverContext,
             IHttpContextAccessor httpContextAccessor)
         {
             var debUser = new DebUser(resolverContext.GetUser());
-            cisService.InvalidateUserDetailsCache(debUser.UserId, debUser.PostId);
+
+            cisService.InvalidateUserCache(debUser.UserId, debUser.PostId);
 
             var httpContext = httpContextAccessor.HttpContext;
 

@@ -2,7 +2,6 @@
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
-using Nexus.DEB.Domain.Models.Common;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -17,15 +16,9 @@ namespace Nexus.DEB.Api.GraphQL
             DateTime? reviewDate,
             ICollection<RequirementScopePair>? requirementScopeCombinations,
             IStatementDomainService statementService,
-            IDebService debService,
-            IPawsService pawsService,
-            IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken = default)
         {
-            var moduleId = applicationSettingsService.GetModuleId("DEB");
-            var workflowId = await debService.GetWorkflowIdAsync(moduleId, EntityTypes.SoC, cancellationToken);
-
-            var result = await statementService.ValidateNewStatementAsync(
+            var result = await statementService.CreateStatementAsync(
                 ownerId,
                 title,
                 statementText,
@@ -35,14 +28,10 @@ namespace Nexus.DEB.Api.GraphQL
 
             if (!result.IsSuccess)
             {
-                throw BuildException(result);
+                throw ExceptionHelper.BuildException(result);
             }
 
-            var statement = await debService.CreateStatementAsync(result.Data, cancellationToken);
-
-            await pawsService.CreateWorkflowInstanceAsync(workflowId.Value, statement.EntityId, cancellationToken);
-
-            return statement;
+            return result.Data;
         }
 
         [Authorize]
@@ -54,11 +43,9 @@ namespace Nexus.DEB.Api.GraphQL
             DateTime? reviewDate,
             ICollection<RequirementScopePair>? requirementScopeCombinations,
             IStatementDomainService statementService,
-            IDebService debService,
             CancellationToken cancellationToken = default)
         {
-
-            var result = await statementService.ValidateExistingStatementAsync(
+            var result = await statementService.UpdateStatementAsync(
                 id,
                 ownerId,
                 title,
@@ -69,23 +56,10 @@ namespace Nexus.DEB.Api.GraphQL
 
             if (!result.IsSuccess)
             {
-                throw BuildException(result);
+                throw ExceptionHelper.BuildException(result);
             }
 
-            return await debService.UpdateStatementAsync(result.Data, cancellationToken);
-        }
-
-        private static GraphQLException BuildException(Result result)
-        {
-            var errors = result.Errors.Select(e =>
-                ErrorBuilder.New()
-                    .SetMessage(e.Message)
-                    .SetCode(e.Code)
-                    .SetExtension("field", e.Field)
-                    .SetExtension("meta", e.Meta)
-                    .Build());
-
-            return new GraphQLException(errors);
+            return result.Data;
         }
     }
 }

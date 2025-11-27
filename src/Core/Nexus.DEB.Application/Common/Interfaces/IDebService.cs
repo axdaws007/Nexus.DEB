@@ -52,6 +52,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         #region Generic (eventual Framework)
 
         Task<Guid?> GetWorkflowIdAsync(Guid moduleId, string entityType, CancellationToken cancellationToken);
+        Guid? GetWorkflowId(Guid moduleId, string entityType);
         Task<PawsState?> GetWorkflowStatusByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
         Task<ICollection<CommentDetail>> GetCommentsForEntityAsync(Guid entityId, CancellationToken cancellationToken);

@@ -24,6 +24,21 @@ namespace Nexus.DEB.Infrastructure.Services
             return Guid.TryParse(value, out var result) ? result : (Guid?)null;
         }
 
+        public Guid? GetWorkflowId(
+            Guid moduleId,
+            string entityType)
+        {
+            var settingName = $"PawsWorkFlowID:{entityType}";
+
+            var value = _dbContext.ModuleSettings
+                .AsNoTracking()
+                .Where(x => x.ModuleId == moduleId && x.Name == settingName)
+                .Select(x => x.Value)
+                .FirstOrDefault();
+
+            return Guid.TryParse(value, out var result) ? result : (Guid?)null;
+        }
+
         public async Task<PawsState?> GetWorkflowStatusByIdAsync(
             Guid id,
             CancellationToken cancellationToken = default)
@@ -54,7 +69,7 @@ namespace Nexus.DEB.Infrastructure.Services
             await _dbContext.SaveChangesAsync();
 
             return await _dbContext.CommentDetails.AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Id == comment.Id);
+                .FirstOrDefaultAsync(x => x.Id == comment.Id, cancellationToken);
         }
 
         public async Task<bool> DeleteCommentByIdAsync(

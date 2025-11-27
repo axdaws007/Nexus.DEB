@@ -2,6 +2,7 @@
 using Nexus.DEB.Api.GraphQL.Authentication.Models;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Domain;
 using System.Security.Claims;
 
 namespace Nexus.DEB.Api.GraphQL
@@ -36,7 +37,7 @@ namespace Nexus.DEB.Api.GraphQL
 
             if (userDetails.PostId != Guid.Empty)
             {
-                capabilities = claimsPrincipal.Claims.Where(x => x.Type == "Capability").Select(x => x.Value).ToList();
+                capabilities = claimsPrincipal.Claims.Where(x => x.Type == DebHelper.ClaimTypes.Capability).OrderBy(x => x.Value).Select(x => x.Value).ToList();
             }
 
             return new CurrentUserInfo
@@ -49,7 +50,7 @@ namespace Nexus.DEB.Api.GraphQL
                 Email = userDetails.Email,
                 PostId = userDetails.PostId,
                 PostTitle = userDetails.PostTitle,
-                Posts = userDetails.Posts,
+                Posts = userDetails.Posts?.OrderBy(x => x.Title).ToList(),
                 Capabilities = capabilities,
                 IsAuthenticated = currentUserService.IsAuthenticated
             };

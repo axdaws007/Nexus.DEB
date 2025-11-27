@@ -17,6 +17,6 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<ICollection<PostDetails>?> GetPostsBySearchTextAsync(string searchText, CancellationToken cancellation = default);
         Task<ICollection<PostDetails>?> GetAllPosts();
 
-        void InvalidateUserDetailsCache(Guid userId, Guid postId);
+        void InvalidateUserCache(Guid userId, Guid postId);
     }
 }

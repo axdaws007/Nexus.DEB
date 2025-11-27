@@ -5,7 +5,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 {
     public interface IStatementDomainService
     {
-        Task<Result<Statement>> ValidateNewStatementAsync(
+        Task<Result<Statement>> CreateStatementAsync(
             Guid ownerId,
             string title,
             string statementText,
@@ -13,7 +13,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
             ICollection<RequirementScopePair>? RequirementScopeCombinations,
             CancellationToken cancellationToken);
 
-        Task<Result<Statement>> ValidateExistingStatementAsync(
+        Task<Result<Statement>> UpdateStatementAsync(
             Guid id,
             Guid ownerId,
             string title,

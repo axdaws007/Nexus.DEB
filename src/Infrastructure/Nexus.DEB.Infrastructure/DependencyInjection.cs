@@ -115,6 +115,7 @@ namespace Nexus.DEB.Infrastructure
 
             // Register domain services
             services.AddScoped<IStatementDomainService, StatementDomainService>();
+            services.AddScoped<ICommentDomainService, CommentDomainService>();
 
             // Register validator registry
             services.AddScoped<ITransitionValidatorRegistry, TransitionValidatorRegistry>();

@@ -23,7 +23,7 @@ namespace Nexus.DEB.Api.GraphQL.Cis
             }
 
             if (posts != null && posts.Count > 0 && !string.IsNullOrEmpty(searchText))
-                return posts.Where(x => x.PostTitle.ToLower().Contains(searchText.ToLower())).ToList();
+                return posts.Where(x => x.PostTitle.ToLower().Contains(searchText.ToLower())).OrderBy(x => x.PostTitle).ToList();
 
             return posts ?? new List<PostDetails>();
         }

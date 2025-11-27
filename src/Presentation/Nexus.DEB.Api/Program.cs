@@ -139,7 +139,8 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy(DebHelper.Policies.CanAddComments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllEditCommentCapabilities));
+    options.AddPolicy(DebHelper.Policies.CanAddComments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllCreateCommentCapabilities));
+    options.AddPolicy(DebHelper.Policies.CanDeleteComments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllDeleteCommentCapabilities));
 });
 
 builder

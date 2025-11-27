@@ -145,8 +145,10 @@ namespace Nexus.DEB.Infrastructure.Services
                 operationName: $"GetAllPosts");
         }
 
-        public void InvalidateUserDetailsCache(Guid userId, Guid postId)
+        public void InvalidateUserCache(Guid userId, Guid postId)
         {
+            // This method should never actually be called.
+            throw new NotImplementedException();
         }
     }
 }

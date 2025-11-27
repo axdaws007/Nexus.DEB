@@ -33,6 +33,8 @@ namespace Nexus.DEB.Infrastructure.Services
                 .Include(r => r.SectionRequirements)
                     .ThenInclude(sr => sr.Section)
                 .Include(r => r.StatementsRequirementsScopes)
+                .Include(r => r.StandardVersions)
+                    .ThenInclude(x => x.Standard)
                 .Select(r => new RequirementSummary
                 {
                     EntityId = r.EntityId,
@@ -59,7 +61,8 @@ namespace Nexus.DEB.Infrastructure.Services
                     StatementIds = r.StatementsRequirementsScopes
                         .Select(srs => srs.StatementId)
                         .Distinct()
-                        .ToList()
+                        .ToList(),
+                    StandardVersionTitles = r.StandardVersions.Select(sv => sv.Standard.Title + sv.Delimiter + sv.Title).ToList()
                 })
                 .AsNoTracking();
 

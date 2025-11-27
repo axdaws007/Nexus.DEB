@@ -13,5 +13,6 @@ namespace Nexus.DEB.Application.Common.Models
         public int? StatusId { get; set; }
         public string? Status { get; set; }
         public ICollection<Guid>? StatementIds { get; set; }
+        public ICollection<string> StandardVersionTitles { get; set; }
     }
 }

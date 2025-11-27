@@ -182,46 +182,46 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
-        public async Task<ICollection<RequirementWithScopes>> GetRequirementScopesForStatement(
-            Guid statementId,
-            CancellationToken cancellationToken)
-        {
-            var results = await _dbContext.Set<StatementRequirementScope>()
-                .Where(srs => srs.StatementId == statementId)
-                .Include(srs => srs.Requirement)
-                    .ThenInclude(r => r.StandardVersions)
-                        .ThenInclude(s => s.Standard)
-                .Include(srs => srs.Scope)
-                .AsNoTracking()
-                .ToListAsync(cancellationToken);
+        //public async Task<ICollection<RequirementWithScopes>> GetRequirementScopesForStatement(
+        //    Guid statementId,
+        //    CancellationToken cancellationToken)
+        //{
+        //    var results = await _dbContext.Set<StatementRequirementScope>()
+        //        .Where(srs => srs.StatementId == statementId)
+        //        .Include(srs => srs.Requirement)
+        //            .ThenInclude(r => r.StandardVersions)
+        //                .ThenInclude(s => s.Standard)
+        //        .Include(srs => srs.Scope)
+        //        .AsNoTracking()
+        //        .ToListAsync(cancellationToken);
 
-            var grouped = results
-                .GroupBy(srs => new
-                {
-                    srs.RequirementId,
-                    srs.Requirement.EntityId,
-                    srs.Requirement.SerialNumber,
-                    srs.Requirement.Title
-                })
-                .Select(g => new RequirementWithScopes
-                {
-                    RequirementId = g.Key.EntityId,
-                    SerialNumber = g.Key.SerialNumber,
-                    Title = g.Key.Title,
-                    StandardVersionReference = g.First().Requirement.StandardVersions
-                        .Select(sv => sv.Standard.Title + sv.Delimiter + sv.Title)
-                        .FirstOrDefault() ?? string.Empty,
-                    Scopes = g.Select(srs => new ScopeDetail
-                    {
-                        ScopeId = srs.ScopeId,
-                        SerialNumber = srs.Scope.SerialNumber,
-                        Title = srs.Scope.Title
-                    }).ToList()
-                })
-                .ToList();
+        //    var grouped = results
+        //        .GroupBy(srs => new
+        //        {
+        //            srs.RequirementId,
+        //            srs.Requirement.EntityId,
+        //            srs.Requirement.SerialNumber,
+        //            srs.Requirement.Title
+        //        })
+        //        .Select(g => new RequirementWithScopes
+        //        {
+        //            RequirementId = g.Key.EntityId,
+        //            SerialNumber = g.Key.SerialNumber,
+        //            Title = g.Key.Title,
+        //            StandardVersionReference = g.First().Requirement.StandardVersions
+        //                .Select(sv => sv.Standard.Title + sv.Delimiter + sv.Title)
+        //                .FirstOrDefault() ?? string.Empty,
+        //            Scopes = g.Select(srs => new ScopeDetail
+        //            {
+        //                ScopeId = srs.ScopeId,
+        //                SerialNumber = srs.Scope.SerialNumber,
+        //                Title = srs.Scope.Title
+        //            }).ToList()
+        //        })
+        //        .ToList();
 
-            return grouped;
-        }
+        //    return grouped;
+        //}
 
         #endregion Requirements
 
@@ -435,20 +435,34 @@ namespace Nexus.DEB.Infrastructure.Services
 
             var statementDetail = statement.Adapt<StatementDetail>();
 
-            // Get the flat list of combinations first
-            var combinations = await _dbContext.StatementsRequirementsScopes
-                .Include(x => x.Requirement)
-                    .ThenInclude(r => r.StandardVersions)
-                        .ThenInclude(sv => sv.Standard)
-                .Include(x => x.Scope)
+            // Get all selected combinations for this statement (from StatementRequirementScope)
+            var selectedCombinations = await _dbContext.StatementsRequirementsScopes
                 .Where(x => x.StatementId == id)
+                .Select(x => new { x.RequirementId, x.ScopeId })
                 .ToListAsync(cancellationToken);
 
-            statementDetail.Requirements = combinations
-                .GroupBy(x => x.Requirement)
-                .Select(g =>
+            // Create a HashSet for fast lookup of selected combinations
+            var selectedSet = selectedCombinations
+                .Select(x => (x.RequirementId, x.ScopeId))
+                .ToHashSet();
+
+            // Get the distinct list of requirement IDs that are linked to this statement
+            var requirementIds = selectedCombinations
+                .Select(x => x.RequirementId)
+                .Distinct()
+                .ToList();
+
+            // Get all those requirements with their possible scopes (from ScopeRequirement)
+            var requirements = await _dbContext.Requirements
+                .Include(r => r.Scopes)
+                .Include(r => r.StandardVersions)
+                    .ThenInclude(sv => sv.Standard)
+                .Where(r => requirementIds.Contains(r.EntityId))
+                .ToListAsync(cancellationToken);
+
+            statementDetail.Requirements = requirements
+                .Select(requirement =>
                 {
-                    var requirement = g.Key;
                     var standardVersion = requirement.StandardVersions.First(); // Assume only one
 
                     return new RequirementWithScopes
@@ -460,12 +474,14 @@ namespace Nexus.DEB.Infrastructure.Services
                         // StandardVersion info (single values)
                         StandardVersionReference = standardVersion.Standard.Title + standardVersion.Delimiter + standardVersion.Title,
 
-                        // All scopes for this requirement (from this statement)
-                        Scopes = g.Select(x => new ScopeDetail
+                        // All possible scopes for this requirement (from ScopeRequirement)
+                        // IsSelected is true if this combination exists in StatementRequirementScope for this statement
+                        Scopes = requirement.Scopes.Select(scope => new ScopeDetail
                         {
-                            ScopeId = x.ScopeId,
-                            SerialNumber = x.Scope.SerialNumber,
-                            Title = x.Scope.Title
+                            ScopeId = scope.EntityId,
+                            SerialNumber = scope.SerialNumber,
+                            Title = scope.Title,
+                            IsSelected = selectedSet.Contains((requirement.EntityId, scope.EntityId))
                         }).ToList()
                     };
                 })
@@ -473,8 +489,6 @@ namespace Nexus.DEB.Infrastructure.Services
 
             return statementDetail;
         }
-
-
         public async Task<Statement?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default)
             => await _dbContext.Statements.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
 

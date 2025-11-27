@@ -15,7 +15,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters);
         IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters);
         IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId);
-        Task<ICollection<RequirementWithScopes>> GetRequirementScopesForStatement(Guid statementId, CancellationToken cancellationToken);
+        //Task<ICollection<RequirementWithScopes>> GetRequirementScopesForStatement(Guid statementId, CancellationToken cancellationToken);
         IQueryable<Scope> GetScopes();
         IQueryable<ScopeSummary> GetScopesForGrid();
         IQueryable<ScopeExport> GetScopesForExport();

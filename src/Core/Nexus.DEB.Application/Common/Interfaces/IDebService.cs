@@ -15,9 +15,11 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters);
         IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters);
         IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId);
+        Task<ICollection<RequirementWithScopes>> GetRequirementScopesForStatement(Guid statementId, CancellationToken cancellationToken);
         IQueryable<Scope> GetScopes();
         IQueryable<ScopeSummary> GetScopesForGrid();
         IQueryable<ScopeExport> GetScopesForExport();
+        Task<ICollection<ScopeDetail>> GetScopesForRequirementAsync(Guid requirementId, CancellationToken cancellationToken);
         Task<StandardVersion?> GetStandardVersionByIdAsync(Guid id, CancellationToken cancellationToken);
         IQueryable<StandardVersion> GetStandardVersions();
         IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters);
@@ -28,8 +30,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<Statement?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<StatementChildCounts> GetChildCountsForStatementAsync(Guid id, CancellationToken cancellationToken);
 
-        Task<Statement> CreateStatementAsync(Statement statement, CancellationToken cancellationToken = default);
-        Task<Statement> UpdateStatementAsync(Statement statement, CancellationToken cancellationToken = default);
+        Task<Statement> CreateStatementAsync(Statement statement, ICollection<RequirementScopes> requirementScopeCombinations, CancellationToken cancellationToken = default);
+        Task<Statement> UpdateStatementAsync(Statement statement, ICollection<RequirementScopes> requirementScopeCombinations, CancellationToken cancellationToken = default);
         IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters);
         IQueryable<TaskExport> GetTasksForExport(TaskSummaryFilters? filters);
 

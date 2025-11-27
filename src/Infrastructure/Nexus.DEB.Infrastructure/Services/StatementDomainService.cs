@@ -24,7 +24,7 @@ namespace Nexus.DEB.Infrastructure.Services
             string title,
             string statementText,
             DateTime? reviewDate,
-            ICollection<RequirementScopePair>? requirementScopeCombinations,
+            ICollection<RequirementScopes>? requirementScopeCombinations,
             CancellationToken cancellationToken)
         {
             await ValidateFieldsAsync(ownerId, title, statementText, reviewDate, requirementScopeCombinations);
@@ -51,9 +51,10 @@ namespace Nexus.DEB.Infrastructure.Services
                     Title = title
                 };
 
-                statement = await this.DebService.CreateStatementAsync(statement, cancellationToken);
+                statement = await this.DebService.CreateStatementAsync(statement, requirementScopeCombinations, cancellationToken);
 
                 await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, statement.EntityId, cancellationToken);
+
 
                 return Result<Statement>.Success(statement);
             }
@@ -69,7 +70,7 @@ namespace Nexus.DEB.Infrastructure.Services
             string title,
             string statementText,
             DateTime? reviewDate,
-            ICollection<RequirementScopePair>? requirementScopeCombinations,
+            ICollection<RequirementScopes>? requirementScopeCombinations,
             CancellationToken cancellationToken)
         {
             var statement = await DebService.GetStatementByIdAsync(id);
@@ -98,7 +99,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             try
             {
-                await this.DebService.UpdateStatementAsync(statement, cancellationToken);
+                await this.DebService.UpdateStatementAsync(statement, requirementScopeCombinations, cancellationToken);
 
                 return Result<Statement>.Success(statement);
             }
@@ -113,7 +114,7 @@ namespace Nexus.DEB.Infrastructure.Services
             string title,
             string statementText,
             DateTime? reviewDate,
-            ICollection<RequirementScopePair>? RequirementScopeCombinations)
+            ICollection<RequirementScopes>? RequirementScopeCombinations)
         {
             await ValidateOwnerAsync(ownerId);
 

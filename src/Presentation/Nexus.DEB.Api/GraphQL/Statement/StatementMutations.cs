@@ -14,7 +14,7 @@ namespace Nexus.DEB.Api.GraphQL
             string title,
             string statementText,
             DateTime? reviewDate,
-            ICollection<RequirementScopePair>? requirementScopeCombinations,
+            ICollection<RequirementScopes> requirementScopeCombinations,
             IStatementDomainService statementService,
             CancellationToken cancellationToken = default)
         {
@@ -41,7 +41,7 @@ namespace Nexus.DEB.Api.GraphQL
             string title,
             string statementText,
             DateTime? reviewDate,
-            ICollection<RequirementScopePair>? requirementScopeCombinations,
+            ICollection<RequirementScopes> requirementScopeCombinations,
             IStatementDomainService statementService,
             CancellationToken cancellationToken = default)
         {

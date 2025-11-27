@@ -1,6 +1,9 @@
 ﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Infrastructure.Services;
+using System.Threading;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -29,5 +32,12 @@ namespace Nexus.DEB.Api.GraphQL
 
             return debService.GetRequirementsForGrid(f);
         }
+
+        [Authorize]
+        public static async Task<ICollection<RequirementWithScopes>> GetRequirementScopesForStatement(
+            Guid statementId,
+            IDebService debService,
+            CancellationToken cancellationToken)
+            => await debService.GetRequirementScopesForStatement(statementId, cancellationToken);
     }
 }

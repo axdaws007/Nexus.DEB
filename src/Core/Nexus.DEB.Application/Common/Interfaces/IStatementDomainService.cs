@@ -10,7 +10,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
             string title,
             string statementText,
             DateTime? reviewDate,
-            ICollection<RequirementScopePair>? RequirementScopeCombinations,
+            ICollection<RequirementScopes>? RequirementScopeCombinations,
             CancellationToken cancellationToken);
 
         Task<Result<Statement>> UpdateStatementAsync(
@@ -19,7 +19,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
             string title,
             string statementText,
             DateTime? reviewDate,
-            ICollection<RequirementScopePair>? requirementScopeCombinations,
+            ICollection<RequirementScopes>? requirementScopeCombinations,
             CancellationToken cancellationToken);
 
     }

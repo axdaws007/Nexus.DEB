@@ -1,6 +1,7 @@
 ﻿using HotChocolate.Authorization;
 using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 
@@ -30,5 +31,12 @@ namespace Nexus.DEB.Api.GraphQL
             IResolverContext resolverContext,
             CancellationToken cancellationToken)
             => await debService.GetScopesLookupAsync(cancellationToken);
+
+        [Authorize]
+        public static async Task<ICollection<ScopeDetail>> GetScopesForRequirement(
+            Guid requirementId,
+            IDebService debService,
+            CancellationToken cancellationToken)
+            => await debService.GetScopesForRequirementAsync(requirementId, cancellationToken);
     }
 }

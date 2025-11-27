@@ -1,8 +1,8 @@
 ﻿namespace Nexus.DEB.Application.Common.Models
 {
-    public class RequirementScopePair
+    public class RequirementScopes
     {
         public Guid RequirementId { get; set; }
-        public Guid ScopeId { get; set; }
+        public ICollection<Guid> ScopeIds { get; set; } = [];
     }
 }

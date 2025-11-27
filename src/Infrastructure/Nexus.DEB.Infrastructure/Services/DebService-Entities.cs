@@ -179,6 +179,47 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
+        public async Task<ICollection<RequirementWithScopes>> GetRequirementScopesForStatement(
+            Guid statementId,
+            CancellationToken cancellationToken)
+        {
+            var results = await _dbContext.Set<StatementRequirementScope>()
+                .Where(srs => srs.StatementId == statementId)
+                .Include(srs => srs.Requirement)
+                    .ThenInclude(r => r.StandardVersions)
+                        .ThenInclude(s => s.Standard)
+                .Include(srs => srs.Scope)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+            var grouped = results
+                .GroupBy(srs => new
+                {
+                    srs.RequirementId,
+                    srs.Requirement.EntityId,
+                    srs.Requirement.SerialNumber,
+                    srs.Requirement.Title
+                })
+                .Select(g => new RequirementWithScopes
+                {
+                    RequirementId = g.Key.EntityId,
+                    SerialNumber = g.Key.SerialNumber,
+                    Title = g.Key.Title,
+                    StandardVersionReference = g.First().Requirement.StandardVersions
+                        .Select(sv => sv.Standard.Title + sv.Delimiter + sv.Title)
+                        .FirstOrDefault() ?? string.Empty,
+                    Scopes = g.Select(srs => new ScopeDetail
+                    {
+                        ScopeId = srs.ScopeId,
+                        SerialNumber = srs.Scope.SerialNumber,
+                        Title = srs.Scope.Title
+                    }).ToList()
+                })
+                .ToList();
+
+            return grouped;
+        }
+
         #endregion Requirements
 
         // --------------------------------------------------------------------------------------------------------------
@@ -211,6 +252,18 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public IQueryable<ScopeExport> GetScopesForExport() => _dbContext.ScopeExport.AsNoTracking();
 
+        public async Task<ICollection<ScopeDetail>> GetScopesForRequirementAsync(Guid requirementId, CancellationToken cancellationToken)
+            => await _dbContext.Requirements
+                .Where(r => r.EntityId == requirementId)
+                .SelectMany(r => r.Scopes)
+                .Select(s => new ScopeDetail()
+                {
+                    ScopeId = s.EntityId,
+                    SerialNumber = s.SerialNumber,
+                    Title = s.Title
+                })
+                .ToListAsync(cancellationToken);
+    
         #endregion Scopes
 
         // --------------------------------------------------------------------------------------------------------------
@@ -439,18 +492,60 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public async Task<Statement> CreateStatementAsync(
             Statement statement,
+            ICollection<RequirementScopes> requirementScopeCombinations,
             CancellationToken cancellationToken = default)
         {
             await _dbContext.Statements.AddAsync(statement, cancellationToken);
+
+            var newStatementRequirementScopes = requirementScopeCombinations
+                .SelectMany(rs => rs.ScopeIds.Select(scopeId => new StatementRequirementScope
+                {
+                    StatementId = statement.EntityId,
+                    RequirementId = rs.RequirementId,
+                    ScopeId = scopeId
+                }))
+                .ToList();
+
+            await _dbContext.StatementsRequirementsScopes.AddRangeAsync(newStatementRequirementScopes, cancellationToken);
+
             await _dbContext.SaveChangesAsync(cancellationToken);
 
             return statement;
         }
 
         public async Task<Statement> UpdateStatementAsync(
-            Statement statement, 
+            Statement statement,
+            ICollection<RequirementScopes> requirementScopeCombinations,
             CancellationToken cancellationToken = default)
         {
+            var existingStatementRequirementScopes = _dbContext.StatementsRequirementsScopes.Where(x => x.StatementId == statement.EntityId).ToList();
+
+            var newStatementRequirementScopes = requirementScopeCombinations
+                .SelectMany(rs => rs.ScopeIds.Select(scopeId => new StatementRequirementScope
+                {
+                    StatementId = statement.EntityId,  
+                    RequirementId = rs.RequirementId,
+                    ScopeId = scopeId
+                }))
+                .ToList();
+
+
+            foreach (var existingSRS in existingStatementRequirementScopes)
+            {
+                if (!newStatementRequirementScopes.Contains(existingSRS))
+                {
+                    _dbContext.StatementsRequirementsScopes.Remove(existingSRS);
+                }
+            }
+
+            foreach (var newSRS in newStatementRequirementScopes)
+            {
+                if (!existingStatementRequirementScopes.Contains(newSRS))
+                {
+                    _dbContext.StatementsRequirementsScopes.Add(newSRS);
+                }
+            }
+
             await _dbContext.SaveChangesAsync(cancellationToken);
 
             return statement;

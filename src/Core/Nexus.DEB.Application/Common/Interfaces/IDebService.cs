@@ -19,7 +19,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<Scope> GetScopes();
         IQueryable<ScopeSummary> GetScopesForGrid();
         IQueryable<ScopeExport> GetScopesForExport();
-        Task<ICollection<ScopeDetail>> GetScopesForRequirementAsync(Guid requirementId, CancellationToken cancellationToken);
+        Task<ICollection<ScopeDetail>> GetScopesForRequirementAsync(Guid statementId, Guid requirementId, CancellationToken cancellationToken);
         Task<StandardVersion?> GetStandardVersionByIdAsync(Guid id, CancellationToken cancellationToken);
         IQueryable<StandardVersion> GetStandardVersions();
         IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters);
@@ -55,6 +55,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task<Guid?> GetWorkflowIdAsync(Guid moduleId, string entityType, CancellationToken cancellationToken);
         Guid? GetWorkflowId(Guid moduleId, string entityType);
+        Task<List<Guid>> GetDefaultOwnerRoleIdsForEntityTypeAsync(Guid moduleId, string entityType, CancellationToken cancellationToken = default);
+
         Task<PawsState?> GetWorkflowStatusByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
         Task<ICollection<CommentDetail>> GetCommentsForEntityAsync(Guid entityId, CancellationToken cancellationToken);

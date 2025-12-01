@@ -33,6 +33,8 @@ namespace Nexus.DEB.Infrastructure.Services
                 .Include(r => r.SectionRequirements)
                     .ThenInclude(sr => sr.Section)
                 .Include(r => r.StatementsRequirementsScopes)
+                .Include(r => r.StandardVersions)
+                    .ThenInclude(x => x.Standard)
                 .Select(r => new RequirementSummary
                 {
                     EntityId = r.EntityId,
@@ -59,7 +61,8 @@ namespace Nexus.DEB.Infrastructure.Services
                     StatementIds = r.StatementsRequirementsScopes
                         .Select(srs => srs.StatementId)
                         .Distinct()
-                        .ToList()
+                        .ToList(),
+                    StandardVersionTitles = r.StandardVersions.Select(sv => sv.Standard.Title + sv.Delimiter + sv.Title).ToList()
                 })
                 .AsNoTracking();
 
@@ -252,10 +255,17 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public IQueryable<ScopeExport> GetScopesForExport() => _dbContext.ScopeExport.AsNoTracking();
 
-        public async Task<ICollection<ScopeDetail>> GetScopesForRequirementAsync(Guid requirementId, CancellationToken cancellationToken)
+        public async Task<ICollection<ScopeDetail>> GetScopesForRequirementAsync(
+            Guid requirementId,
+            Guid statementId,
+            CancellationToken cancellationToken)
             => await _dbContext.Requirements
                 .Where(r => r.EntityId == requirementId)
                 .SelectMany(r => r.Scopes)
+                .Where(s => !_dbContext.StatementsRequirementsScopes.Any(srs =>
+                    srs.StatementId == statementId &&
+                    srs.RequirementId == requirementId &&
+                    srs.ScopeId == s.EntityId))
                 .Select(s => new ScopeDetail()
                 {
                     ScopeId = s.EntityId,
@@ -263,7 +273,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     Title = s.Title
                 })
                 .ToListAsync(cancellationToken);
-    
+
         #endregion Scopes
 
         // --------------------------------------------------------------------------------------------------------------

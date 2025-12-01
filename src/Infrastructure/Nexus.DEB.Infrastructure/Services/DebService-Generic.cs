@@ -39,6 +39,30 @@ namespace Nexus.DEB.Infrastructure.Services
             return Guid.TryParse(value, out var result) ? result : (Guid?)null;
         }
 
+        public async Task<List<Guid>> GetDefaultOwnerRoleIdsForEntityTypeAsync(
+            Guid moduleId,
+            string entityType,
+            CancellationToken cancellationToken = default)
+        {
+            var settingName = $"DefaultOwnerRoleIds:{entityType}";
+
+            var value = await _dbContext.ModuleSettings
+                .AsNoTracking()
+                .Where(x => x.ModuleId == moduleId && x.Name == settingName)
+                .Select(x => x.Value)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (string.IsNullOrEmpty(value))
+                return new List<Guid>();
+
+            return value
+                .Split(',')
+                .Select(s => s.Trim())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Select(Guid.Parse)
+                .ToList();
+        }
+
         public async Task<PawsState?> GetWorkflowStatusByIdAsync(
             Guid id,
             CancellationToken cancellationToken = default)

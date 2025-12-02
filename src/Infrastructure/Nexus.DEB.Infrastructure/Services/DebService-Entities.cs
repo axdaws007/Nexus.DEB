@@ -257,15 +257,31 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public async Task<ICollection<ScopeDetail>> GetScopesForRequirementAsync(
             Guid requirementId,
-            Guid statementId,
+            Guid? statementId,
             CancellationToken cancellationToken)
-            => await _dbContext.Requirements
+        {
+            var query = _dbContext.Requirements
                 .Where(r => r.EntityId == requirementId)
-                .SelectMany(r => r.Scopes)
-                .Where(s => !_dbContext.StatementsRequirementsScopes.Any(srs =>
-                    srs.StatementId == statementId &&
+                .SelectMany(r => r.Scopes);
+
+            if (statementId == null)
+            {
+                // Exclude scopes that are used in ANY statement for this requirement
+                query = query.Where(s => !_dbContext.StatementsRequirementsScopes.Any(srs =>
                     srs.RequirementId == requirementId &&
-                    srs.ScopeId == s.EntityId))
+                    srs.ScopeId == s.EntityId));
+            }
+            else
+            {
+                // Exclude scopes that are used in OTHER statements for this requirement
+                // (but include scopes used for THIS statement)
+                query = query.Where(s => !_dbContext.StatementsRequirementsScopes.Any(srs =>
+                    srs.RequirementId == requirementId &&
+                    srs.ScopeId == s.EntityId &&
+                    srs.StatementId != statementId.Value));
+            }
+
+            return await query
                 .Select(s => new ScopeDetail()
                 {
                     ScopeId = s.EntityId,
@@ -273,6 +289,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     Title = s.Title
                 })
                 .ToListAsync(cancellationToken);
+        }
 
         #endregion Scopes
 
@@ -786,6 +803,11 @@ namespace Nexus.DEB.Infrastructure.Services
 
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task<StatementRequirementScope?> GetRequirementScopeCombination(Guid requirementId, Guid scopeId, CancellationToken cancellationToken)
+            => await _dbContext.StatementsRequirementsScopes
+                    .FirstOrDefaultAsync(x => x.RequirementId == requirementId && x.ScopeId == scopeId, cancellationToken);
+
         #endregion
     }
 }

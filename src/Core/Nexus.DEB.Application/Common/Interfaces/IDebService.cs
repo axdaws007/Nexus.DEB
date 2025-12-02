@@ -19,7 +19,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<Scope> GetScopes();
         IQueryable<ScopeSummary> GetScopesForGrid();
         IQueryable<ScopeExport> GetScopesForExport();
-        Task<ICollection<ScopeDetail>> GetScopesForRequirementAsync(Guid statementId, Guid requirementId, CancellationToken cancellationToken);
+        Task<ICollection<ScopeDetail>> GetScopesForRequirementAsync(Guid requirementId, Guid? statementId, CancellationToken cancellationToken);
         Task<StandardVersion?> GetStandardVersionByIdAsync(Guid id, CancellationToken cancellationToken);
         IQueryable<StandardVersion> GetStandardVersions();
         IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters);
@@ -73,6 +73,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
             ICollection<StatementRequirementScope> statementRequirementScopes,
             ICollection<Domain.Models.Task> tasks, 
             CancellationToken cancellationToken);
+
+        Task<StatementRequirementScope?> GetRequirementScopeCombination(Guid requirementId, Guid scopeId, CancellationToken cancellationToken);
 
         Task<CommentDetail?> CreateCommentAsync(Comment comment, CancellationToken cancellationToken);
 

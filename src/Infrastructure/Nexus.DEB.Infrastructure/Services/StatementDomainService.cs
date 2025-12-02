@@ -2,6 +2,7 @@
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
+using static Azure.Core.HttpHeader;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -114,7 +115,7 @@ namespace Nexus.DEB.Infrastructure.Services
             string title,
             string statementText,
             DateTime? reviewDate,
-            ICollection<RequirementScopes>? RequirementScopeCombinations)
+            ICollection<RequirementScopes>? requirementScopeCombinations)
         {
             await ValidateOwnerAsync(ownerId);
 
@@ -126,6 +127,39 @@ namespace Nexus.DEB.Infrastructure.Services
 
             // Validate review date
             ValidateReviewDate(reviewDate);
+
+            await ValidateRequirementScopeCombinations(requirementScopeCombinations);
+        }
+
+        private async Task ValidateRequirementScopeCombinations(ICollection<RequirementScopes>? requirementScopeCombinations, CancellationToken cancellationToken = default)
+        {
+            if (requirementScopeCombinations != null)
+            {
+                foreach (var requirementItem in requirementScopeCombinations)
+                {
+                    foreach (var scopeId in requirementItem.ScopeIds)
+                    {
+                        var statementRequirementScope = await this.DebService.GetRequirementScopeCombination(requirementItem.RequirementId, scopeId, cancellationToken);
+
+                        if (statementRequirementScope != null)
+                        {
+                            var requirement = await this.DebService.GetEntityHeadAsync(statementRequirementScope.RequirementId, cancellationToken);
+                            var scope = await this.DebService.GetEntityHeadAsync(statementRequirementScope.ScopeId, cancellationToken);
+                            var statement = await this.DebService.GetEntityHeadAsync(statementRequirementScope.StatementId, cancellationToken);
+
+                            var requirementIdentifier = string.Join(" ", requirement.SerialNumber ?? string.Empty, requirement.Title);
+
+                            ValidationErrors.Add(
+                                new ValidationError()
+                                {
+                                    Code = "INVALID_REQUIREMENT_SCOPE",
+                                    Field = "Requirement/Scope",
+                                    Message = $"The combination of requirement '{requirementIdentifier}' and scope '{scope.Title}' is already in use on Statement '{statement.SerialNumber}'."
+                                });
+                        }
+                    }
+                }
+            }
         }
 
         private async Task ValidateOwnerAsync(Guid ownerId)

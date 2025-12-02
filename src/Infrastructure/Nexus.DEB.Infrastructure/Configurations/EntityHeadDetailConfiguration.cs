@@ -39,6 +39,9 @@ namespace Nexus.DEB.Infrastructure.Configurations
 
             builder.Property(e => e.OwnedByPostTitle)
                 .HasColumnName("OwnedByPostTitle");
+
+            builder.Property(e => e.SerialNumber)
+                .HasColumnName("SerialNumber");
         }
     }
 }

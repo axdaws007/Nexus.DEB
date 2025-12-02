@@ -9,5 +9,6 @@
         public DateTime LastModifiedDate { get; set; }
         public string? LastModifiedByPostTitle { get; set; }
         public string? OwnedByPostTitle { get; set; }
+        public string? SerialNumber { get; set; }
     }
 }

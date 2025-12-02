@@ -28,7 +28,7 @@ namespace Nexus.DEB.Infrastructure.Services
             ICollection<RequirementScopes>? requirementScopeCombinations,
             CancellationToken cancellationToken)
         {
-            await ValidateFieldsAsync(ownerId, title, statementText, reviewDate, requirementScopeCombinations);
+            await ValidateFieldsAsync(null, ownerId, title, statementText, reviewDate, requirementScopeCombinations);
 
             if (ValidationErrors.Count > 0)
             {
@@ -86,7 +86,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 });
             }
 
-            await ValidateFieldsAsync(ownerId, title, statementText, reviewDate, requirementScopeCombinations);
+            await ValidateFieldsAsync(statement, ownerId, title, statementText, reviewDate, requirementScopeCombinations);
 
             if (ValidationErrors.Count > 0)
             {
@@ -111,6 +111,7 @@ namespace Nexus.DEB.Infrastructure.Services
         }
 
         private async Task ValidateFieldsAsync(
+            Statement? statement,
             Guid ownerId,
             string title,
             string statementText,
@@ -128,40 +129,67 @@ namespace Nexus.DEB.Infrastructure.Services
             // Validate review date
             ValidateReviewDate(reviewDate);
 
-            await ValidateRequirementScopeCombinations(requirementScopeCombinations);
+            await ValidateRequirementScopeCombinations(statement, requirementScopeCombinations);
         }
 
-        private async Task ValidateRequirementScopeCombinations(ICollection<RequirementScopes>? requirementScopeCombinations, CancellationToken cancellationToken = default)
+        private async Task ValidateRequirementScopeCombinations(
+            Statement? statement,
+            ICollection<RequirementScopes>? requirementScopeCombinations,
+            CancellationToken cancellationToken = default)
         {
-            if (requirementScopeCombinations != null)
+            if (requirementScopeCombinations is null || requirementScopeCombinations.Count == 0)
+                return;
+
+            // Build list of all combinations to check in one go
+            var combinationsToCheck = requirementScopeCombinations
+                .SelectMany(r => r.ScopeIds.Select(scopeId => (r.RequirementId, ScopeId: scopeId)))
+                .ToList();
+
+            // Batch fetch all existing combinations
+            var existingCombinations = await this.DebService.GetRequirementScopeCombinations(combinationsToCheck, cancellationToken);
+
+            // Filter to those used by OTHER statements
+            var conflictingCombinations = existingCombinations
+                .Where(c => statement is null || c.StatementId != statement.EntityId)
+                .ToList();
+
+            if (conflictingCombinations.Count == 0)
+                return;
+
+            // Batch fetch all entity heads we need
+            var entityIds = conflictingCombinations
+                .SelectMany(c => new[] { c.RequirementId, c.ScopeId, c.StatementId })
+                .Distinct()
+                .ToList();
+
+            var entityHeads = await this.DebService.GetEntityHeadsAsync(entityIds, cancellationToken);
+
+            // Build validation errors
+            foreach (var conflict in conflictingCombinations)
             {
-                foreach (var requirementItem in requirementScopeCombinations)
+                var requirement = entityHeads.GetValueOrDefault(conflict.RequirementId);
+                var scope = entityHeads.GetValueOrDefault(conflict.ScopeId);
+                var usedStatement = entityHeads.GetValueOrDefault(conflict.StatementId);
+
+                if (requirement is null || scope is null || usedStatement is null)
+                    continue;
+
+                var requirementIdentifier = $"{requirement.SerialNumber} {requirement.Title}".Trim();
+
+                ValidationErrors.Add(new ValidationError
                 {
-                    foreach (var scopeId in requirementItem.ScopeIds)
+                    Code = "INVALID_REQUIREMENT_SCOPE",
+                    Field = "Requirement/Scope",
+                    Message = $"The combination of requirement '{requirementIdentifier}' and scope '{scope.Title}' is already in use on Statement '{usedStatement.SerialNumber}'.",
+                    Meta = new Dictionary<string, object>
                     {
-                        var statementRequirementScope = await this.DebService.GetRequirementScopeCombination(requirementItem.RequirementId, scopeId, cancellationToken);
-
-                        if (statementRequirementScope != null)
-                        {
-                            var requirement = await this.DebService.GetEntityHeadAsync(statementRequirementScope.RequirementId, cancellationToken);
-                            var scope = await this.DebService.GetEntityHeadAsync(statementRequirementScope.ScopeId, cancellationToken);
-                            var statement = await this.DebService.GetEntityHeadAsync(statementRequirementScope.StatementId, cancellationToken);
-
-                            var requirementIdentifier = string.Join(" ", requirement.SerialNumber ?? string.Empty, requirement.Title);
-
-                            ValidationErrors.Add(
-                                new ValidationError()
-                                {
-                                    Code = "INVALID_REQUIREMENT_SCOPE",
-                                    Field = "Requirement/Scope",
-                                    Message = $"The combination of requirement '{requirementIdentifier}' and scope '{scope.Title}' is already in use on Statement '{statement.SerialNumber}'."
-                                });
-                        }
+                        ["requirementId"] = conflict.RequirementId,
+                        ["scopeId"] = conflict.ScopeId,
+                        ["conflictingStatementId"] = conflict.StatementId
                     }
-                }
+                });
             }
         }
-
         private async Task ValidateOwnerAsync(Guid ownerId)
         {
             var posts = await CisService.GetAllPosts();

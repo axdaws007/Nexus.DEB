@@ -20,7 +20,19 @@ namespace Nexus.DEB.Infrastructure.Services
             => await _dbContext.EntityHeadDetails
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
-            
+
+        public async Task<Dictionary<Guid, EntityHead>> GetEntityHeadsAsync(
+            IEnumerable<Guid> ids,
+            CancellationToken cancellationToken)
+        {
+            var idList = ids.ToList();
+
+            return await _dbContext.EntityHeads
+                .AsNoTracking()
+                .Where(e => idList.Contains(e.EntityId))
+                .ToDictionaryAsync(e => e.EntityId, cancellationToken);
+        }
+
         #endregion
 
         // --------------------------------------------------------------------------------------------------------------
@@ -221,6 +233,30 @@ namespace Nexus.DEB.Infrastructure.Services
                 .ToList();
 
             return grouped;
+        }
+
+        public async Task<List<StatementRequirementScope>> GetRequirementScopeCombinations(
+            IEnumerable<(Guid RequirementId, Guid ScopeId)> combinations,
+            CancellationToken cancellationToken)
+        {
+            var combinationsList = combinations.ToList();
+
+            // Get distinct IDs to minimize SQL results
+            var requirementIds = combinationsList.Select(c => c.RequirementId).Distinct().ToList();
+            var scopeIds = combinationsList.Select(c => c.ScopeId).Distinct().ToList();
+
+            // Query with two Contains (translates to SQL IN clauses)
+            var candidates = await _dbContext.StatementsRequirementsScopes
+                .AsNoTracking()
+                .Where(srs => requirementIds.Contains(srs.RequirementId)
+                           && scopeIds.Contains(srs.ScopeId))
+                .ToListAsync(cancellationToken);
+
+            // Filter to exact combinations in memory
+            var combinationSet = combinationsList.ToHashSet();
+            return candidates
+                .Where(srs => combinationSet.Contains((srs.RequirementId, srs.ScopeId)))
+                .ToList();
         }
 
         #endregion Requirements

@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Identity.Client;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Nexus.DEB.Domain.Models.Other;
@@ -63,9 +65,47 @@ namespace Nexus.DEB.Infrastructure.Persistence
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(DebContext).Assembly);
         }
 
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            return base.SaveChangesAsync(cancellationToken);
+            BeforeSaveChanges();
+
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void BeforeSaveChanges()
+        {
+            var currentUserService = this.GetService<ICurrentUserService>();
+            var dateTimeProvider = this.GetService<IDateTimeProvider>();
+
+            var postId = currentUserService.PostId;
+
+            var changeTrackerEntries = this.ChangeTracker
+                .Entries()
+                .Where(e => (e.Entity is IEntityHead) && (
+                  e.State == EntityState.Added ||
+                  e.State == EntityState.Modified ||
+                  e.State == EntityState.Deleted));
+
+            foreach (var modifiedEntry in changeTrackerEntries)
+            {
+                if (modifiedEntry != null && modifiedEntry.Entity != null)
+                {
+                    IEntityHead modifiedEntity = (IEntityHead)modifiedEntry.Entity;
+
+                    modifiedEntity.LastModifiedDate = dateTimeProvider.Now;
+                    modifiedEntity.LastModifiedById = postId;
+
+                    if (modifiedEntry.State == EntityState.Added)
+                    {
+                        var applicationSettingsService = this.GetService<IApplicationSettingsService>();
+
+                        modifiedEntity.CreatedDate = dateTimeProvider.Now;
+                        modifiedEntity.CreatedById = postId;
+                        modifiedEntity.ModuleId = applicationSettingsService.GetModuleId("DEB");
+                    }
+                }
+            }
+
         }
     }
 }

@@ -39,12 +39,7 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 var statement = new Statement()
                 {
-                    CreatedById = CurrentUserService.PostId,
-                    CreatedDate = DateTimeProvider.Now,
                     EntityTypeTitle = EntityTypes.SoC,
-                    LastModifiedById = CurrentUserService.PostId,
-                    LastModifiedDate = DateTimeProvider.Now,
-                    ModuleId = this.ModuleId,
                     OwnedById = ownerId,
                     ReviewDate = reviewDate,
                     SerialNumber = await DebService.GenerateSerialNumberAsync(this.ModuleId, this.InstanceId, EntityTypes.SoC),

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20251202163926_AddStatementRequirementScopeTriggerAndTriggerMetaData")]
+    partial class AddStatementRequirementScopeTriggerAndTriggerMetaData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -319,10 +322,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("OwnedByPostTitle");
 
-                    b.Property<string>("SerialNumber")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("SerialNumber");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
@@ -389,6 +388,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Value")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ModuleId", "Name");

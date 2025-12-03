@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20251127165913_AddEventIdToChangeRecord")]
+    partial class AddEventIdToChangeRecord
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,12 +56,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("ChangeRecord", "common", t =>
-                        {
-                            t.HasTrigger("ChangeTracking");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.ToTable("ChangeRecord", "common");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.ChangeRecordItem", b =>
@@ -93,13 +91,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
                     b.HasIndex("ChangeRecordId");
 
-                    b.ToTable("ChangeRecordItem", "common", t =>
-                        {
-                            t.HasTrigger("ChangeTracking")
-                                .HasDatabaseName("ChangeTracking1");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.ToTable("ChangeRecordItem", "common");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Comment", b =>
@@ -283,14 +275,9 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
                     b.HasIndex("OwnedById");
 
-                    b.ToTable("EntityHead", "common", t =>
-                        {
-                            t.HasTrigger("EntityHead_ChangeTracking");
-                        });
+                    b.ToTable("EntityHead", "common");
 
-                    b
-                        .UseTptMappingStrategy()
-                        .HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.UseTptMappingStrategy();
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.EntityHeadDetail", b =>
@@ -318,10 +305,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.Property<string>("OwnedByPostTitle")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("OwnedByPostTitle");
-
-                    b.Property<string>("SerialNumber")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("SerialNumber");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -389,6 +372,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Value")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ModuleId", "Name");
@@ -1092,12 +1076,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
                     b.HasIndex("ScopeId");
 
-                    b.ToTable("StatementRequirementScope", "deb", t =>
-                        {
-                            t.HasTrigger("StatementRequirementScope_ChangeTracking");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.ToTable("StatementRequirementScope", "deb");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.TaskExport", b =>
@@ -1375,12 +1354,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.Property<DateTime?>("ReviewDate")
                         .HasColumnType("datetime2");
 
-                    b.ToTable("Statement", "deb", t =>
-                        {
-                            t.HasTrigger("Statement_ChangeTracking");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.ToTable("Statement", "deb");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Task", b =>

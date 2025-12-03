@@ -8,7 +8,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<EntityHead> builder)
         {
-            builder.ToTable("EntityHead", "common");
+            builder.ToTable("EntityHead", "common", t => { t.HasTrigger("EntityHead_ChangeTracking"); });
 
             builder.HasKey(x => x.EntityId);
             builder.HasIndex(x => x.EntityTypeTitle);

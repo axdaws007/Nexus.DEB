@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20251126115013_AddChangeRecordAndChangeRecordItemTables")]
+    partial class AddChangeRecordAndChangeRecordItemTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,86 +24,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.ChangeRecord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ChangeByUser")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<DateTime>("ChangeDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Comments")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("EntityId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EntityId");
-
-                    b.ToTable("ChangeRecord", "common", t =>
-                        {
-                            t.HasTrigger("ChangeTracking");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
-                });
-
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.ChangeRecordItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ChangeRecordId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ChangedFrom")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ChangedTo")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FieldName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FriendlyFieldName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChangeRecordId");
-
-                    b.ToTable("ChangeRecordItem", "common", t =>
-                        {
-                            t.HasTrigger("ChangeTracking")
-                                .HasDatabaseName("ChangeTracking1");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
-                });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Comment", b =>
                 {
@@ -283,14 +206,9 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
                     b.HasIndex("OwnedById");
 
-                    b.ToTable("EntityHead", "common", t =>
-                        {
-                            t.HasTrigger("EntityHead_ChangeTracking");
-                        });
+                    b.ToTable("EntityHead", "common");
 
-                    b
-                        .UseTptMappingStrategy()
-                        .HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.UseTptMappingStrategy();
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.EntityHeadDetail", b =>
@@ -319,10 +237,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("OwnedByPostTitle");
 
-                    b.Property<string>("SerialNumber")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("SerialNumber");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
@@ -331,6 +245,71 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.ToTable((string)null);
 
                     b.ToView("vw_EntityHeadDetail", "common");
+                });
+
+            modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ChangeRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ChangeByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ChangeDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Comments")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.ToTable("ChangeRecord", "common");
+                });
+
+            modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ChangeRecordItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChangeRecordId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ChangedFrom")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ChangedTo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FieldName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FriendlyFieldName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangeRecordId");
+
+                    b.ToTable("ChangeRecordItem", "common");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ModuleInfo", b =>
@@ -389,6 +368,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Value")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ModuleId", "Name");
@@ -1092,12 +1072,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
                     b.HasIndex("ScopeId");
 
-                    b.ToTable("StatementRequirementScope", "deb", t =>
-                        {
-                            t.HasTrigger("StatementRequirementScope_ChangeTracking");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.ToTable("StatementRequirementScope", "deb");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.TaskExport", b =>
@@ -1375,12 +1350,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.Property<DateTime?>("ReviewDate")
                         .HasColumnType("datetime2");
 
-                    b.ToTable("Statement", "deb", t =>
-                        {
-                            t.HasTrigger("Statement_ChangeTracking");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.ToTable("Statement", "deb");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Task", b =>
@@ -1403,17 +1373,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.ToTable("Task", "deb");
                 });
 
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.ChangeRecordItem", b =>
-                {
-                    b.HasOne("Nexus.DEB.Domain.Models.ChangeRecord", "ChangeRecord")
-                        .WithMany("ChangeRecordItems")
-                        .HasForeignKey("ChangeRecordId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("ChangeRecord");
-                });
-
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Comment", b =>
                 {
                     b.HasOne("Nexus.DEB.Domain.Models.CommentType", "CommentType")
@@ -1422,6 +1381,17 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("CommentType");
+                });
+
+            modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ChangeRecordItem", b =>
+                {
+                    b.HasOne("Nexus.DEB.Domain.Models.Other.ChangeRecord", "ChangeRecord")
+                        .WithMany("ChangeRecordItems")
+                        .HasForeignKey("ChangeRecordId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("ChangeRecord");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ModuleSetting", b =>
@@ -1622,7 +1592,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.Navigation("TaskType");
                 });
 
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.ChangeRecord", b =>
+            modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ChangeRecord", b =>
                 {
                     b.Navigation("ChangeRecordItems");
                 });

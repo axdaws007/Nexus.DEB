@@ -33,9 +33,11 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<SettingsType> SettingsTypes { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<SerialNumber> SerialNumbers { get; set; }
+        public DbSet<ChangeRecord> ChangeRecords { get; set; }
+        public DbSet<ChangeRecordItem> ChangeRecordItems { get; set; }
 
-        // Entities
-        public DbSet<EntityHead> EntityHeads { get; set; }
+		// Entities
+		public DbSet<EntityHead> EntityHeads { get; set; }
         public DbSet<Requirement> Requirements { get; set; }
         public DbSet<Scope> Scopes { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }

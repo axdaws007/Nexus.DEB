@@ -8,7 +8,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<StatementRequirementScope> builder)
         {
-            builder.ToTable("StatementRequirementScope", "deb");
+            builder.ToTable("StatementRequirementScope", "deb", t => { t.HasTrigger("StatementRequirementScope_ChangeTracking"); });
 
             builder.HasKey(x => new { x.StatementId, x.RequirementId, x.ScopeId });
 

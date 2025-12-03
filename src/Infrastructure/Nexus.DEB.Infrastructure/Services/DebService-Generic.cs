@@ -101,7 +101,23 @@ namespace Nexus.DEB.Infrastructure.Services
             CancellationToken cancellationToken)
             => (await _dbContext.Comments.Where(x => x.Id == id).ExecuteDeleteAsync(cancellationToken) == 1);
 
-        public async Task<string> GenerateSerialNumberAsync(
+        public async Task<ICollection<ChangeRecord>> GetChangeRecordsForEntityAsync(
+			Guid entityId,
+			CancellationToken cancellationToken)
+			=> await _dbContext.ChangeRecords.AsNoTracking()
+				.Where(x => !x.IsDeleted && x.EntityId == entityId)
+				.OrderByDescending(x => x.ChangeDate)
+				.ToListAsync(cancellationToken);
+
+		public async Task<ICollection<ChangeRecordItem>> GetChangeRecordItemsForChangeRecordAsync(
+			long changeRecordId,
+			CancellationToken cancellationToken)
+			=> await _dbContext.ChangeRecordItems.AsNoTracking()
+				.Where(x => !x.IsDeleted && x.ChangeRecordId == changeRecordId)
+				.OrderBy(x => x.FriendlyFieldName)
+				.ToListAsync(cancellationToken);
+
+		public async Task<string> GenerateSerialNumberAsync(
             Guid moduleId,
             Guid instanceId,
             string entityType,

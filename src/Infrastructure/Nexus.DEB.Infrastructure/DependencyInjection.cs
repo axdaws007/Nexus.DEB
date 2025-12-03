@@ -65,9 +65,12 @@ namespace Nexus.DEB.Infrastructure
 
             // Database - Using Pooled DbContext Factory for better performance
             services.AddPooledDbContextFactory<DebContext>(options =>
-                options.UseSqlServer(
-                    configuration.GetConnectionString("DEB"),
-                    b => b.MigrationsAssembly(typeof(DebContext).Assembly.FullName)));
+                options
+                    .UseSqlServer(
+                        configuration.GetConnectionString("DEB"),
+                        b => b.MigrationsAssembly(typeof(DebContext).Assembly.FullName))
+                    .AddInterceptors(new ChangeEventInterceptor())
+            );
 
             // Register IDebContext using a factory-created instance
             services.AddScoped<IDebContext>(provider =>

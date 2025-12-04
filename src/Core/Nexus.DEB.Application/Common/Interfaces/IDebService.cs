@@ -73,6 +73,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<ICollection<SavedSearch>> GetSavedSearchesByContextAsync(string context, CancellationToken cancellationToken);
 
 		Task<SavedSearch> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken);
+		Task<SavedSearch> CreateSavedSearchAsync(SavedSearch savedSearch, CancellationToken cancellationToken);
 
 		#endregion Generic (eventual Framework)
 

@@ -117,6 +117,23 @@ namespace Nexus.DEB.Infrastructure.Services
 				.OrderBy(x => x.FriendlyFieldName)
 				.ToListAsync(cancellationToken);
 
+        public async Task<ICollection<SavedSearch>> GetSavedSearchesByContextAsync(string context, CancellationToken cancellationToken)
+        {
+            var currentPostId = _currentUserService.PostId;
+			return await _dbContext.SavedSearches.AsNoTracking()
+				.Where(x => x.PostId == currentPostId && x.Context == context)
+				.OrderBy(x => x.Name)
+				.ToListAsync(cancellationToken);
+		}
+
+        public async Task<SavedSearch> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken)
+        {
+			var currentPostId = _currentUserService.PostId;
+			return await _dbContext.SavedSearches.AsNoTracking()
+				.Where(x => x.PostId == currentPostId && x.Context == context && x.Name == name)
+				.FirstOrDefaultAsync(cancellationToken);
+		}
+
 		public async Task<string> GenerateSerialNumberAsync(
             Guid moduleId,
             Guid instanceId,

@@ -11,7 +11,6 @@ namespace Nexus.DEB.Domain.Models
 		public Guid PostId { get; set; }
 		public string Name { get; set; } = string.Empty;
 		public string Context { get; set; } = string.Empty;
-		public Guid ModuleId { get; set; }
 		public string? Filter { get; set; }
 		public DateTime CreatedDate { get; set; }
 		public DateTime? LastModifiedDate { get; set; }

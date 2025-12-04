@@ -15,7 +15,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
 		{
 			builder.ToTable("SavedSearch", "common");
 
-			builder.HasKey(x => new { x.PostId, x.Name, x.Context, x.ModuleId });
+			builder.HasKey(x => new { x.PostId, x.Name, x.Context });
 
 			builder.Property(x => x.Name).HasMaxLength(350);
 			builder.Property(x => x.Context).HasMaxLength(50);

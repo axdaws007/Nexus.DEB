@@ -7,9 +7,14 @@ namespace Nexus.DEB.Infrastructure.Services
     public partial class DebService : IDebService, IAsyncDisposable
     {
         private readonly DebContext _dbContext;
+        private readonly ICurrentUserService _currentUserService;
 
-        // Constructor
-        public DebService(IDbContextFactory<DebContext> dbContextFactory) => _dbContext = dbContextFactory.CreateDbContext();
+		// Constructor
+		public DebService(IDbContextFactory<DebContext> dbContextFactory, ICurrentUserService currentUserService)
+        {
+			_dbContext = dbContextFactory.CreateDbContext();
+			_currentUserService = currentUserService;
+		}
 
         // Dispose
         public ValueTask DisposeAsync() => _dbContext.DisposeAsync();

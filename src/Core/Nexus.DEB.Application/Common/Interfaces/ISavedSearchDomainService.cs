@@ -10,6 +10,6 @@ namespace Nexus.DEB.Application.Common.Interfaces
 {
 	public interface ISavedSearchDomainService
 	{
-		Task<Result<SavedSearch>> CreateSavedSearchAsync(string context, string name, string filter, CancellationToken cancellationToken);
+		Task<Result<SavedSearch>> SaveSavedSearchAsync(string context, string name, string filter, CancellationToken cancellationToken);
 	}
 }

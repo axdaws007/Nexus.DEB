@@ -135,53 +135,20 @@ namespace Nexus.DEB.Infrastructure.Services
 				.FirstOrDefaultAsync(cancellationToken);
 		}
 
-        public async Task<SavedSearch> CreateSavedSearchAsync(SavedSearch savedSearch, CancellationToken cancellationToken)
+        public async Task<SavedSearch> SaveSavedSearchAsync(SavedSearch savedSearch, bool isNew, CancellationToken cancellationToken)
         {
-            await _dbContext.SavedSearches.AddAsync(savedSearch);
+            if (isNew)
+            {
+                await _dbContext.SavedSearches.AddAsync(savedSearch);
+            }
+            else
+            {
+                _dbContext.SavedSearches.Update(savedSearch);
+            }
 			await _dbContext.SaveChangesAsync(cancellationToken);
 
             return savedSearch;
 		}
-
-		//public async Task<Result<Statement>> CreateStatementAsync(
-		//	Guid ownerId,
-		//	string title,
-		//	string statementText,
-		//	DateTime? reviewDate,
-		//	ICollection<RequirementScopes>? requirementScopeCombinations,
-		//	CancellationToken cancellationToken)
-		//{
-		//	await ValidateFieldsAsync(null, ownerId, title, statementText, reviewDate, requirementScopeCombinations);
-
-		//	if (ValidationErrors.Count > 0)
-		//	{
-		//		return Result<Statement>.Failure(ValidationErrors);
-		//	}
-
-		//	try
-		//	{
-		//		var statement = new Statement()
-		//		{
-		//			EntityTypeTitle = EntityTypes.SoC,
-		//			OwnedById = ownerId,
-		//			ReviewDate = reviewDate,
-		//			SerialNumber = await DebService.GenerateSerialNumberAsync(this.ModuleId, this.InstanceId, EntityTypes.SoC),
-		//			Description = statementText,
-		//			Title = title
-		//		};
-
-		//		statement = await this.DebService.CreateStatementAsync(statement, requirementScopeCombinations, cancellationToken);
-
-		//		await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, statement.EntityId, cancellationToken);
-
-
-		//		return Result<Statement>.Success(statement);
-		//	}
-		//	catch (Exception ex)
-		//	{
-		//		return Result<Statement>.Failure($"An error occurred creating the Statement: {ex.Message}");
-		//	}
-		//}
 
 		public async Task<string> GenerateSerialNumberAsync(
             Guid moduleId,

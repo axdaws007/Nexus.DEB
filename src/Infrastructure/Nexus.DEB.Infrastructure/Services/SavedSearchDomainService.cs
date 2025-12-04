@@ -19,7 +19,7 @@ namespace Nexus.DEB.Infrastructure.Services
 		{
 		}
 
-		public async Task<Result<SavedSearch>> CreateSavedSearchAsync(string context, string name, string filter, CancellationToken cancellationToken)
+		public async Task<Result<SavedSearch>> SaveSavedSearchAsync(string context, string name, string filter, CancellationToken cancellationToken)
 		{
 			await ValidateFieldsAsync(context, name, filter);
 
@@ -30,23 +30,35 @@ namespace Nexus.DEB.Infrastructure.Services
 
 			try
 			{
-				var savedSearch = new SavedSearch()
+				SavedSearch savedSearch;
+
+				var savedSearches = await DebService.GetSavedSearchesByContextAsync(context, cancellationToken);
+				if (savedSearches.Any(a => a.Name == name))
 				{
-					PostId = CurrentUserService.PostId,
-					Context = context,
-					Name = name,
-					Filter = filter,
-					CreatedDate = DateTimeProvider.Now
-				};
+					savedSearch = savedSearches.First(a => a.Name == name);
+					savedSearch.Filter = filter;
+					savedSearch.LastModifiedDate = DateTimeProvider.Now;
+				}
+				else
+				{
+					savedSearch = new SavedSearch()
+					{
+						PostId = CurrentUserService.PostId,
+						Context = context,
+						Name = name,
+						Filter = filter,
+						CreatedDate = DateTimeProvider.Now
+					};
+				}
 
-				var newSavedSearch = await DebService.CreateSavedSearchAsync(savedSearch, cancellationToken);
+				var dbSavedSearch = await DebService.SaveSavedSearchAsync(savedSearch, !savedSearches.Any(a => a.Name == name), cancellationToken);
 
-				if (newSavedSearch == null)
+				if (dbSavedSearch == null)
 				{
 					return Result<SavedSearch>.Failure("Saved Search was not created.");
 				}
 
-				return Result<SavedSearch>.Success(newSavedSearch);
+				return Result<SavedSearch>.Success(dbSavedSearch);
 			}
 			catch (Exception ex)
 			{
@@ -87,18 +99,6 @@ namespace Nexus.DEB.Infrastructure.Services
 						Code = "INVALID_NAME",
 						Field = nameof(name),
 						Message = "The 'name' is empty."
-					});
-			}
-
-			var savedSearches = await DebService.GetSavedSearchesByContextAsync(context, cancellationToken);
-			if (savedSearches.Any(a => a.Name == name))
-			{
-				ValidationErrors.Add(
-					new ValidationError()
-					{
-						Code = "INVALID_NAME",
-						Field = nameof(name),
-						Message = "The 'name' already exists for this 'context'."
 					});
 			}
 		}

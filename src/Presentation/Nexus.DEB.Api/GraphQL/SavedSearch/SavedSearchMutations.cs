@@ -8,14 +8,14 @@ namespace Nexus.DEB.Api.GraphQL
 	public static class SavedSearchMutations
 	{
 		[Authorize]
-		public static async Task<SavedSearch?> CreateSavedSearchAsync(
+		public static async Task<SavedSearch?> SaveSavedSearchAsync(
 			string context,
 			string name,
 			string filter,
 			ISavedSearchDomainService savedSearchService,
 			CancellationToken cancellationToken = default)
 		{
-			var result = await savedSearchService.CreateSavedSearchAsync(context, name, filter, cancellationToken);
+			var result = await savedSearchService.SaveSavedSearchAsync(context, name, filter, cancellationToken);
 
 			if (!result.IsSuccess)
 			{

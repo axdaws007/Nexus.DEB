@@ -23,5 +23,12 @@ namespace Nexus.DEB.Infrastructure.Services
 
             return _configuration.GetValue<Guid>(appsettingIdentifier);
         }
+
+        public Guid GetLibraryId(string libraryName)
+        {
+            var libraryIdentifier = $"DMS:Libraries:{libraryName}";
+
+            return _configuration.GetValue<Guid>(libraryIdentifier);
+        }
     }
 }

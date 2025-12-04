@@ -83,5 +83,10 @@ namespace Nexus.DEB.Domain
             public static ReadOnlyCollection<string> AllDeleteCommentCapabilities => AllDeleteAnyCommentCapabilities.Union(AllDeleteOwnedCommentCapabilities).ToList().AsReadOnly();
         }
 
+        public static class DmsLibraries
+        {
+            public const string DebDocuments = "DEB Documents";
+            public const string CommonDocuments = "Common Documents";
+        }
     }
 }

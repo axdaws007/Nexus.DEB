@@ -4,5 +4,6 @@
     {
         Guid GetModuleId(string moduleName);
         Guid GetInstanceId();
+        Guid GetLibraryId(string libraryName);
     }
 }

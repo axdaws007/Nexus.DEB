@@ -191,6 +191,7 @@ app.MapGraphQL().WithOptions(new GraphQLServerOptions
 
 app.MapExportEndpoints();
 app.MapWorkflowDiagramEndpoints();
+app.MapDmsEndpoints();
 
 if (app.Environment.IsDevelopment())
 {

@@ -5,12 +5,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Infrastructure.Services;
 
 public class ChangeEventInterceptor : SaveChangesInterceptor
 {
-	private const string SessionContextKey = "EventId";
+	private const string SessionContextEventId = "EventId";
+	private const string SessionContextUserDetails = "UserDetails";
+	private readonly ICurrentUserService _currentUserService;
 
-	private async Task SetSessionContextAsync(DbContext context, Guid eventId, CancellationToken cancellationToken)
+	public ChangeEventInterceptor(ICurrentUserService currentUserService)
+	{
+		_currentUserService = currentUserService;
+	}
+
+	private async Task SetSessionContextAsync(DbContext context, string key, object value, CancellationToken cancellationToken)
 	{
 		var conn = context.Database.GetDbConnection();
 
@@ -26,12 +35,15 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 		var pKey = command.CreateParameter();
 		pKey.ParameterName = "@key";
 		pKey.DbType = DbType.String;
-		pKey.Value = SessionContextKey;
+		pKey.Value = key;
 
 		var pValue = command.CreateParameter();
 		pValue.ParameterName = "@value";
-		pValue.DbType = DbType.Guid;
-		pValue.Value = eventId;
+		if(value is Guid)
+			pValue.DbType = DbType.Guid;
+		else
+			pValue.DbType = DbType.String;
+		pValue.Value = value;
 
 		command.Parameters.Add(pKey);
 		command.Parameters.Add(pValue);
@@ -39,7 +51,7 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 		await command.ExecuteNonQueryAsync(cancellationToken);
 	}
 
-	private void SetSessionContext(DbContext context, Guid eventId)
+	private void SetSessionContext(DbContext context, string key, object value)
 	{
 		var conn = context.Database.GetDbConnection();
 
@@ -54,12 +66,12 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 		var pKey = command.CreateParameter();
 		pKey.ParameterName = "@key";
 		pKey.DbType = DbType.String;
-		pKey.Value = SessionContextKey;
+		pKey.Value = key;
 
 		var pValue = command.CreateParameter();
 		pValue.ParameterName = "@value";
 		pValue.DbType = DbType.Guid;
-		pValue.Value = eventId;
+		pValue.Value = value;
 
 		command.Parameters.Add(pKey);
 		command.Parameters.Add(pValue);
@@ -76,7 +88,9 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 		if (eventData.Context != null)
 		{
 			var eventId = Guid.NewGuid();
-			await SetSessionContextAsync(eventData.Context, eventId, cancellationToken);
+			var userDetails = await GetFormattedUser();
+			await SetSessionContextAsync(eventData.Context, SessionContextEventId, eventId, cancellationToken);
+			await SetSessionContextAsync(eventData.Context, SessionContextUserDetails, userDetails, cancellationToken);
 		}
 
 		return result;
@@ -90,9 +104,16 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 		if (eventData.Context != null)
 		{
 			var eventId = Guid.NewGuid();
-			SetSessionContext(eventData.Context, eventId);
+			SetSessionContext(eventData.Context, SessionContextEventId, eventId);
+			SetSessionContext(eventData.Context, SessionContextUserDetails, GetFormattedUser());
 		}
 
 		return result;
+	}
+
+	private async Task<string> GetFormattedUser()
+	{
+		var userdetails = await _currentUserService.GetUserDetailsAsync();
+		return string.Format("{0} ({1} {2})", userdetails.PostTitle, userdetails.FirstName, userdetails.LastName);
 	}
 }

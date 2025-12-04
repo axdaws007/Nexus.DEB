@@ -64,13 +64,12 @@ namespace Nexus.DEB.Infrastructure
             });
 
             // Database - Using Pooled DbContext Factory for better performance
-            services.AddPooledDbContextFactory<DebContext>(options =>
-                options
-                    .UseSqlServer(
-                        configuration.GetConnectionString("DEB"),
-                        b => b.MigrationsAssembly(typeof(DebContext).Assembly.FullName))
-                    .AddInterceptors(new ChangeEventInterceptor())
-            );
+            services.AddPooledDbContextFactory<DebContext>((sp, options) =>
+            {
+                options.UseSqlServer(configuration.GetConnectionString("DEB"),
+                        b => b.MigrationsAssembly(typeof(DebContext).Assembly.FullName));
+                options.AddInterceptors(sp.GetRequiredService<ChangeEventInterceptor>());
+            });
 
             // Register IDebContext using a factory-created instance
             services.AddScoped<IDebContext>(provider =>
@@ -79,8 +78,10 @@ namespace Nexus.DEB.Infrastructure
                 return factory.CreateDbContext();
             });
 
-            // Other infrastructure services will be registered here
-            services.AddScoped<ILoginService, LoginService>();
+			services.AddSingleton<ChangeEventInterceptor>();
+
+			// Other infrastructure services will be registered here
+			services.AddScoped<ILoginService, LoginService>();
             services.AddScoped<IDebService, DebService>(); 
 
             services.AddScoped<CbacService>();

@@ -1,6 +1,7 @@
 ﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models.Dms;
+using Nexus.DEB.Domain;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -23,6 +24,15 @@ namespace Nexus.DEB.Api.GraphQL
             IApplicationSettingsService applicationSettingsService,
             IDmsService dmsService)
         {
+            try
+            {
+                DebHelper.Dms.Libraries.ValidateOrThrow(library);
+            }
+            catch(Exception ex)
+            {
+                throw ExceptionHelper.BuildException(ex);
+            }
+
             var libraryId = applicationSettingsService.GetLibraryId(library);
 
             return await dmsService.GetDocumentAsync(libraryId, documentId, version);
@@ -43,6 +53,15 @@ namespace Nexus.DEB.Api.GraphQL
             IApplicationSettingsService applicationSettingsService,
             IDmsService dmsService)
         {
+            try
+            {
+                DebHelper.Dms.Libraries.ValidateOrThrow(library);
+            }
+            catch (Exception ex)
+            {
+                throw ExceptionHelper.BuildException(ex);
+            }
+
             var libraryId = applicationSettingsService.GetLibraryId(library);
 
             return await dmsService.GetDocumentListByEntityAsync(libraryId, entityId);
@@ -63,6 +82,15 @@ namespace Nexus.DEB.Api.GraphQL
             IApplicationSettingsService applicationSettingsService,
             IDmsService dmsService)
         {
+            try
+            {
+                DebHelper.Dms.Libraries.ValidateOrThrow(library);
+            }
+            catch (Exception ex)
+            {
+                throw ExceptionHelper.BuildException(ex);
+            }
+
             var libraryId = applicationSettingsService.GetLibraryId(library);
 
             return await dmsService.GetDocumentHistoryAsync(libraryId, documentId);
@@ -82,6 +110,15 @@ namespace Nexus.DEB.Api.GraphQL
             IApplicationSettingsService applicationSettingsService,
             IDmsService dmsService)
         {
+            try
+            {
+                DebHelper.Dms.Libraries.ValidateOrThrow(library);
+            }
+            catch (Exception ex)
+            {
+                throw ExceptionHelper.BuildException(ex);
+            }
+
             var libraryId = applicationSettingsService.GetLibraryId(library);
 
             return await dmsService.GetEntityDocumentCountAsync(libraryId, entityId);

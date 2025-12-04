@@ -2,6 +2,7 @@
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Domain;
+using Nexus.DEB.Infrastructure.Services;
 
 namespace Nexus.DEB.Api.Restful
 {
@@ -14,9 +15,9 @@ namespace Nexus.DEB.Api.Restful
                 .RequireAuthorization()
                 .WithOpenApi();
 
-            dmsGroup.MapPost("/libraries/deb-documents/document", AddDebDocument)
-                .WithName("AddDebDocument")
-                .WithSummary("Add a new document to the DEB document library")
+            dmsGroup.MapPost("/libraries/{library}/document", AddDocument)
+                .WithName("AddDocument")
+                .WithSummary("Add a new document to the library")
                 .DisableAntiforgery() // Required for file uploads
                 .Produces<DmsDocumentResponse>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status400BadRequest)
@@ -24,17 +25,7 @@ namespace Nexus.DEB.Api.Restful
                 .Produces(StatusCodes.Status403Forbidden)
                 .Produces(StatusCodes.Status500InternalServerError);
 
-            dmsGroup.MapPost("/libraries/common-documents/document", AddCommonDocument)
-                .WithName("AddCommonDocument")
-                .WithSummary("Add a new document to the Common document library")
-                .DisableAntiforgery() // Required for file uploads
-                .Produces<DmsDocumentResponse>(StatusCodes.Status200OK)
-                .Produces(StatusCodes.Status400BadRequest)
-                .Produces(StatusCodes.Status401Unauthorized)
-                .Produces(StatusCodes.Status403Forbidden)
-                .Produces(StatusCodes.Status500InternalServerError);
-
-            //dmsGroup.MapPost("/libraries/{libraryId:guid}/document/{documentId:guid}", UpdateDocument)
+            //dmsGroup.MapPost("/libraries/{library}/document/{documentId:guid}", UpdateDocument)
             //    .WithName("UpdateDocument")
             //    .WithSummary("Update an existing document")
             //    .DisableAntiforgery() // Required for file uploads
@@ -44,77 +35,33 @@ namespace Nexus.DEB.Api.Restful
             //    .Produces(StatusCodes.Status403Forbidden)
             //    .Produces(StatusCodes.Status500InternalServerError);
 
-            //dmsGroup.MapGet("/libraries/{libraryId:guid}/document/{documentId:guid}/file", GetDocumentFile)
-            //    .WithName("GetDocumentFile")
-            //    .WithSummary("Download a document file")
-            //    .Produces<FileResult>(StatusCodes.Status200OK)
-            //    .Produces(StatusCodes.Status400BadRequest)
-            //    .Produces(StatusCodes.Status401Unauthorized)
-            //    .Produces(StatusCodes.Status404NotFound)
-            //    .Produces(StatusCodes.Status500InternalServerError);
+            dmsGroup.MapGet("/libraries/{library}/document/{documentId:guid}/file", GetDocumentFile)
+                .WithName("GetDocumentFile")
+                .WithSummary("Download a document file")
+                .Produces<FileResult>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status400BadRequest)
+                .Produces(StatusCodes.Status401Unauthorized)
+                .Produces(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status500InternalServerError);
         }
 
-        /// <summary>
-        /// Adds a document to the DEB Documents library.
-        /// </summary>
-        private static async Task<IResult> AddDebDocument(
-            [FromForm] IFormFile file,
-            [FromForm] string entityId,
-            [FromForm] string? title,
-            [FromForm] string? description,
-            [FromForm] string? author,
-            [FromForm] string? documentType,
-            [FromServices] IApplicationSettingsService applicationSettingsService,
-            [FromServices] IDmsService dmsService)
-        {
-            var libraryId = applicationSettingsService.GetLibraryId(DebHelper.DmsLibraries.DebDocuments);
-
-            return await AddDocument(libraryId, file, entityId, title, description, author, documentType, dmsService);
-        }
-
-        /// <summary>
-        /// Adds a document to the Common Documents library.
-        /// </summary>
-        private static async Task<IResult> AddCommonDocument(
-            [FromForm] IFormFile file,
-            [FromForm] string entityId,
-            [FromForm] string? title,
-            [FromForm] string? description,
-            [FromForm] string? author,
-            [FromForm] string? documentType,
-            [FromServices] IApplicationSettingsService applicationSettingsService,
-            [FromServices] IDmsService dmsService)
-        {
-            var libraryId = applicationSettingsService.GetLibraryId(DebHelper.DmsLibraries.CommonDocuments);
-
-            return await AddDocument(libraryId, file, entityId, title, description, author, documentType, dmsService);
-        }
-
-        /// <summary>
-        /// Adds a new document to a library.
-        /// Accepts multipart/form-data with a file and individual metadata fields.
-        /// </summary>
-        /// <param name="libraryId">The library ID</param>
-        /// <param name="file">The file to upload (from form)</param>
-        /// <param name="entityId">The entity ID this document is associated with (REQUIRED)</param>
-        /// <param name="title">Document title (optional)</param>
-        /// <param name="description">Document description (optional)</param>
-        /// <param name="author">Document author (optional)</param>
-        /// <param name="documentType">Document type: "document" or "note" (defaults to "document")</param>
-        /// <param name="dmsService">Injected DMS service</param>
-        /// <returns>Document response with ID and metadata</returns>
         private static async Task<IResult> AddDocument(
-            Guid libraryId,
-            IFormFile file,
-            string entityId,
-            string? title,
-            string? description,
-            string? author,
-            string? documentType,
-            IDmsService dmsService)
+            [FromRoute] string library,
+            [FromForm] IFormFile file,
+            [FromForm] string entityId,
+            [FromForm] string? title,
+            [FromForm] string? description,
+            [FromForm] string? author,
+            [FromForm] string? documentType,
+            [FromServices] IApplicationSettingsService applicationSettingsService,
+            [FromServices] IDmsService dmsService)
         {
             try
             {
+                DebHelper.Dms.Libraries.ValidateOrThrow(library);
+
+                var libraryId = applicationSettingsService.GetLibraryId(library);
+
                 // Validate file
                 if (file == null || file.Length == 0)
                 {
@@ -303,13 +250,18 @@ namespace Nexus.DEB.Api.Restful
         /// <param name="dmsService">Injected DMS service</param>
         /// <returns>File stream with appropriate headers</returns>
         private static async Task<IResult> GetDocumentFile(
-            [FromRoute] Guid libraryId,
+            [FromRoute] string library,
             [FromRoute] Guid documentId,
             [FromQuery] int? version,
+            [FromServices] IApplicationSettingsService applicationSettingsService,
             [FromServices] IDmsService dmsService)
         {
             try
             {
+                DebHelper.Dms.Libraries.ValidateOrThrow(library);
+
+                var libraryId = applicationSettingsService.GetLibraryId(library);
+
                 var document = await dmsService.GetDocumentFileAsync(libraryId, documentId, version);
 
                 if (document == null)

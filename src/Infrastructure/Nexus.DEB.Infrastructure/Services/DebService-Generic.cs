@@ -2,6 +2,7 @@
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Domain.Models.Common;
 using static System.Formats.Asn1.AsnWriter;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -123,6 +124,38 @@ namespace Nexus.DEB.Infrastructure.Services
 				.Where(x => !x.IsDeleted && x.ChangeRecordId == changeRecordId)
 				.OrderBy(x => x.FriendlyFieldName)
 				.ToListAsync(cancellationToken);
+
+        public async Task<ICollection<SavedSearch>> GetSavedSearchesByContextAsync(string context, CancellationToken cancellationToken)
+        {
+            var currentPostId = _currentUserService.PostId;
+			return await _dbContext.SavedSearches.AsNoTracking()
+				.Where(x => x.PostId == currentPostId && x.Context == context)
+				.OrderBy(x => x.Name)
+				.ToListAsync(cancellationToken);
+		}
+
+        public async Task<SavedSearch?> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken)
+        {
+			var currentPostId = _currentUserService.PostId;
+			return await _dbContext.SavedSearches.AsNoTracking()
+				.Where(x => x.PostId == currentPostId && x.Context == context && x.Name == name)
+				.FirstOrDefaultAsync(cancellationToken);
+		}
+
+        public async Task<SavedSearch> SaveSavedSearchAsync(SavedSearch savedSearch, bool isNew, CancellationToken cancellationToken)
+        {
+            if (isNew)
+            {
+                await _dbContext.SavedSearches.AddAsync(savedSearch);
+            }
+            else
+            {
+                _dbContext.SavedSearches.Update(savedSearch);
+            }
+			await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return savedSearch;
+		}
 
 		public async Task<string> GenerateSerialNumberAsync(
             Guid moduleId,

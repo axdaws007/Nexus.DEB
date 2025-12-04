@@ -35,6 +35,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<SerialNumber> SerialNumbers { get; set; }
         public DbSet<ChangeRecord> ChangeRecords { get; set; }
         public DbSet<ChangeRecordItem> ChangeRecordItems { get; set; }
+        public DbSet<SavedSearch> SavedSearches { get; set; }
 
 		// Entities
 		public DbSet<EntityHead> EntityHeads { get; set; }

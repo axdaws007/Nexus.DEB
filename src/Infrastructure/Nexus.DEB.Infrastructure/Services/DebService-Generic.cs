@@ -102,6 +102,13 @@ namespace Nexus.DEB.Infrastructure.Services
             CancellationToken cancellationToken)
             => (await _dbContext.Comments.Where(x => x.Id == id).ExecuteDeleteAsync(cancellationToken) == 1);
 
+        public async Task<int> GetChangeRecordsCountForEntityAsync(
+            Guid entityId,
+            CancellationToken cancellationToken)
+            => await _dbContext.ChangeRecords.AsNoTracking()
+                .Where(x => !x.IsDeleted && x.EntityId == entityId)
+                .CountAsync(cancellationToken);
+
         public async Task<ICollection<ChangeRecord>> GetChangeRecordsForEntityAsync(
 			Guid entityId,
 			CancellationToken cancellationToken)

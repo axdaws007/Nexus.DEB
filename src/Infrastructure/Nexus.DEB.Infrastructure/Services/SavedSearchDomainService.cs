@@ -70,7 +70,7 @@ namespace Nexus.DEB.Infrastructure.Services
 		{
 			ValidateContext(context);
 			
-			await ValidateName(name, context);
+			ValidateName(name, context);
 
 			ValidateFilter(filter);
 		}
@@ -89,7 +89,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			}
 		}
 
-		private async Task ValidateName(string name, string context, CancellationToken cancellationToken = default)
+		private void ValidateName(string name, string context)
 		{
 			if (string.IsNullOrWhiteSpace(name))
 			{

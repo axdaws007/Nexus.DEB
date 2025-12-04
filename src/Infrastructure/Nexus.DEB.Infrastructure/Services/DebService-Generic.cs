@@ -134,7 +134,7 @@ namespace Nexus.DEB.Infrastructure.Services
 				.ToListAsync(cancellationToken);
 		}
 
-        public async Task<SavedSearch> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken)
+        public async Task<SavedSearch?> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken)
         {
 			var currentPostId = _currentUserService.PostId;
 			return await _dbContext.SavedSearches.AsNoTracking()

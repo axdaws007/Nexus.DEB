@@ -71,8 +71,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 		Task<PawsEntityDetail?> GetCurrentWorkflowStatusForEntityAsync(Guid entityId, CancellationToken cancellationToken);
 
         Task<ICollection<SavedSearch>> GetSavedSearchesByContextAsync(string context, CancellationToken cancellationToken);
-
-		Task<SavedSearch> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken);
+		Task<SavedSearch?> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken);
 		Task<SavedSearch> SaveSavedSearchAsync(SavedSearch savedSearch, bool isNew, CancellationToken cancellationToken);
 
 		#endregion Generic (eventual Framework)

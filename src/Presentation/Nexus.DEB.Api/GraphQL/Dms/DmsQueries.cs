@@ -76,7 +76,7 @@ namespace Nexus.DEB.Api.GraphQL
         /// <param name="dmsService">Injected DMS service</param>
         /// <returns>Paginated list of document versions</returns>
         [Authorize]
-        public static async Task<DmsDocumentHistoryList?> GetDocumentHistory(
+        public static async Task<ICollection<DmsDocumentHistoryItem>?> GetDocumentHistory(
             string library,
             Guid documentId,
             IApplicationSettingsService applicationSettingsService,

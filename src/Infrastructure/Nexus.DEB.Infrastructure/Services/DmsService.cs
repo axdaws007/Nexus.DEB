@@ -285,13 +285,13 @@ namespace Nexus.DEB.Infrastructure.Services
         /// <summary>
         /// Gets document history/version information.
         /// </summary>
-        public async Task<DmsDocumentHistoryList?> GetDocumentHistoryAsync(
+        public async Task<ICollection<DmsDocumentHistoryItem>?> GetDocumentHistoryAsync(
             Guid libraryId,
             Guid documentId)
         {
             var requestUri = $"api/libraries/{libraryId}/document/{documentId}/history";
 
-            return await SendAuthenticatedRequestAsync<DmsDocumentHistoryList>(
+            return await SendAuthenticatedRequestAsync<ICollection<DmsDocumentHistoryItem>>(
                 HttpMethod.Get,
                 requestUri,
                 operationName: $"GetDocumentHistory for document {documentId} in library {libraryId}");

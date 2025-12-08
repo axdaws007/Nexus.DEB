@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Diagnostics.SymbolStore;
 using System.Reflection;
 
 namespace Nexus.DEB.Domain

@@ -65,7 +65,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         /// <param name="documentId">The document ID</param>
         /// <param name="parameters">Paging and sorting parameters</param>
         /// <returns>Paginated list of document versions</returns>
-        Task<DmsDocumentHistoryList?> GetDocumentHistoryAsync(Guid libraryId, Guid documentId);
+        Task<ICollection<DmsDocumentHistoryItem>?> GetDocumentHistoryAsync(Guid libraryId, Guid documentId);
 
         /// <summary>
         /// Gets the count of documents for an entity.

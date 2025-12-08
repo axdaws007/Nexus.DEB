@@ -824,13 +824,16 @@ namespace Nexus.DEB.Infrastructure.Services
             return query.OrderBy(x => x.SerialNumber);
         }
 
-        #endregion Tasks
+		public async Task<TaskDetailView> GetTaskDetailByIdAsync(Guid id, CancellationToken cancellationToken = default)
+			=> await _dbContext.TaskDetails.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
 
-        // --------------------------------------------------------------------------------------------------------------
+		#endregion Tasks
 
-        #region Other
+		// --------------------------------------------------------------------------------------------------------------
 
-        public async System.Threading.Tasks.Task SaveStatementsAndTasks(
+		#region Other
+
+		public async System.Threading.Tasks.Task SaveStatementsAndTasks(
             ICollection<Statement> statements,
             ICollection<StatementRequirementScope> statementRequirmementScopes,
             ICollection<Domain.Models.Task> tasks, 

@@ -42,5 +42,11 @@ namespace Nexus.DEB.Api.GraphQL
 
             return debService.GetTasksForGrid(f);
         }
-    }
+
+        [Authorize]
+        public static async Task<TaskDetailView?> GetTaskById(Guid taskId,
+			IDebService debService,
+			CancellationToken cancellationToken)
+			=> await debService.GetTaskDetailByIdAsync(taskId, cancellationToken);
+	}
 }

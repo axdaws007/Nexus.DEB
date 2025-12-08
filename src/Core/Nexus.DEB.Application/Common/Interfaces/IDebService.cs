@@ -36,8 +36,10 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<Statement> UpdateStatementAsync(Statement statement, ICollection<RequirementScopes> requirementScopeCombinations, CancellationToken cancellationToken = default);
         IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters);
         IQueryable<TaskExport> GetTasksForExport(TaskSummaryFilters? filters);
+        Task<TaskDetailView?> GetTaskDetailByIdAsync(Guid id, CancellationToken cancellationToken);
 
-        Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(CancellationToken cancellationToken);
+
+		Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(CancellationToken cancellationToken);
         Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(CancellationToken cancellationToken);
 
         #endregion Entity methods

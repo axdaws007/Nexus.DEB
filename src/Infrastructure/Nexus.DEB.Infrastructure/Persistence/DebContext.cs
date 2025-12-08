@@ -56,7 +56,8 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<StatementDetailView> StatementDetails { get; set; }
         public DbSet<TaskSummary> TaskSummaries { get; set; }
         public DbSet<TaskExport> TaskExport { get; set; }
-        public DbSet<PawsState> PawsStates { get; set; }
+        public DbSet<TaskDetailView> TaskDetails { get; set; }
+		public DbSet<PawsState> PawsStates { get; set; }
         public DbSet<CommentDetail> CommentDetails { get; set; }
         public DbSet<ViewPost> ViewPosts { get; set; }
         public DbSet<PawsEntityDetail> PawsEntityDetails { get; set; }

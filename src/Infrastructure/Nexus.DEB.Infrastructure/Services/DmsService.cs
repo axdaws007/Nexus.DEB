@@ -54,7 +54,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 }
 
                 // Create multipart/form-data content
-                using var content = CreateMultipartContentAsync(file, metadata);
+                using var content = CreateMultipartContent(file, metadata);
 
                 // Create authenticated request with the Forms Auth cookie
                 var request = CreateAuthenticatedRequest(HttpMethod.Post, requestUri);
@@ -99,62 +99,62 @@ namespace Nexus.DEB.Infrastructure.Services
         ///// Updates an existing document in a library.
         ///// Sends multipart/form-data to the legacy API.
         ///// </summary>
-        //public async Task<DmsDocumentResponse?> UpdateDocumentAsync(
-        //    Guid libraryId,
-        //    Guid documentId,
-        //    IFormFile file,
-        //    string? metadata = null)
-        //{
-        //    var requestUri = $"api/libraries/{libraryId}/document/{documentId}";
+        public async Task<DmsDocumentResponse?> UpdateDocumentAsync(
+            Guid libraryId,
+            Guid documentId,
+            IFormFile file,
+            DmsDocumentMetadata metadata)
+        {
+            var requestUri = $"api/libraries/{libraryId}/document/{documentId}";
 
-        //    try
-        //    {
-        //        Logger.LogInformation(
-        //            "Updating document {DocumentId} in library {LibraryId}: {FileName} ({FileSize} bytes)",
-        //            documentId, libraryId, file.FileName, file.Length);
+            try
+            {
+                Logger.LogInformation(
+                    "Updating document {DocumentId} in library {LibraryId}: {FileName} ({FileSize} bytes)",
+                    documentId, libraryId, file.FileName, file.Length);
 
-        //        // Create multipart/form-data content
-        //        using var content = await CreateMultipartContentAsync(file, metadata);
+                // Create multipart/form-data content
+                using var content = CreateMultipartContent(file, metadata);
 
-        //        // Create authenticated request with the Forms Auth cookie
-        //        var request = CreateAuthenticatedRequest(HttpMethod.Post, requestUri);
-        //        request.Content = content;
+                // Create authenticated request with the Forms Auth cookie
+                var request = CreateAuthenticatedRequest(HttpMethod.Post, requestUri);
+                request.Content = content;
 
-        //        // Send the request
-        //        var response = await HttpClient.SendAsync(request);
+                // Send the request
+                var response = await HttpClient.SendAsync(request);
 
-        //        if (response.StatusCode == HttpStatusCode.Forbidden)
-        //        {
-        //            Logger.LogWarning(
-        //                "UpdateDocument forbidden for library {LibraryId}, document {DocumentId}",
-        //                libraryId, documentId);
-        //            return null;
-        //        }
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    Logger.LogWarning(
+                        "UpdateDocument forbidden for library {LibraryId}, document {DocumentId}",
+                        libraryId, documentId);
+                    return null;
+                }
 
-        //        if (!response.IsSuccessStatusCode)
-        //        {
-        //            var errorContent = await response.Content.ReadAsStringAsync();
-        //            Logger.LogError(
-        //                "UpdateDocument failed with status {StatusCode}: {ErrorContent}",
-        //                response.StatusCode, errorContent);
-        //            return null;
-        //        }
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Logger.LogError(
+                        "UpdateDocument failed with status {StatusCode}: {ErrorContent}",
+                        response.StatusCode, errorContent);
+                    return null;
+                }
 
-        //        var result = await response.Content.ReadFromJsonAsync<DmsDocumentResponse>(JsonOptions);
+                var result = await response.Content.ReadFromJsonAsync<DmsDocumentResponse>(JsonOptions);
 
-        //        Logger.LogInformation(
-        //            "Successfully updated document {DocumentId} in library {LibraryId}",
-        //            documentId, libraryId);
+                Logger.LogInformation(
+                    "Successfully updated document {DocumentId} in library {LibraryId}",
+                    documentId, libraryId);
 
-        //        return result;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Logger.LogError(ex, "Error updating document {DocumentId} in library {LibraryId}",
-        //            documentId, libraryId);
-        //        throw;
-        //    }
-        //}
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error updating document {DocumentId} in library {LibraryId}",
+                    documentId, libraryId);
+                throw;
+            }
+        }
 
         /// <summary>
         /// Deletes a document from a library.
@@ -316,7 +316,7 @@ namespace Nexus.DEB.Infrastructure.Services
         /// Creates multipart/form-data content for file uploads.
         /// Includes the file and optional metadata.
         /// </summary>
-        private static MultipartFormDataContent CreateMultipartContentAsync(
+        private static MultipartFormDataContent CreateMultipartContent(
             IFormFile file,
             DmsDocumentMetadata metadata)
         {

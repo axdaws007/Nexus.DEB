@@ -25,15 +25,15 @@ namespace Nexus.DEB.Api.Restful
                 .Produces(StatusCodes.Status403Forbidden)
                 .Produces(StatusCodes.Status500InternalServerError);
 
-            //dmsGroup.MapPost("/libraries/{library}/document/{documentId:guid}", UpdateDocument)
-            //    .WithName("UpdateDocument")
-            //    .WithSummary("Update an existing document")
-            //    .DisableAntiforgery() // Required for file uploads
-            //    .Produces<DmsDocumentResponse>(StatusCodes.Status200OK)
-            //    .Produces(StatusCodes.Status400BadRequest)
-            //    .Produces(StatusCodes.Status401Unauthorized)
-            //    .Produces(StatusCodes.Status403Forbidden)
-            //    .Produces(StatusCodes.Status500InternalServerError);
+            dmsGroup.MapPost("/libraries/{library}/document/{documentId:guid}", UpdateDocument)
+                .WithName("UpdateDocument")
+                .WithSummary("Update an existing document")
+                .DisableAntiforgery() // Required for file uploads
+                .Produces<DmsDocumentResponse>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status400BadRequest)
+                .Produces(StatusCodes.Status401Unauthorized)
+                .Produces(StatusCodes.Status403Forbidden)
+                .Produces(StatusCodes.Status500InternalServerError);
 
             dmsGroup.MapGet("/libraries/{library}/document/{documentId:guid}/file", GetDocumentFile)
                 .WithName("GetDocumentFile")
@@ -157,88 +157,93 @@ namespace Nexus.DEB.Api.Restful
         ///// <param name="documentType">Document type: "document" or "note"</param>
         ///// <param name="dmsService">Injected DMS service</param>
         ///// <returns>Document response with updated metadata</returns>
-        //private static async Task<IResult> UpdateDocument(
-        //    [FromRoute] Guid libraryId,
-        //    [FromRoute] Guid documentId,
-        //    [FromForm] IFormFile file,
-        //    [FromForm] string? title,
-        //    [FromForm] string? description,
-        //    [FromForm] string? author,
-        //    [FromForm] string? documentType,
-        //    [FromServices] IDmsService dmsService)
-        //{
-        //    try
-        //    {
-        //        // Validate file
-        //        if (file == null || file.Length == 0)
-        //        {
-        //            return Results.BadRequest(new { error = "File is required" });
-        //        }
+        private static async Task<IResult> UpdateDocument(
+            [FromRoute] string library,
+            [FromRoute] Guid documentId,
+            [FromForm] IFormFile file,
+            [FromForm] string? title,
+            [FromForm] string? description,
+            [FromForm] string? author,
+            [FromForm] string? documentType,
+            [FromServices] IApplicationSettingsService applicationSettingsService,
+            [FromServices] IDmsService dmsService)
+        {
+            try
+            {
+                DebHelper.Dms.Libraries.ValidateOrThrow(library);
 
-        //        // Validate file size
-        //        const long maxFileSize = 50 * 1024 * 1024; // 50 MB
-        //        if (file.Length > maxFileSize)
-        //        {
-        //            return Results.BadRequest(new
-        //            {
-        //                error = $"File size exceeds maximum allowed size of {maxFileSize / 1024 / 1024} MB"
-        //            });
-        //        }
+                var libraryId = applicationSettingsService.GetLibraryId(library);
 
-        //        // Validate documentType if provided
-        //        if (!string.IsNullOrWhiteSpace(documentType))
-        //        {
-        //            var validDocTypes = new[] { "document", "note" };
-        //            if (!validDocTypes.Contains(documentType.ToLower()))
-        //            {
-        //                return Results.BadRequest(new
-        //                {
-        //                    error = "documentType must be 'document' or 'note'"
-        //                });
-        //            }
-        //        }
+                // Validate file
+                if (file == null || file.Length == 0)
+                {
+                    return Results.BadRequest(new { error = "File is required" });
+                }
 
-        //        // Build metadata - for updates, entityId comes from existing document
-        //        // so it's not required in the update request
-        //        var metadata = new DmsDocumentMetadata
-        //        {
-        //            EntityId = Guid.Empty, // Will be populated from existing document by legacy API
-        //            Title = title,
-        //            Description = description,
-        //            Author = author,
-        //            DocumentType = documentType?.ToLower() ?? "document"
-        //        };
+                // Validate file size
+                const long maxFileSize = 50 * 1024 * 1024; // 50 MB
+                if (file.Length > maxFileSize)
+                {
+                    return Results.BadRequest(new
+                    {
+                        error = $"File size exceeds maximum allowed size of {maxFileSize / 1024 / 1024} MB"
+                    });
+                }
 
-        //        var result = await dmsService.UpdateDocumentAsync(libraryId, documentId, file, metadata);
+                // Validate documentType if provided
+                if (!string.IsNullOrWhiteSpace(documentType))
+                {
+                    var validDocTypes = new[] { "document", "note" };
+                    if (!validDocTypes.Contains(documentType.ToLower()))
+                    {
+                        return Results.BadRequest(new
+                        {
+                            error = "documentType must be 'document' or 'note'"
+                        });
+                    }
+                }
 
-        //        if (result == null)
-        //        {
-        //            return Results.Problem(
-        //                detail: "Failed to update document. The service returned no data.",
-        //                statusCode: StatusCodes.Status500InternalServerError);
-        //        }
+                // Build metadata - for updates, entityId comes from existing document
+                // so it's not required in the update request
+                var metadata = new DmsDocumentMetadata
+                {
+                    EntityId = Guid.Empty, // Will be populated from existing document by legacy API
+                    Title = title,
+                    Description = description,
+                    Author = author,
+                    DocumentType = documentType?.ToLower() ?? "document"
+                };
 
-        //        return Results.Ok(result);
-        //    }
-        //    catch (ArgumentException ex)
-        //    {
-        //        return Results.BadRequest(new { error = ex.Message });
-        //    }
-        //    catch (FormatException ex)
-        //    {
-        //        return Results.BadRequest(new { error = ex.Message });
-        //    }
-        //    catch (InvalidOperationException ex)
-        //    {
-        //        return Results.BadRequest(new { error = ex.Message });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Results.Problem(
-        //            detail: ex.Message,
-        //            statusCode: StatusCodes.Status500InternalServerError);
-        //    }
-        //}
+                var result = await dmsService.UpdateDocumentAsync(libraryId, documentId, file, metadata);
+
+                if (result == null)
+                {
+                    return Results.Problem(
+                        detail: "Failed to update document. The service returned no data.",
+                        statusCode: StatusCodes.Status500InternalServerError);
+                }
+
+                return Results.Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+            catch (FormatException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem(
+                    detail: ex.Message,
+                    statusCode: StatusCodes.Status500InternalServerError);
+            }
+        }
 
         /// <summary>
         /// Downloads a document file from a library.

@@ -2,7 +2,7 @@
 
 namespace Nexus.DEB.Application.Common.Models
 {
-    public class StatementSummary : IEntity, IOwnedBy
+    public class StatementSummary : IEntityType, IOwnedBy
     {
         public Guid EntityId { get; set; }
         public string SerialNumber { get; set; } = string.Empty;
@@ -13,5 +13,6 @@ namespace Nexus.DEB.Application.Common.Models
         public ICollection<ChildItem> Requirements { get; set; } = new List<ChildItem>();
         public int? StatusId { get; set; }
         public string? Status { get; set; }
+        public string EntityTypeTitle { get; set; } = string.Empty;
     }
 }

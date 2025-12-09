@@ -343,6 +343,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     Title = s.Title,
                     LastModifiedDate = s.LastModifiedDate,
                     OwnedById = s.OwnedById,
+                    EntityTypeTitle = s.EntityTypeTitle,
 
                     // NEW: Get Requirements through StatementRequirementScope linking table
                     Requirements = s.StatementsRequirementsScopes

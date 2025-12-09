@@ -4,7 +4,7 @@ namespace Nexus.DEB.Api.GraphQL
 {
     public class StandardVersionSummaryFilters
     {
-        [ID(nameof(Standard))]
+        [ID]
         public ICollection<short>? StandardIds { get; set; }
 
         [ID]

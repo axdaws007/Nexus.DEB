@@ -4,17 +4,17 @@ namespace Nexus.DEB.Api.GraphQL
 {
     public class PawsStatusDataLoader : BatchDataLoader<Guid, string?>
     {
-        private readonly IPawsService _pawsService;
+        private readonly IDebService _debService;
         private readonly ILogger<PawsStatusDataLoader> _logger;
 
         public PawsStatusDataLoader(
-            IPawsService pawsService,
+            IDebService debService,
             ILogger<PawsStatusDataLoader> logger,
             IBatchScheduler batchScheduler,
             DataLoaderOptions? options = null)
             : base(batchScheduler, options)
         {
-            _pawsService = pawsService;
+            _debService = debService;
             _logger = logger;
         }
 
@@ -37,7 +37,7 @@ namespace Nexus.DEB.Api.GraphQL
                     string.Join(", ", keys.Take(5)) + (keys.Count > 5 ? "..." : ""));
 
                 // Call the service with all entity IDs at once
-                var statuses = await _pawsService.GetStatusesForEntitiesAsync(
+                var statuses = await _debService.GetWorkflowPseudoStateTitleForEntitiesAsync(
                     keys.ToList(),
                     cancellationToken);
 

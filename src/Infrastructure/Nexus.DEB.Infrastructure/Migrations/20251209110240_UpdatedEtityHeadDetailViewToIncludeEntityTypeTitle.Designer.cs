@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20251209110240_UpdatedEtityHeadDetailViewToIncludeEntityTypeTitle")]
+    partial class UpdatedEtityHeadDetailViewToIncludeEntityTypeTitle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -869,79 +872,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Standard", "deb");
-                });
-
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.StandardVersionDetailView", b =>
-                {
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("CreatedBy");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("CreatedDate");
-
-                    b.Property<string>("Delimiter")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Delimiter");
-
-                    b.Property<DateTime>("EffectiveFrom")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("EffectiveFrom");
-
-                    b.Property<DateTime?>("EffectiveTo")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("EffectiveTo");
-
-                    b.Property<Guid>("EntityId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("EntityId");
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("LastModifiedBy");
-
-                    b.Property<DateTime>("LastModifiedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("LastModifiedDate");
-
-                    b.Property<int>("MajorVersion")
-                        .HasColumnType("int")
-                        .HasColumnName("MajorVersion");
-
-                    b.Property<int>("MinorVersion")
-                        .HasColumnType("int")
-                        .HasColumnName("MinorVersion");
-
-                    b.Property<string>("OwnedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("OwnedBy");
-
-                    b.Property<string>("SerialNumber")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("SerialNumber");
-
-                    b.Property<short>("StandardId")
-                        .HasColumnType("smallint")
-                        .HasColumnName("StandardId");
-
-                    b.Property<string>("StandardTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("StandardTitle");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Title");
-
-                    b.ToTable((string)null);
-
-                    b.ToView("vw_StandardVersionDetail", "deb");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.StandardVersionExport", b =>

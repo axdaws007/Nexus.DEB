@@ -42,6 +42,10 @@ namespace Nexus.DEB.Infrastructure.Configurations
 
             builder.Property(e => e.SerialNumber)
                 .HasColumnName("SerialNumber");
+
+            builder.Property(e => e.EntityTypeTitle)
+                .HasColumnName("EntityTypeTitle")
+                .IsRequired();
         }
     }
 }

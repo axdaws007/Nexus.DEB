@@ -1,6 +1,8 @@
-﻿namespace Nexus.DEB.Domain.Models
+﻿using Nexus.DEB.Domain.Interfaces;
+
+namespace Nexus.DEB.Domain.Models
 {
-    public class EntityHeadDetail
+    public class EntityHeadDetail : IEntityType
     {
         public Guid EntityId { get; set; }
         public string Title { get; set; } = string.Empty;
@@ -10,5 +12,6 @@
         public string? LastModifiedByPostTitle { get; set; }
         public string? OwnedByPostTitle { get; set; }
         public string? SerialNumber { get; set; }
+        public string EntityTypeTitle { get; set; } = string.Empty;
     }
 }

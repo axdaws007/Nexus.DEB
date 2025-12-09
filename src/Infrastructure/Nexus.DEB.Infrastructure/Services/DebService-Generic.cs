@@ -74,6 +74,9 @@ namespace Nexus.DEB.Infrastructure.Services
             CancellationToken cancellationToken)
             => await _dbContext.PawsEntityDetails.AsNoTracking().FirstOrDefaultAsync(x => x.EntityId == entityId, cancellationToken);
 
+        public async Task<IReadOnlyDictionary<Guid, string?>> GetWorkflowPseudoStateTitleForEntitiesAsync(List<Guid> entityIds, CancellationToken cancellationToken = default)
+            => await _dbContext.PawsEntityDetails.AsNoTracking().Where(x => entityIds.Contains(x.EntityId)).ToDictionaryAsync(x => x.EntityId, x => x.PseudoStateTitle, cancellationToken);
+
         public async Task<ICollection<CommentDetail>> GetCommentsForEntityAsync(Guid entityId, CancellationToken cancellationToken)
             => await _dbContext.CommentDetails.AsNoTracking()
                         .Where(x => x.EntityId == entityId)

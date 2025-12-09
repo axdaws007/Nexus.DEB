@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using Nexus.DEB.Domain.Models.Common;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 namespace Nexus.DEB.Domain
 {
@@ -13,6 +15,32 @@ namespace Nexus.DEB.Domain
             public const string PostTitle = "posttitle";
             public const string FirstName = "firstname";
             public const string LastName = "lastname";
+        }
+
+        public static class Paws
+        {
+            public static class States
+            {
+                public const string Draft = "Draft";
+                public const string Open = "Open";
+                public const string Closed = "Closed";
+                public const string Active = "Active";
+                public const string ClosedArchived = "Closed/Archived";
+                public const string Superceded = "Superceded";
+                public const string Archived = "Archived";
+                public const string Auditable = "Auditable";
+                public const string Audited = "Audited";
+                public const string ClosedAndArchived = "Closed and Archived";
+
+
+                public static ReadOnlyCollection<string> AllEditableStates => new(
+                [
+                    Draft,
+                    Open,
+                    Active
+                ]);
+            }
+
         }
 
         public static class Policies
@@ -52,6 +80,16 @@ namespace Nexus.DEB.Domain
             public const string CanDeleteOwnedStdVersionComments = "CanDeleteOwnedStdVersionComments ";
             public const string CanDeleteOwnedRequirementComments = "CanDeleteOwnedRequirementComments";
             public const string CanDeleteOwnedTaskComments = "CanDeleteOwnedTaskComments";
+
+
+            public static readonly IReadOnlyDictionary<string, string> EditCapabilityByEntityType = new Dictionary<string, string>
+            {
+                [EntityTypes.StandardVersion] = DebHelper.Capabilites.CanEditStdVersion,
+                [EntityTypes.Requirement] = DebHelper.Capabilites.CanEditRequirement,
+                [EntityTypes.SoC] = DebHelper.Capabilites.CanEditSoC,
+                [EntityTypes.Task] = DebHelper.Capabilites.CanEditSoCTask,
+                [EntityTypes.Scope] = DebHelper.Capabilites.CanEditScope
+            };
 
             public static ReadOnlyCollection<string> AllCreateCommentCapabilities => new(
             [

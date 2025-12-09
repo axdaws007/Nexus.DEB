@@ -1,6 +1,8 @@
-﻿namespace Nexus.DEB.Application.Common.Models
+﻿using Nexus.DEB.Domain.Interfaces;
+
+namespace Nexus.DEB.Application.Common.Models
 {
-    public abstract class EntityDetailBase
+    public abstract class EntityDetailBase : IEntityType
     {
         public Guid EntityId { get; set; }
         public string Title { get; set; } = string.Empty;

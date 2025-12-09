@@ -710,13 +710,34 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
-        #endregion StandardVersions
+        public async Task<StandardVersionDetail?> GetStandardVersionDetailByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+			var standardVersion = await _dbContext.StandardVersionDetails.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
 
-        // --------------------------------------------------------------------------------------------------------------
+			if (standardVersion == null)
+				return null;
 
-        #region Tasks
+			var standardVersionDetail = standardVersion.Adapt<StandardVersionDetail>();
 
-        public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
+            var scopes = await _dbContext.StandardVersions.Where(sv => sv.EntityId == id)
+				.SelectMany(sv => sv.Requirements)
+				.Include(r => r.Scopes)
+                .SelectMany(s => s.Scopes).Distinct()
+				.ToListAsync(cancellationToken);
+
+            standardVersionDetail.Scopes = scopes;
+
+			return standardVersionDetail;
+		}
+			
+
+		#endregion StandardVersions
+
+		// --------------------------------------------------------------------------------------------------------------
+
+		#region Tasks
+
+		public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
         {
             var query = _dbContext.TaskSummaries.AsQueryable();
 

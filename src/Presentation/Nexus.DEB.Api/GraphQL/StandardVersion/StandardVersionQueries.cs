@@ -1,6 +1,7 @@
 ﻿using HotChocolate.Authorization;
 using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 
@@ -56,6 +57,14 @@ namespace Nexus.DEB.Api.GraphQL
             => debService.GetStandardVersions();
 
         [Authorize]
+        public static async Task<StandardVersionDetail?> GetStandardVersionByIdAsync(
+			Guid id,
+			IDebService debService,
+			IResolverContext resolverContext,
+			CancellationToken cancellationToken)
+			=> await debService.GetStandardVersionDetailByIdAsync(id, cancellationToken);
+
+		[Authorize]
         public async static Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(
             IDebService debService,
             IResolverContext resolverContext,

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Nexus.DEB.Infrastructure.Configurations
 {
-	public class TaskDetailConfiguration : IEntityTypeConfiguration<TaskDetailView>
+	public class TaskDetailViewConfiguration : IEntityTypeConfiguration<TaskDetailView>
 	{
 		public void Configure(EntityTypeBuilder<TaskDetailView> builder)
 		{

@@ -71,5 +71,12 @@ namespace Nexus.DEB.Api.GraphQL
             CancellationToken cancellationToken)
             => await debService.GetStandardVersionsLookupAsync(cancellationToken);
 
-    }
+		[Authorize]
+		public static async Task<StandardVersionChildCounts> GetChildCountsForStandardVersion(
+			Guid id,
+			IDebService debService,
+			CancellationToken cancellationToken)
+			=> await debService.GetChildCountsForStandardVersionAsync(id, cancellationToken);
+
+	}
 }

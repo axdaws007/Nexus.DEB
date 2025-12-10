@@ -730,7 +730,20 @@ namespace Nexus.DEB.Infrastructure.Services
 
 			return standardVersionDetail;
 		}
-			
+
+		public async Task<StandardVersionChildCounts> GetChildCountsForStandardVersionAsync(Guid id, CancellationToken cancellationToken)
+		{
+			var numberOfComments = await GetCommentsCountForEntityAsync(id, cancellationToken);
+
+			var numberOfHistoryEvents = await GetChangeRecordsCountForEntityAsync(id, cancellationToken);
+
+			return new StandardVersionChildCounts()
+			{
+				CommentsCount = numberOfComments,
+				HistoryCount = numberOfHistoryEvents
+			};
+		}
+
 
 		#endregion StandardVersions
 

@@ -9,11 +9,13 @@ namespace Nexus.DEB.Domain.Models
 	public class StandardVersionDetailView
 	{
 		public Guid EntityId { get; set; }
+		public string EntityTypeTitle { get; set; } = string.Empty;
 		public string? SerialNumber { get; set; }
 		public short StandardId { get; set; }
 		public string StandardTitle { get; set; } = string.Empty;
 		public string Delimiter { get; set; } = string.Empty;
 		public string Title { get; set; } = string.Empty;
+		public string? Description { get; set; }
 		public DateTime CreatedDate { get; set; }
 		public string CreatedBy { get; set; } = string.Empty;
 		public string OwnedBy { get; set; } = string.Empty;

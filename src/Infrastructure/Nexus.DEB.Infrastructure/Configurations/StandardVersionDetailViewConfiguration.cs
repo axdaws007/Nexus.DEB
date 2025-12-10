@@ -20,6 +20,9 @@ namespace Nexus.DEB.Infrastructure.Configurations
 			builder.Property(e => e.EntityId)
 				.HasColumnName("EntityId")
 				.IsRequired();
+			builder.Property(e => e.EntityTypeTitle)
+				.HasColumnName("EntityTypeTitle")
+				.IsRequired();
 			builder.Property(e => e.SerialNumber)
 				.HasColumnName("SerialNumber");
 			builder.Property(e => e.StandardId)
@@ -34,6 +37,8 @@ namespace Nexus.DEB.Infrastructure.Configurations
 			builder.Property(e => e.Title)
 				.HasColumnName("Title")
 				.IsRequired();
+			builder.Property(e => e.Description)
+				.HasColumnName("Description");
 			builder.Property(e => e.CreatedDate)
 				.HasColumnName("CreatedDate")
 				.IsRequired();

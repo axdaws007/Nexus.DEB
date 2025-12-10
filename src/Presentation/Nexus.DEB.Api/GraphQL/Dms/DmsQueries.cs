@@ -47,6 +47,8 @@ namespace Nexus.DEB.Api.GraphQL
         /// <param name="dmsService">Injected DMS service</param>
         /// <returns>Paginated list of documents</returns>
         [Authorize]
+        [UseOffsetPaging]
+        [UseSorting]
         public static async Task<ICollection<DmsDocumentListItem>?> GetDocumentListForEntity(
             string library,
             Guid entityId,

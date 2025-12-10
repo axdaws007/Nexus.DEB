@@ -16,6 +16,7 @@ namespace Nexus.DEB.Api.Restful
                 .WithOpenApi();
 
             dmsGroup.MapPost("/libraries/{library}/document", AddDocument)
+                .RequireAuthorization(policyNames: [DebHelper.Policies.CanAddSoCEvidence])
                 .WithName("AddDocument")
                 .WithSummary("Add a new document to the library")
                 .DisableAntiforgery() // Required for file uploads
@@ -26,6 +27,7 @@ namespace Nexus.DEB.Api.Restful
                 .Produces(StatusCodes.Status500InternalServerError);
 
             dmsGroup.MapPost("/libraries/{library}/document/{documentId:guid}", UpdateDocument)
+                .RequireAuthorization(policyNames: [DebHelper.Policies.CanEditSoCEvidence])
                 .WithName("UpdateDocument")
                 .WithSummary("Update an existing document")
                 .DisableAntiforgery() // Required for file uploads
@@ -36,6 +38,7 @@ namespace Nexus.DEB.Api.Restful
                 .Produces(StatusCodes.Status500InternalServerError);
 
             dmsGroup.MapGet("/libraries/{library}/document/{documentId:guid}/file", GetDocumentFile)
+                .RequireAuthorization(policyNames: [DebHelper.Policies.CanViewSoCEvidence])
                 .WithName("GetDocumentFile")
                 .WithSummary("Download a document file")
                 .Produces<FileResult>(StatusCodes.Status200OK)
@@ -43,6 +46,15 @@ namespace Nexus.DEB.Api.Restful
                 .Produces(StatusCodes.Status401Unauthorized)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status500InternalServerError);
+
+            //dmsGroup.MapGet("/debug/claims", (HttpContext context) =>
+            //{
+            //    var claims = context.User.Claims
+            //        .Select(c => new { c.Type, c.Value })
+            //        .ToList();
+            //    return Results.Ok(claims);
+            //})
+            //.WithName("DebugClaims");
         }
 
         private static async Task<IResult> AddDocument(

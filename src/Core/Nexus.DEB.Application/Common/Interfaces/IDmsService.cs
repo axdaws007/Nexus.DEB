@@ -22,7 +22,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         /// <param name="file">The file to upload</param>
         /// <param name="metadata">Document metadata (optional JSON string from form data)</param>
         /// <returns>The updated document response</returns>
-        Task<DmsDocumentResponse?> UpdateDocumentAsync(Guid libraryId, Guid documentId, IFormFile file, DmsDocumentMetadata? metadata = null);
+        Task<DmsDocumentResponse?> UpdateDocumentAsync(Guid libraryId, Guid documentId, IFormFile? file, DmsDocumentMetadata? metadata = null);
 
         /// <summary>
         /// Deletes a document from a library.

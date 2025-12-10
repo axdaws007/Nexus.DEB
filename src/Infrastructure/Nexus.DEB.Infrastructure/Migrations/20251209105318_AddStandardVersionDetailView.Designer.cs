@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20251209105318_AddStandardVersionDetailView")]
+    partial class AddStandardVersionDetailView
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -306,11 +309,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.Property<Guid>("EntityId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("EntityId");
-
-                    b.Property<string>("EntityTypeTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("EntityTypeTitle");
 
                     b.Property<string>("LastModifiedByPostTitle")
                         .HasColumnType("nvarchar(max)")
@@ -876,7 +874,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
-                        .HasColumnName("CreatedByPostTitle");
+                        .HasColumnName("CreatedBy");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2")
@@ -887,32 +885,22 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("Delimiter");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Description");
-
-                    b.Property<DateTime?>("EffectiveEndDate")
+                    b.Property<DateTime>("EffectiveFrom")
                         .HasColumnType("datetime2")
-                        .HasColumnName("EffectiveEndDate");
+                        .HasColumnName("EffectiveFrom");
 
-                    b.Property<DateTime>("EffectiveStartDate")
+                    b.Property<DateTime?>("EffectiveTo")
                         .HasColumnType("datetime2")
-                        .HasColumnName("EffectiveStartDate");
+                        .HasColumnName("EffectiveTo");
 
                     b.Property<Guid>("EntityId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("EntityId");
 
-                    b.Property<string>("EntityTypeTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("EntityTypeTitle");
-
                     b.Property<string>("LastModifiedBy")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
-                        .HasColumnName("LastModifiedByPostTitle");
+                        .HasColumnName("LastModifiedBy");
 
                     b.Property<DateTime>("LastModifiedDate")
                         .HasColumnType("datetime2")
@@ -929,7 +917,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.Property<string>("OwnedBy")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
-                        .HasColumnName("OwnedByPostTitle");
+                        .HasColumnName("OwnedBy");
 
                     b.Property<string>("SerialNumber")
                         .HasColumnType("nvarchar(max)")

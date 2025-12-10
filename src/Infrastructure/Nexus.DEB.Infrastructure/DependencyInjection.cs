@@ -63,6 +63,16 @@ namespace Nexus.DEB.Infrastructure
                 client.Timeout = TimeSpan.FromSeconds(timeout);
             });
 
+            services.AddHttpClient("DmsApi", client =>
+            {
+                var baseUrl = configuration["LegacyApis:DMS:BaseUrl"]
+                    ?? throw new InvalidOperationException("LegacyApis:DMS:BaseUrl is not configured");
+                var timeout = int.Parse(configuration["LegacyApis:DMS:Timeout"] ?? "30");
+
+                client.BaseAddress = new Uri(baseUrl);
+                client.Timeout = TimeSpan.FromSeconds(timeout);
+            });
+
             // Database - Using Pooled DbContext Factory for better performance
             services.AddPooledDbContextFactory<DebContext>((sp, options) =>
             {
@@ -110,6 +120,7 @@ namespace Nexus.DEB.Infrastructure
             // Note: PawsService is used by field resolvers and needs to be transient
             services.AddTransient<ICurrentUserService, CurrentUserService>();
             services.AddTransient<IPawsService, PawsService>();
+            services.AddTransient<IDmsService, DmsService>();
             services.AddTransient<IDateTimeProvider, DateTimeProvider>();
             services.AddTransient<IApplicationSettingsService, ApplicationSettingsService>();
 

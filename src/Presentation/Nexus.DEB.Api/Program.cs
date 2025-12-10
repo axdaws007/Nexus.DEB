@@ -141,6 +141,9 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(DebHelper.Policies.CanAddComments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllCreateCommentCapabilities));
     options.AddPolicy(DebHelper.Policies.CanDeleteComments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllDeleteCommentCapabilities));
+    options.AddPolicy(DebHelper.Policies.CanAddSoCEvidence, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanAddSoCEvidence));
+    options.AddPolicy(DebHelper.Policies.CanEditSoCEvidence, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoCEvidence));
+    options.AddPolicy(DebHelper.Policies.CanDeleteSoCEvidence, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanDeleteSoCEvidence));
 });
 
 builder
@@ -191,6 +194,7 @@ app.MapGraphQL().WithOptions(new GraphQLServerOptions
 
 app.MapExportEndpoints();
 app.MapWorkflowDiagramEndpoints();
+app.MapDmsEndpoints();
 
 if (app.Environment.IsDevelopment())
 {

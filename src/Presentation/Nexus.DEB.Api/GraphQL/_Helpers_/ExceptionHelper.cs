@@ -19,7 +19,12 @@ namespace Nexus.DEB.Api.GraphQL
 
         public static GraphQLException BuildException(Exception exception)
         {
-            return new GraphQLException("An error has occurred.", exception);
+            var error = ErrorBuilder.New()
+                            .SetMessage(exception.Message)
+                            .SetException(exception)
+                            .Build();
+
+            return new GraphQLException(error);
         }
     }
 }

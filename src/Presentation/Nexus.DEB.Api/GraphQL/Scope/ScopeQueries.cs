@@ -33,11 +33,15 @@ namespace Nexus.DEB.Api.GraphQL
             => await debService.GetScopesLookupAsync(cancellationToken);
 
         [Authorize]
-        public static async Task<ICollection<ScopeDetail>> GetScopesForRequirement(
+        public static async Task<ICollection<ScopeCondensed>> GetScopesForRequirement(
             Guid requirementId,
             Guid? statementId,
             IDebService debService,
             CancellationToken cancellationToken)
             => await debService.GetScopesForRequirementAsync(requirementId, statementId, cancellationToken);
-    }
+
+        [Authorize]
+        public static async Task<ScopeDetail> GetScopeById(Guid scopeId, IDebService debService, CancellationToken cancellationToken)
+            => await debService.GetScopeById(scopeId, cancellationToken);
+	}
 }

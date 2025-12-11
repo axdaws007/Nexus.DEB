@@ -1,6 +1,6 @@
 ﻿namespace Nexus.DEB.Application.Common.Models
 {
-    public class ScopeDetail
+    public class ScopeCondensed
     {
         public Guid ScopeId { get; set; }
         public string? SerialNumber { get; set; }

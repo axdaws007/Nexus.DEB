@@ -14,7 +14,8 @@ namespace Nexus.DEB.Api.GraphQL
             descriptor.Field(x => x.StandardId).Ignore();
             descriptor.Field(x => x.StatusId).Ignore();
 
-            base.Configure(descriptor);
+            descriptor.Field("canUpVersion")
+                .ResolveWith<CanUpVersionStandardVersionResolver>(i => i.GetCanUpVersionAsync(default, default, default, default, default, default));           
         }
     }
 }

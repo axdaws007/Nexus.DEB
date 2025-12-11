@@ -31,6 +31,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
 		IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
         IQueryable<StandardVersionExport> GetStandardVersionsForExport(StandardVersionSummaryFilters? filters);
+        Task<IReadOnlyDictionary<Guid, bool>> HasOtherDraftStandardVersionsForStandardsAsync(IEnumerable<Guid> entityIds, CancellationToken cancellationToken = default);
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);
         Task<StatementDetail?> GetStatementDetailByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<Statement?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default);

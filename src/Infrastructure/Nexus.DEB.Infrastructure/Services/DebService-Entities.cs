@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 
@@ -793,14 +794,44 @@ namespace Nexus.DEB.Infrastructure.Services
 			};
 		}
 
+        public async Task<IReadOnlyDictionary<Guid, bool>> HasOtherDraftStandardVersionsForStandardsAsync(
+            IEnumerable<Guid> entityIds,
+            CancellationToken cancellationToken = default)
+        {
+            var entityIdList = entityIds.ToList();
 
-		#endregion StandardVersions
+            if (entityIdList.Count == 0)
+                return new Dictionary<Guid, bool>();
 
-		// --------------------------------------------------------------------------------------------------------------
+            var query = from current in _dbContext.StandardVersions
+                        where entityIdList.Contains(current.EntityId)
+                        select new
+                        {
+                            current.EntityId,
+                            HasOtherActive = (
+                                from other in _dbContext.StandardVersions
+                                where other.StandardId == current.StandardId
+                                   && other.EntityId != current.EntityId
+                                   && !other.IsRemoved
+                                join ped in _dbContext.PawsEntityDetails on other.EntityId equals ped.EntityId
+                                where ped.PseudoStateTitle == DebHelper.Paws.States.Draft
+                                select other
+                            ).Any()
+                        };
 
-		#region Tasks
+            return await query.ToDictionaryAsync(
+                x => x.EntityId,
+                x => x.HasOtherActive,
+                cancellationToken);
+        }
 
-		public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
+        #endregion StandardVersions
+
+        // --------------------------------------------------------------------------------------------------------------
+
+        #region Tasks
+
+        public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
         {
             var query = _dbContext.TaskSummaries.AsQueryable();
 

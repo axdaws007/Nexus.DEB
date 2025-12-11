@@ -29,6 +29,7 @@ builder.Services.AddCors(options =>
                     "https://localhost:5001", // GraphQL IDE (Banana Cake Pop)
                     "https://localhost:7001"  // Alternative HTTPS port
                 )
+                .WithExposedHeaders("Content-Disposition", "Content-Length")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials(); // Required for Forms Authentication cookies
@@ -57,6 +58,7 @@ builder.Services.AddCors(options =>
 
             corsBuilder
                 .WithOrigins(domains)
+                .WithExposedHeaders("Content-Disposition", "Content-Length")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials(); // Required for Forms Authentication cookies
@@ -171,7 +173,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("edev"))
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();

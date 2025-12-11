@@ -172,7 +172,7 @@ namespace Nexus.DEB.Api.Restful
         private static async Task<IResult> UpdateDocument(
             [FromRoute] string library,
             [FromRoute] Guid documentId,
-            [FromForm] IFormFile file,
+            [FromForm] IFormFile? file,
             [FromForm] string? title,
             [FromForm] string? description,
             [FromForm] string? author,
@@ -185,22 +185,6 @@ namespace Nexus.DEB.Api.Restful
                 DebHelper.Dms.Libraries.ValidateOrThrow(library);
 
                 var libraryId = applicationSettingsService.GetLibraryId(library);
-
-                // Validate file
-                if (file == null || file.Length == 0)
-                {
-                    return Results.BadRequest(new { error = "File is required" });
-                }
-
-                // Validate file size
-                const long maxFileSize = 50 * 1024 * 1024; // 50 MB
-                if (file.Length > maxFileSize)
-                {
-                    return Results.BadRequest(new
-                    {
-                        error = $"File size exceeds maximum allowed size of {maxFileSize / 1024 / 1024} MB"
-                    });
-                }
 
                 // Validate documentType if provided
                 if (!string.IsNullOrWhiteSpace(documentType))

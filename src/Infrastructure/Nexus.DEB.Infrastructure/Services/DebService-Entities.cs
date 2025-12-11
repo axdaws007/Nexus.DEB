@@ -575,13 +575,13 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public async Task<StatementChildCounts> GetChildCountsForStatementAsync(Guid id, CancellationToken cancellationToken)
         {
-            // TODO - need to add in the count of Evidences once we get to adding them to the schema
-
             var numberOfTasks = await _dbContext.Tasks.CountAsync(x => x.StatementId == id && x.IsRemoved == false, cancellationToken);
 
             var numberOfComments = await GetCommentsCountForEntityAsync(id, cancellationToken);
 
             var numberOfHistoryEvents = await GetChangeRecordsCountForEntityAsync(id, cancellationToken);
+
+            // Note: EvidencesCount populated in the GraphQL query as we're interrogating the DMS Web API.
 
             return new StatementChildCounts()
             {

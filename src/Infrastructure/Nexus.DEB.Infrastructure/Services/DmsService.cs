@@ -102,7 +102,7 @@ namespace Nexus.DEB.Infrastructure.Services
         public async Task<DmsDocumentResponse?> UpdateDocumentAsync(
             Guid libraryId,
             Guid documentId,
-            IFormFile file,
+            IFormFile? file,
             DmsDocumentMetadata metadata)
         {
             var requestUri = $"api/libraries/{libraryId}/document/{documentId}";
@@ -111,7 +111,7 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 Logger.LogInformation(
                     "Updating document {DocumentId} in library {LibraryId}: {FileName} ({FileSize} bytes)",
-                    documentId, libraryId, file.FileName, file.Length);
+                    documentId, libraryId, file?.FileName, file?.Length);
 
                 // Create multipart/form-data content
                 using var content = CreateMultipartContent(file, metadata);
@@ -317,17 +317,20 @@ namespace Nexus.DEB.Infrastructure.Services
         /// Includes the file and optional metadata.
         /// </summary>
         private static MultipartFormDataContent CreateMultipartContent(
-            IFormFile file,
+            IFormFile? file,
             DmsDocumentMetadata metadata)
         {
             var content = new MultipartFormDataContent();
 
-            // Add the file
-            var fileContent = new StreamContent(file.OpenReadStream());
-            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(
-                file.ContentType ?? "application/octet-stream");
+            if (file != null)
+            {
+                // Add the file
+                var fileContent = new StreamContent(file.OpenReadStream());
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(
+                    file.ContentType ?? "application/octet-stream");
 
-            content.Add(fileContent, "file", file.FileName);
+                content.Add(fileContent, "file", file.FileName);
+            }
 
             // Add individual metadata fields as the legacy API expects them
             content.Add(new StringContent(metadata.EntityId.ToString(), Encoding.UTF8), "entityId");

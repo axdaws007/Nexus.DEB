@@ -1,6 +1,7 @@
 ﻿using HotChocolate.Authorization;
 using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL
@@ -44,7 +45,7 @@ namespace Nexus.DEB.Api.GraphQL
         }
 
         [Authorize]
-        public static async Task<TaskDetailView?> GetTaskById(Guid taskId,
+        public static async Task<TaskDetail?> GetTaskById(Guid taskId,
 			IDebService debService,
 			CancellationToken cancellationToken)
 			=> await debService.GetTaskDetailByIdAsync(taskId, cancellationToken);

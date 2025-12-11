@@ -223,7 +223,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     StandardVersionReference = g.First().Requirement.StandardVersions
                         .Select(sv => sv.Standard.Title + sv.Delimiter + sv.Title)
                         .FirstOrDefault() ?? string.Empty,
-                    Scopes = g.Select(srs => new ScopeDetail
+                    Scopes = g.Select(srs => new ScopeCondensed
                     {
                         ScopeId = srs.ScopeId,
                         SerialNumber = srs.Scope.SerialNumber,
@@ -291,7 +291,56 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public IQueryable<ScopeExport> GetScopesForExport() => _dbContext.ScopeExport.AsNoTracking();
 
-        public async Task<ICollection<ScopeDetail>> GetScopesForRequirementAsync(
+        public async Task<ScopeDetail?> GetScopeByIdAsync(Guid id, CancellationToken cancellationToken)
+		{
+            var scope = await _dbContext.Scopes.AsNoTracking()
+                .Include(s => s.Requirements)
+                .ThenInclude(r => r.StandardVersions)
+				.FirstOrDefaultAsync(s => s.EntityId == id, cancellationToken);
+
+			if (scope == null)
+				return null;
+
+			var scopeDetail = scope.Adapt<ScopeDetail>();
+
+            var scopeRequirements = scope.Requirements;
+            var standardVersionIds = scopeRequirements.SelectMany(s => s.StandardVersions).Distinct().Select(s => s.EntityId);
+
+
+			var standardVersions = _dbContext.StandardVersions.AsNoTracking().Include(sv => sv.Standard).Include(sv => sv.Requirements).Where(w => standardVersionIds.Contains(w.EntityId));
+            var standardVersionStates = _dbContext.PawsEntityDetails.AsNoTracking().Where(w => standardVersionIds.Contains(w.EntityId));
+
+
+			foreach (var sv in standardVersions)
+            {
+                var svR = new StandardVersionRequirements();
+                svR.StandardVersionId = sv.EntityId;
+				svR.StandardVersionTitle = sv.Standard.Title + sv.Delimiter + sv.Title;
+                svR.Status = standardVersionStates.FirstOrDefault(s => s.EntityId == sv.EntityId)?.PseudoStateTitle ?? string.Empty;
+                svR.TotalRequirements = sv.Requirements.Count;
+                svR.TotalRequirementsInScope = scopeRequirements.Where(w => w.StandardVersions.Any(a => a.EntityId == sv.EntityId)).Count();
+                scopeDetail.StandardVersionRequirements.Add(svR);
+			}
+
+            return scopeDetail;
+		}
+
+		public async Task<ScopeChildCounts> GetChildCountsForScopeAsync(Guid id, CancellationToken cancellationToken)
+		{
+			var numberOfComments = await GetCommentsCountForEntityAsync(id, cancellationToken);
+
+			var numberOfHistoryEvents = await GetChangeRecordsCountForEntityAsync(id, cancellationToken);
+
+			// Note: AttachmentsCount populated in the GraphQL query as we're interrogating the DMS Web API.
+
+			return new ScopeChildCounts()
+			{
+				CommentsCount = numberOfComments,
+				HistoryCount = numberOfHistoryEvents
+			};
+		}
+
+		public async Task<ICollection<ScopeCondensed>> GetScopesForRequirementAsync(
             Guid requirementId,
             Guid? statementId,
             CancellationToken cancellationToken)
@@ -318,7 +367,7 @@ namespace Nexus.DEB.Infrastructure.Services
             }
 
             return await query
-                .Select(s => new ScopeDetail()
+                .Select(s => new ScopeCondensed()
                 {
                     ScopeId = s.EntityId,
                     SerialNumber = s.SerialNumber,
@@ -522,7 +571,7 @@ namespace Nexus.DEB.Infrastructure.Services
                         StandardVersionReference = standardVersion.Standard.Title + standardVersion.Delimiter + standardVersion.Title,
 
                         // All scopes for this requirement (from this statement)
-                        Scopes = g.Select(x => new ScopeDetail
+                        Scopes = g.Select(x => new ScopeCondensed
                         {
                             ScopeId = x.ScopeId,
                             SerialNumber = x.Scope.SerialNumber,

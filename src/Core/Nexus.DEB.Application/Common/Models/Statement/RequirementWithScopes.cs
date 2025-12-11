@@ -6,6 +6,6 @@
         public string? SerialNumber { get; set; }
         public string Title { get; set; } = string.Empty;
         public string StandardVersionReference { get; set; } = string.Empty;
-        public List<ScopeDetail> Scopes { get; set; } = new();
+        public List<ScopeCondensed> Scopes { get; set; } = new();
     }
 }

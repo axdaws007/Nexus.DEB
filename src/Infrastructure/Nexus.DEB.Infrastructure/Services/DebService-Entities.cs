@@ -939,8 +939,17 @@ namespace Nexus.DEB.Infrastructure.Services
             return query.OrderBy(x => x.SerialNumber);
         }
 
-		public async Task<TaskDetailView> GetTaskDetailByIdAsync(Guid id, CancellationToken cancellationToken = default)
-			=> await _dbContext.TaskDetails.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
+		public async Task<TaskDetail?> GetTaskDetailByIdAsync(Guid id, CancellationToken cancellationToken = default)
+		{
+			var task = await _dbContext.TaskDetails.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
+
+			if (task == null)
+				return null;
+
+			var taskDetail = task.Adapt<TaskDetail>();
+
+			return taskDetail;
+		}
 
 		#endregion Tasks
 

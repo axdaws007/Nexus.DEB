@@ -325,6 +325,21 @@ namespace Nexus.DEB.Infrastructure.Services
             return scopeDetail;
 		}
 
+		public async Task<ScopeChildCounts> GetChildCountsForScopeAsync(Guid id, CancellationToken cancellationToken)
+		{
+			var numberOfComments = await GetCommentsCountForEntityAsync(id, cancellationToken);
+
+			var numberOfHistoryEvents = await GetChangeRecordsCountForEntityAsync(id, cancellationToken);
+
+			// Note: AttachmentsCount populated in the GraphQL query as we're interrogating the DMS Web API.
+
+			return new ScopeChildCounts()
+			{
+				CommentsCount = numberOfComments,
+				HistoryCount = numberOfHistoryEvents
+			};
+		}
+
 		public async Task<ICollection<ScopeCondensed>> GetScopesForRequirementAsync(
             Guid requirementId,
             Guid? statementId,

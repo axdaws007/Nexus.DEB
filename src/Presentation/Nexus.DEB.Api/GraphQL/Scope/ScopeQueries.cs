@@ -3,6 +3,7 @@ using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL
@@ -43,5 +44,26 @@ namespace Nexus.DEB.Api.GraphQL
         [Authorize]
         public static async Task<ScopeDetail> GetScopeById(Guid scopeId, IDebService debService, CancellationToken cancellationToken)
             => await debService.GetScopeById(scopeId, cancellationToken);
+
+		[Authorize]
+		public static async Task<ScopeChildCounts> GetChildCountsForScope(
+			Guid id,
+			IDebService debService,
+			IApplicationSettingsService applicationSettingsService,
+			IDmsService dmsService,
+			CancellationToken cancellationToken)
+		{
+			var counts = await debService.GetChildCountsForScopeAsync(id, cancellationToken);
+
+			var debLibraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.DebDocuments);
+			var commonLibraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.CommonDocuments);
+
+			var debDocumentCount = await dmsService.GetEntityDocumentCountAsync(debLibraryId, id);
+			var commonDocumentCount = await dmsService.GetEntityDocumentCountAsync(commonLibraryId, id);
+
+			counts.AttachmentsCount = debDocumentCount + commonDocumentCount;
+
+			return counts;
+		}
 	}
 }

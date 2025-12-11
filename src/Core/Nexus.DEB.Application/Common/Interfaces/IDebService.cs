@@ -2,7 +2,6 @@
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
-using System.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Application.Common.Interfaces

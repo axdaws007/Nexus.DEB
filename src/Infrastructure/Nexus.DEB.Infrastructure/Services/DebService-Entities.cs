@@ -291,7 +291,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public IQueryable<ScopeExport> GetScopesForExport() => _dbContext.ScopeExport.AsNoTracking();
 
-        public async Task<ScopeDetail> GetScopeById(Guid id, CancellationToken cancellationToken)
+        public async Task<ScopeDetail?> GetScopeByIdAsync(Guid id, CancellationToken cancellationToken)
 		{
             var scope = await _dbContext.Scopes.AsNoTracking()
                 .Include(s => s.Requirements)

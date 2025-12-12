@@ -42,24 +42,24 @@ namespace Nexus.DEB.Api.GraphQL
             => await debService.GetScopesForRequirementAsync(requirementId, statementId, cancellationToken);
 
         [Authorize]
-        public static async Task<ScopeDetail?> GetScopeById(Guid id, IDebService debService, CancellationToken cancellationToken)
-            => await debService.GetScopeByIdAsync(id, cancellationToken);
+        public static async Task<ScopeDetail?> GetScopeById(Guid scopeId, IDebService debService, CancellationToken cancellationToken)
+            => await debService.GetScopeByIdAsync(scopeId, cancellationToken);
 
 		[Authorize]
 		public static async Task<ScopeChildCounts> GetChildCountsForScope(
-			Guid id,
+			Guid scopeId,
 			IDebService debService,
 			IApplicationSettingsService applicationSettingsService,
 			IDmsService dmsService,
 			CancellationToken cancellationToken)
 		{
-			var counts = await debService.GetChildCountsForScopeAsync(id, cancellationToken);
+			var counts = await debService.GetChildCountsForScopeAsync(scopeId, cancellationToken);
 
 			var debLibraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.DebDocuments);
 			var commonLibraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.CommonDocuments);
 
-			var debDocumentCount = await dmsService.GetEntityDocumentCountAsync(debLibraryId, id);
-			var commonDocumentCount = await dmsService.GetEntityDocumentCountAsync(commonLibraryId, id);
+			var debDocumentCount = await dmsService.GetEntityDocumentCountAsync(debLibraryId, scopeId);
+			var commonDocumentCount = await dmsService.GetEntityDocumentCountAsync(commonLibraryId, scopeId);
 
 			counts.AttachmentsCount = debDocumentCount + commonDocumentCount;
 

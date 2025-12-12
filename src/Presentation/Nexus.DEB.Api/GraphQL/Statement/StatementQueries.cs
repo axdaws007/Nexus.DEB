@@ -46,27 +46,27 @@ namespace Nexus.DEB.Api.GraphQL
 
         [Authorize]
         public static async Task<StatementDetail?> GetStatementById(
-            Guid id,
+            Guid statementId,
             IDebService debService,
             IResolverContext resolverContext,
             CancellationToken cancellationToken)
-            => await debService.GetStatementDetailByIdAsync(id, cancellationToken);
+            => await debService.GetStatementDetailByIdAsync(statementId, cancellationToken);
 
         [Authorize]
         public static async Task<StatementChildCounts> GetChildCountsForStatement(
-            Guid id,
+            Guid statementId,
             IDebService debService,
             IApplicationSettingsService applicationSettingsService,
             IDmsService dmsService,
             CancellationToken cancellationToken)
         {
-            var counts = await debService.GetChildCountsForStatementAsync(id, cancellationToken);
+            var counts = await debService.GetChildCountsForStatementAsync(statementId, cancellationToken);
 
             var debLibraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.DebDocuments);
             var commonLibraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.CommonDocuments);
 
-            var debDocumentCount = await dmsService.GetEntityDocumentCountAsync(debLibraryId, id);
-            var commonDocumentCount = await dmsService.GetEntityDocumentCountAsync(commonLibraryId, id);
+            var debDocumentCount = await dmsService.GetEntityDocumentCountAsync(debLibraryId, statementId);
+            var commonDocumentCount = await dmsService.GetEntityDocumentCountAsync(commonLibraryId, statementId);
 
             counts.EvidencesCount = debDocumentCount + commonDocumentCount;
 

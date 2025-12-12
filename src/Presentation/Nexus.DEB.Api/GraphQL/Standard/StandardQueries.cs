@@ -17,10 +17,10 @@ namespace Nexus.DEB.Api.GraphQL
 
         [NodeResolver]
         public static async Task<Standard?> GetStandardByIdAsync(
-            short id,
+            short standardId,
             StandardByIdDataLoader standardByIdDataLoader,
             CancellationToken cancellationToken)
-            => await standardByIdDataLoader.LoadAsync(id, cancellationToken);
+            => await standardByIdDataLoader.LoadAsync(standardId, cancellationToken);
 
         [Authorize]
         public async static Task<ICollection<FilterItem>> GetStandardsLookupAsync(

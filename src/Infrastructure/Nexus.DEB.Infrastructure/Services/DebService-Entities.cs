@@ -225,7 +225,7 @@ namespace Nexus.DEB.Infrastructure.Services
                         .FirstOrDefault() ?? string.Empty,
                     Scopes = g.Select(srs => new ScopeCondensed
                     {
-                        ScopeId = srs.ScopeId,
+                        EntityId = srs.ScopeId,
                         SerialNumber = srs.Scope.SerialNumber,
                         Title = srs.Scope.Title
                     }).ToList()
@@ -369,7 +369,7 @@ namespace Nexus.DEB.Infrastructure.Services
             return await query
                 .Select(s => new ScopeCondensed()
                 {
-                    ScopeId = s.EntityId,
+                    EntityId = s.EntityId,
                     SerialNumber = s.SerialNumber,
                     Title = s.Title
                 })
@@ -573,7 +573,7 @@ namespace Nexus.DEB.Infrastructure.Services
                         // All scopes for this requirement (from this statement)
                         Scopes = g.Select(x => new ScopeCondensed
                         {
-                            ScopeId = x.ScopeId,
+                            EntityId = x.ScopeId,
                             SerialNumber = x.Scope.SerialNumber,
                             Title = x.Scope.Title
                         }).ToList()

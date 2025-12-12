@@ -58,11 +58,11 @@ namespace Nexus.DEB.Api.GraphQL
 
         [Authorize]
         public static async Task<StandardVersionDetail?> GetStandardVersionByIdAsync(
-			Guid id,
+			Guid standardVersionId,
 			IDebService debService,
 			IResolverContext resolverContext,
 			CancellationToken cancellationToken)
-			=> await debService.GetStandardVersionDetailByIdAsync(id, cancellationToken);
+			=> await debService.GetStandardVersionDetailByIdAsync(standardVersionId, cancellationToken);
 
 		[Authorize]
         public async static Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(
@@ -73,10 +73,10 @@ namespace Nexus.DEB.Api.GraphQL
 
 		[Authorize]
 		public static async Task<StandardVersionChildCounts> GetChildCountsForStandardVersion(
-			Guid id,
+			Guid standardVersionId,
 			IDebService debService,
 			CancellationToken cancellationToken)
-			=> await debService.GetChildCountsForStandardVersionAsync(id, cancellationToken);
+			=> await debService.GetChildCountsForStandardVersionAsync(standardVersionId, cancellationToken);
 
 	}
 }

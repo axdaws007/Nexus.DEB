@@ -607,6 +607,7 @@ namespace Nexus.DEB.Infrastructure.Services
             };
         }    
 
+
         public async Task<Statement> CreateStatementAsync(
             Statement statement,
             ICollection<RequirementScopes> requirementScopeCombinations,
@@ -951,7 +952,20 @@ namespace Nexus.DEB.Infrastructure.Services
 			return taskDetail;
 		}
 
-		#endregion Tasks
+        public async Task<TaskChildCounts> GetChildCountsForTaskAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var numberOfComments = await GetCommentsCountForEntityAsync(id, cancellationToken);
+
+            var numberOfHistoryEvents = await GetChangeRecordsCountForEntityAsync(id, cancellationToken);
+
+            return new TaskChildCounts()
+            {
+                CommentsCount = numberOfComments,
+                HistoryCount = numberOfHistoryEvents
+            };
+        }
+        
+        #endregion Tasks
 
 		// --------------------------------------------------------------------------------------------------------------
 

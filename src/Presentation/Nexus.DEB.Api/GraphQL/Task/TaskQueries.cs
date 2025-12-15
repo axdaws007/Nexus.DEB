@@ -2,6 +2,7 @@
 using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL
@@ -49,5 +50,12 @@ namespace Nexus.DEB.Api.GraphQL
 			IDebService debService,
 			CancellationToken cancellationToken)
 			=> await debService.GetTaskDetailByIdAsync(taskId, cancellationToken);
-	}
+
+        [Authorize]
+        public static async Task<TaskChildCounts> GetChildCountsForTask(
+            Guid taskId,
+            IDebService debService,
+            CancellationToken cancellationToken)
+            => await debService.GetChildCountsForTaskAsync(taskId, cancellationToken);
+    }
 }

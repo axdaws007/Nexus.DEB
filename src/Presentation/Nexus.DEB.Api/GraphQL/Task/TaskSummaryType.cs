@@ -2,7 +2,7 @@
 
 namespace Nexus.DEB.Api.GraphQL
 {
-    public class TaskSummaryType : ObjectType<TaskSummary>
+    public class TaskSummaryType : EntityType<TaskSummary>
     {
         protected override void Configure(IObjectTypeDescriptor<TaskSummary> descriptor)
         {

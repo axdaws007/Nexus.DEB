@@ -2,7 +2,7 @@
 
 namespace Nexus.DEB.Domain.Models
 {
-    public class TaskSummary : IEntity, IOwnedBy
+    public class TaskSummary : IEntityType, IOwnedBy
     {
         public Guid EntityId { get; set; }
         public string SerialNumber { get; set; } = string.Empty;
@@ -14,5 +14,6 @@ namespace Nexus.DEB.Domain.Models
         public int? StatusId { get; set; }
         public string? Status { get; set; }
         public Guid StatementId { get; set; }
+        public string EntityTypeTitle { get; set; } = string.Empty;
     }
 }

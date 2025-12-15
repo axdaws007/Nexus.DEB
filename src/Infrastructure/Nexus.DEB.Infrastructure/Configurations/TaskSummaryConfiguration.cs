@@ -50,6 +50,10 @@ namespace Nexus.DEB.Infrastructure.Configurations
             builder.Property(e => e.StatementId)
                 .HasColumnName("StatementId")
                 .IsRequired();
+
+            builder.Property(e => e.EntityTypeTitle)
+                .HasColumnName("EntityTypeTitle")
+                .IsRequired();
         }
     }
 }

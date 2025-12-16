@@ -1,4 +1,5 @@
-﻿using Nexus.DEB.Application.Common.Models;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
+using Nexus.DEB.Application.Common.Models;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -6,8 +7,8 @@ namespace Nexus.DEB.Api.GraphQL
 	{
 		protected override void Configure(IObjectTypeDescriptor<TaskDetail> descriptor)
 		{
-			descriptor.Field(x => x.ActivityId).ID();
-			descriptor.Field(x => x.TaskTypeId).ID();
+			descriptor.Field(x => x.ActivityId).ID("Activity");
+			descriptor.Field(x => x.TaskTypeId).ID("FilterItem");
 			base.Configure(descriptor);
 		}
 	}

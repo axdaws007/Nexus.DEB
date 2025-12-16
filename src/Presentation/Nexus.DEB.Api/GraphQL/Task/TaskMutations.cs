@@ -1,5 +1,6 @@
 ﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain;
 
 namespace Nexus.DEB.Api.GraphQL.Task
@@ -8,7 +9,7 @@ namespace Nexus.DEB.Api.GraphQL.Task
     public static class TaskMutations
     {
         [Authorize(Policy = DebHelper.Policies.CanCreateSoCTask)]
-        public static async Task<Domain.Models.Task?> CreateTaskAsync(
+        public static async Task<TaskDetail?> CreateTaskAsync(
             Guid statementId,
             Guid taskOwnerId,
             [ID]short taskTypeId,
@@ -17,6 +18,7 @@ namespace Nexus.DEB.Api.GraphQL.Task
             string title,
             string? description,
             ITaskDomainService taskDomainService,
+            IDebService debService,
             CancellationToken cancellationToken = default)
         {
             var result = await taskDomainService.CreateTaskAsync(
@@ -34,11 +36,11 @@ namespace Nexus.DEB.Api.GraphQL.Task
                 throw ExceptionHelper.BuildException(result);
             }
 
-            return result.Data;
+            return await debService.GetTaskDetailByIdAsync(result.Data.EntityId, cancellationToken);
         }
 
         [Authorize(Policy = DebHelper.Policies.CanEditSoCTask)]
-        public static async Task<Domain.Models.Task?> UpdateTaskAsync(
+        public static async Task<TaskDetail?> UpdateTaskAsync(
             Guid id,
             Guid statementId,
             Guid taskOwnerId,
@@ -48,6 +50,7 @@ namespace Nexus.DEB.Api.GraphQL.Task
             string title,
             string? description,
             ITaskDomainService taskDomainService,
+            IDebService debService,
             CancellationToken cancellationToken = default)
         {
             var result = await taskDomainService.UpdateTaskAsync(
@@ -66,7 +69,7 @@ namespace Nexus.DEB.Api.GraphQL.Task
                 throw ExceptionHelper.BuildException(result);
             }
 
-            return result.Data;
+            return await debService.GetTaskDetailByIdAsync(id, cancellationToken);
         }
     }
 }

@@ -84,17 +84,20 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 var workflowStatus = await DebService.GetCurrentWorkflowStatusForEntityAsync(task.EntityId, cancellationToken);
 
-                await PawsService.ApproveStepAsync(
-                    this.WorkflowId.Value,
-                    task.EntityId,
-                    workflowStatus.StepId,
-                    activityId,
-                    [activityId],
-                    null,
-                    null,
-                    null,
-                    [taskOwnerId],
-                    cancellationToken);
+                if (activityId != workflowStatus.ActivityId)
+                {
+                    await PawsService.ApproveStepAsync(
+                        this.WorkflowId.Value,
+                        task.EntityId,
+                        workflowStatus.StepId,
+                        activityId,
+                        [activityId],
+                        null,
+                        null,
+                        null,
+                        [taskOwnerId],
+                        cancellationToken);
+                }
 
                 return Result<Domain.Models.Task>.Success(task);
             }

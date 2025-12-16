@@ -8,7 +8,7 @@ namespace Nexus.DEB.Api.GraphQL
 		protected override void Configure(IObjectTypeDescriptor<TaskDetail> descriptor)
 		{
 			descriptor.Field(x => x.ActivityId).ID("Activity");
-			descriptor.Field(x => x.TaskTypeId).ID("FilterItem");
+			descriptor.Field(x => x.TaskTypeId).ID(nameof(FilterItem));
 			base.Configure(descriptor);
 		}
 	}

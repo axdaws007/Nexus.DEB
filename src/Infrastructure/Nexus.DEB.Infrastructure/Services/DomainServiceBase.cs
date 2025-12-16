@@ -47,5 +47,36 @@ namespace Nexus.DEB.Infrastructure.Services
                 this.WorkflowId = debService.GetWorkflowId(this.ModuleId, entityType);
             }
         }
+
+        protected virtual void ValidateTitle(string title)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                ValidationErrors.Add(
+                    new ValidationError()
+                    {
+                        Code = "INVALID_TITLE",
+                        Field = nameof(title),
+                        Message = "The 'title' is empty."
+                    });
+            }
+        }
+
+        protected virtual async Task ValidateOwnerAsync(Guid ownerId)
+        {
+            var posts = await CisService.GetAllPosts();
+
+            if (posts != null && posts.FirstOrDefault(x => x.ID == ownerId) == null)
+            {
+                ValidationErrors.Add(
+                    new ValidationError()
+                    {
+                        Code = "INVALID_OWNER",
+                        Field = nameof(ownerId),
+                        Message = "The 'Owner ID' provided does not exist as a valid Post."
+                    });
+            }
+        }
+
     }
 }

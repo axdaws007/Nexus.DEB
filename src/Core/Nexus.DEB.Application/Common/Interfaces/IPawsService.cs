@@ -30,6 +30,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<bool> CreateWorkflowInstanceAsync(
             Guid workflowID,
             Guid entityId,
+            int? startingActivityId = null,
+            Guid? ownerId = null,
             CancellationToken cancellationToken = default);
 
         Task<bool> ApproveStepAsync(
@@ -52,5 +54,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<string?> GetWorkflowDiagramHtmlAsync(Guid workflowId, Guid entityId, CancellationToken cancellationToken);
 
         Task<byte[]?> GetWorkflowDiagramImageAsync(string cacheKey, CancellationToken cancellationToken);
+
+        Task<ICollection<WorkflowActivity>?> GetActivitiesForWorkflowAsync(Guid workflowId, bool includeRemoved = false, CancellationToken cancellationToken = default);
     }
 }

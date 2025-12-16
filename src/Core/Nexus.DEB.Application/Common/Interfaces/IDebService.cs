@@ -42,7 +42,11 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters);
         IQueryable<TaskExport> GetTasksForExport(TaskSummaryFilters? filters);
         Task<TaskDetail?> GetTaskDetailByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<Domain.Models.Task?> GetTaskByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<TaskChildCounts> GetChildCountsForTaskAsync(Guid id, CancellationToken cancellationToken);
+        Task<Domain.Models.Task> CreateTaskAsync(Domain.Models.Task task, CancellationToken cancellationToken = default);
+        Task<Domain.Models.Task> UpdateTaskAsync(Domain.Models.Task task, CancellationToken cancellationToken = default);
+
 
 
         Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(CancellationToken cancellationToken);

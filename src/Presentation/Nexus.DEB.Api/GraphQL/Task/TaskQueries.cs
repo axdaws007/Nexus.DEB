@@ -53,9 +53,9 @@ namespace Nexus.DEB.Api.GraphQL
 
         [Authorize]
         public static async Task<TaskChildCounts> GetChildCountsForTask(
-            Guid taskId,
+            Guid id,
             IDebService debService,
             CancellationToken cancellationToken)
-            => await debService.GetChildCountsForTaskAsync(taskId, cancellationToken);
+            =>  await debService.GetChildCountsForTaskAsync(id, cancellationToken);
     }
 }

@@ -107,6 +107,24 @@ namespace Nexus.DEB.Infrastructure.Services
             */
         }
 
+        public async Task<ICollection<WorkflowActivity>?> GetActivitiesForWorkflowAsync(Guid workflowId, bool includeRemoved = false, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var response = await SendAuthenticatedRequestAsync<ICollection<WorkflowActivity>>(
+                    HttpMethod.Get,
+                    $"api/PAWSClient/GetActivities?workflowID={workflowId}&includeRemoved={includeRemoved}",
+                    operationName: $"GetActivities for {workflowId} workflow");
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error fetching activities for workflow");
+                throw;
+            }
+        }
+
         public async Task<ICollection<PendingActivity>?> GetPendingActivitiesAsync(Guid entityId, Guid workflowId, CancellationToken cancellationToken = default)
         {
             try
@@ -177,7 +195,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
         }
 
-        public async Task<bool> CreateWorkflowInstanceAsync(Guid workflowID, Guid entityId, CancellationToken cancellationToken = default)
+        public async Task<bool> CreateWorkflowInstanceAsync(Guid workflowID, Guid entityId, int? startingActivityId = null, Guid? ownerId = null, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -185,7 +203,9 @@ namespace Nexus.DEB.Infrastructure.Services
                 var request = new CreateWorkflowInstanceRequest
                 {
                     WorkflowID = workflowID,
-                    EntityID = entityId
+                    EntityID = entityId,
+                    ActivityID = startingActivityId,
+                    OwnerID = ownerId
                 };
 
                 // Create JSON content (JsonOptions from base class)

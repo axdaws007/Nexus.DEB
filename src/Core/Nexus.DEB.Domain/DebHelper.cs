@@ -51,6 +51,9 @@ namespace Nexus.DEB.Domain
             public const string CanEditSoCEvidence = "CanEditSoCEvidence";
             public const string CanDeleteSoCEvidence = "CanDeleteSoCEvidence";
             public const string CanViewSoCEvidence = "CanViewSoCEvidence";
+            public const string CanCreateOrEditSoC = "CanCreateOrEditSoC";
+            public const string CanCreateSoCTask = "CanCreateSoCTask";
+            public const string CanEditSoCTask = "CanEditSoCTask";
         }
 
         public static class Capabilites
@@ -66,7 +69,7 @@ namespace Nexus.DEB.Domain
             public const string CanDeleteSoCEvidence = "CanDeleteSoCEvidence";
             public const string CanAddSoCEvidence = "CanAddSocEvidence";
             public const string CanCreateSoCTask = "CanCreateSoCTask";
-            public const string CanEditSoCTask = "CanManageSoCTask";
+            public const string CanEditSoCTask = "CanEditSoCTask";
             public const string CanUpVersionStdVersion = "CanUpVersionStdVersion";
             public const string CanEditStdVersion = "CanEditStdVersion";
             public const string CanEditRequirement = "CanEditRequirement";

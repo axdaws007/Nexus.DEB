@@ -147,6 +147,10 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(DebHelper.Policies.CanEditSoCEvidence, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoCEvidence));
     options.AddPolicy(DebHelper.Policies.CanDeleteSoCEvidence, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanDeleteSoCEvidence));
     options.AddPolicy(DebHelper.Policies.CanViewSoCEvidence, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanViewSoCEvidence));
+
+    options.AddPolicy(DebHelper.Policies.CanCreateOrEditSoC, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoC));
+    options.AddPolicy(DebHelper.Policies.CanCreateSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanCreateSoCTask));
+    options.AddPolicy(DebHelper.Policies.CanEditSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoCTask));
 });
 
 builder

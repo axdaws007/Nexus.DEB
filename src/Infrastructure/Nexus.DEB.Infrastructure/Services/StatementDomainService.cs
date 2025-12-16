@@ -49,7 +49,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 statement = await this.DebService.CreateStatementAsync(statement, requirementScopeCombinations, cancellationToken);
 
-                await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, statement.EntityId, cancellationToken);
+                await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, statement.EntityId, null, null, cancellationToken);
 
 
                 return Result<Statement>.Success(statement);
@@ -183,35 +183,6 @@ namespace Nexus.DEB.Infrastructure.Services
                         ["conflictingStatementId"] = conflict.StatementId
                     }
                 });
-            }
-        }
-        private async Task ValidateOwnerAsync(Guid ownerId)
-        {
-            var posts = await CisService.GetAllPosts();
-
-            if (posts != null && posts.FirstOrDefault(x => x.ID == ownerId) == null)
-            {
-                ValidationErrors.Add(
-                    new ValidationError()
-                    {
-                        Code = "INVALID_OWNER",
-                        Field = nameof(ownerId),
-                        Message = "The 'Owner ID' provided does not exist as a valid Post."
-                    });
-            }
-        }
-
-        private void ValidateTitle(string title)
-        {
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                ValidationErrors.Add(
-                    new ValidationError()
-                    {
-                        Code = "INVALID_TITLE",
-                        Field = nameof(title),
-                        Message = "The 'title' is empty."
-                    });
             }
         }
 

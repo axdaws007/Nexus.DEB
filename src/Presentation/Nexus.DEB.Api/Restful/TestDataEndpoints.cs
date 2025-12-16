@@ -1,6 +1,7 @@
 ﻿using Bogus;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Nexus.DEB.Api.Restful.Models;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain.Models;
@@ -115,32 +116,62 @@ namespace Nexus.DEB.Api.Restful
             // Create one statement for each requirement
             foreach (var requirement in requirements)
             {
-                var possibleScopes = requirement.Scopes.ToList();
+                (bool generateStatementForThisRequirement, _ ) = GenerateWeightedTrueOrFalse(0.75);
 
-                var statement = statementFaker.Generate();
-
-
-                statementsToCreate.Add(statement);
-
-                var statementRequirementScope = new StatementRequirementScope();
-                statementRequirementScope.Statement = statement;
-                statementRequirementScope.Requirement = requirement;
-                statementRequirementScope.Scope = f.PickRandom(possibleScopes);
-
-                statementRequirementScopesToCreate.Add(statementRequirementScope);
-
-                await CreateRandomWorkflowSteps(statementWorkflowId.Value, statement.EntityId, pawsService, f, cancellationToken);
-
-                // Create a random number of tasks per statement (0 to MaximumNumberOfTasksPerStatement)
-                var numberOfTasks = random.Number(0, parameters.MaximumNumberOfTasksPerStatement);
-
-                for (int i = 0; i < numberOfTasks; i++)
+                if (generateStatementForThisRequirement)
                 {
-                    var task = taskFaker.Generate();
-                    task.StatementId = statement.EntityId;
-                    tasksToCreate.Add(task);
+                    var possibleScopes = requirement.Scopes.ToList();
 
-                    await CreateRandomWorkflowSteps(tasksWorkflowId.Value, task.EntityId, pawsService, f, cancellationToken);
+                    var statement = statementFaker.Generate();
+
+                    statementsToCreate.Add(statement);
+
+                    var numberToCreate = f.Random.Int(1, possibleScopes.Count);
+
+                    for(var i = 0; i < numberToCreate; i++)
+                    {
+                        var isValid = false;
+                        var attempts = 0;
+                        var statementRequirementScope = new StatementRequirementScope();
+                        statementRequirementScope.Statement = statement;
+                        statementRequirementScope.Requirement = requirement;
+
+                        do
+                        {
+                            var selectedScope = f.PickRandom(possibleScopes);
+                            statementRequirementScope.Scope = selectedScope;
+
+                            var existingRecord = await debService.GetRequirementScopeCombination(statementRequirementScope.RequirementId, statementRequirementScope.ScopeId, cancellationToken);
+
+                            if (existingRecord == null)
+                            {
+                                isValid = true;
+                                possibleScopes.Remove(selectedScope);
+                            }
+
+                            attempts++;
+                        } while (isValid == false && attempts < 5 && possibleScopes.Count > 0);
+
+                        if (isValid)
+                        {
+                            statementRequirementScopesToCreate.Add(statementRequirementScope);
+                        }
+                    }
+
+                    await CreateRandomWorkflowSteps(statementWorkflowId.Value, statement.EntityId, pawsService, f, cancellationToken);
+
+                    // Create a random number of tasks per statement (0 to MaximumNumberOfTasksPerStatement)
+                    var numberOfTasks = random.Number(0, parameters.MaximumNumberOfTasksPerStatement);
+
+                    for (int i = 0; i < numberOfTasks; i++)
+                    {
+                        var task = taskFaker.Generate();
+                        task.StatementId = statement.EntityId;
+                        tasksToCreate.Add(task);
+
+                        await CreateRandomWorkflowSteps(tasksWorkflowId.Value, task.EntityId, pawsService, f, cancellationToken);
+                    }
+
                 }
             }
 
@@ -178,9 +209,9 @@ namespace Nexus.DEB.Api.Restful
             Faker f,
             CancellationToken cancellationToken)
         {
-            await pawsService.CreateWorkflowInstanceAsync(workflowId, entityId);
+            await pawsService.CreateWorkflowInstanceAsync(workflowId, entityId, null, null, cancellationToken);
 
-            (bool generateNextStep, double trueProbability) = GenerateNextStep(0.70);
+            (bool generateNextStep, double trueProbability) = GenerateWeightedTrueOrFalse(0.70, -0.05);
 
             while (generateNextStep)
             {
@@ -231,19 +262,22 @@ namespace Nexus.DEB.Api.Restful
                     break;
 
                 // Randomly decide whether to continue
-                (generateNextStep, trueProbability) = GenerateNextStep(trueProbability);
+                (generateNextStep, trueProbability) = GenerateWeightedTrueOrFalse(trueProbability, -0.05);
             }
 
             return;
         }
 
-        private static (bool, double) GenerateNextStep(double trueProbability)
+        private static (bool, double) GenerateWeightedTrueOrFalse(double trueProbability, double? adjustProbability = null)
         {
             // Generate a random value
             bool result = Random.Shared.NextDouble() < trueProbability;
 
-            // Adjust weights for next time
-            trueProbability = Math.Max(0, trueProbability - 0.05);
+            if (adjustProbability.HasValue)
+            {
+                // Adjust weights for next time
+                trueProbability = Math.Max(0, trueProbability + adjustProbability.Value);
+            }
 
             return (result, trueProbability);
         }

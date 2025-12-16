@@ -2,6 +2,7 @@
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 
@@ -196,5 +197,25 @@ namespace Nexus.DEB.Api.GraphQL.Paws
             return await pawsService.GetWorkflowHistoryAsync(workflowId.Value, entityId, cancellationToken);
         }
 
+        [Authorize]
+        public static async Task<ICollection<WorkflowActivity>?> GetActivitiesForWorkflowAsync(
+            string entityType,
+            bool includeRemoved,
+            IPawsService pawsService,
+            IApplicationSettingsService applicationSettingsService,
+            IDebService debService,
+            CancellationToken cancellationToken)
+        {
+            var moduleId = applicationSettingsService.GetModuleId("DEB");
+
+            var workflowId = await debService.GetWorkflowIdAsync(moduleId, entityType, cancellationToken);
+
+            if (workflowId.HasValue == false)
+            {
+                throw new InvalidOperationException("WorkflowID could not be identified");
+            }
+
+            return await pawsService.GetActivitiesForWorkflowAsync(workflowId.Value, includeRemoved, cancellationToken);
+        }
     }
 }

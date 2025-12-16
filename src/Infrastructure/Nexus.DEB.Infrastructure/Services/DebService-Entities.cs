@@ -226,7 +226,7 @@ namespace Nexus.DEB.Infrastructure.Services
                         .FirstOrDefault() ?? string.Empty,
                     Scopes = g.Select(srs => new ScopeCondensed
                     {
-                        EntityId = srs.ScopeId,
+                        ScopeId = srs.ScopeId,
                         SerialNumber = srs.Scope.SerialNumber,
                         Title = srs.Scope.Title
                     }).ToList()
@@ -370,7 +370,7 @@ namespace Nexus.DEB.Infrastructure.Services
             return await query
                 .Select(s => new ScopeCondensed()
                 {
-                    EntityId = s.EntityId,
+                    ScopeId = s.EntityId,
                     SerialNumber = s.SerialNumber,
                     Title = s.Title
                 })
@@ -574,7 +574,7 @@ namespace Nexus.DEB.Infrastructure.Services
                         // All scopes for this requirement (from this statement)
                         Scopes = g.Select(x => new ScopeCondensed
                         {
-                            EntityId = x.ScopeId,
+                            ScopeId = x.ScopeId,
                             SerialNumber = x.Scope.SerialNumber,
                             Title = x.Scope.Title
                         }).ToList()
@@ -606,7 +606,6 @@ namespace Nexus.DEB.Infrastructure.Services
                 HistoryCount = numberOfHistoryEvents
             };
         }    
-
 
         public async Task<Statement> CreateStatementAsync(
             Statement statement,
@@ -952,6 +951,9 @@ namespace Nexus.DEB.Infrastructure.Services
 			return taskDetail;
 		}
 
+        public async Task<Domain.Models.Task?> GetTaskByIdAsync(Guid id, CancellationToken cancellationToken = default)
+            => await _dbContext.Tasks.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
+
         public async Task<TaskChildCounts> GetChildCountsForTaskAsync(Guid id, CancellationToken cancellationToken)
         {
             var numberOfComments = await GetCommentsCountForEntityAsync(id, cancellationToken);
@@ -964,14 +966,30 @@ namespace Nexus.DEB.Infrastructure.Services
                 HistoryCount = numberOfHistoryEvents
             };
         }
-        
+
+        public async Task<Domain.Models.Task> CreateTaskAsync(Domain.Models.Task task, CancellationToken cancellationToken = default)
+        {
+            await _dbContext.Tasks.AddAsync(task, cancellationToken);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return task;
+        }
+
+        public async Task<Domain.Models.Task> UpdateTaskAsync(Domain.Models.Task task, CancellationToken cancellationToken = default)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return task;
+        }
+
         #endregion Tasks
 
-		// --------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------
 
-		#region Other
+        #region Other
 
-		public async System.Threading.Tasks.Task SaveStatementsAndTasks(
+        public async System.Threading.Tasks.Task SaveStatementsAndTasks(
             ICollection<Statement> statements,
             ICollection<StatementRequirementScope> statementRequirmementScopes,
             ICollection<Domain.Models.Task> tasks, 

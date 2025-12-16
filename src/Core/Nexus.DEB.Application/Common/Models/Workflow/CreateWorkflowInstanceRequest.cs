@@ -4,5 +4,7 @@
     {
         public Guid WorkflowID { get; set; }
         public Guid EntityID { get; set; }
+        public int? ActivityID { get; set; }
+        public Guid? OwnerID { get; set; }
     }
 }

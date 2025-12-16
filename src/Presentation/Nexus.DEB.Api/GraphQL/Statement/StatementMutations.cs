@@ -1,6 +1,7 @@
 ﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL
@@ -8,7 +9,7 @@ namespace Nexus.DEB.Api.GraphQL
     [MutationType]
     public static class StatementMutations
     {
-        [Authorize]
+        [Authorize(Policy = DebHelper.Policies.CanCreateOrEditSoC)]
         public static async Task<Statement?> CreateStatementAsync(
             Guid ownerId,
             string title,
@@ -34,7 +35,7 @@ namespace Nexus.DEB.Api.GraphQL
             return result.Data;
         }
 
-        [Authorize]
+        [Authorize(Policy = DebHelper.Policies.CanCreateOrEditSoC)]
         public static async Task<Statement?> UpdateStatementAsync(
             Guid id,
             Guid ownerId,

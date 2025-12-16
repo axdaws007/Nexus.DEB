@@ -1,9 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Nexus.DEB.Application.Common.Interfaces;
-using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
-using Nexus.DEB.Domain.Models.Common;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace Nexus.DEB.Infrastructure.Services
 {

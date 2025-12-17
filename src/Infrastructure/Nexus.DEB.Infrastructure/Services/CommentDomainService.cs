@@ -1,4 +1,5 @@
-﻿using Nexus.DEB.Application.Common.Interfaces;
+﻿using Nexus.DEB.Application.Common.Extensions;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
@@ -15,7 +16,8 @@ namespace Nexus.DEB.Infrastructure.Services
             ICurrentUserService currentUserService,
             IDateTimeProvider dateTimeProvider,
             IDebService debService,
-            IPawsService pawsService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, string.Empty)
+            IPawsService pawsService,
+            IAuditService auditService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, auditService, string.Empty)
         {
         }
 
@@ -77,6 +79,13 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     return Result<CommentDetail>.Failure("Comment was not created.");
                 }
+
+                await this.AuditService.EntitySaved(
+                    comment.Id,
+                    nameof(Comment),
+                    $"Comment {comment.Id} created.",
+                    await this.CurrentUserService.GetUserDetailsAsync(),
+                    comment.ToAuditData());
 
                 return Result<CommentDetail>.Success(commentDetail);
             }
@@ -156,6 +165,13 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     return Result.Failure("The Comment could not be deleted.");
                 }
+
+                await this.AuditService.EntityDeleted(
+                    comment.Id,
+                    nameof(Comment),
+                    $"Comment {comment.Id} deleted. Data field contains the Comment prior to deletion.",
+                    await this.CurrentUserService.GetUserDetailsAsync(),
+                    comment.ToAuditData());
 
                 return Result.Success();
             }

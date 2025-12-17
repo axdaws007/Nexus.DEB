@@ -73,6 +73,16 @@ namespace Nexus.DEB.Infrastructure
                 client.Timeout = TimeSpan.FromSeconds(timeout);
             });
 
+            services.AddHttpClient("AuditApi", client =>
+            {
+                var baseUrl = configuration["LegacyApis:Audit:BaseUrl"]
+                    ?? throw new InvalidOperationException("LegacyApis:Audit:BaseUrl is not configured");
+                var timeout = int.Parse(configuration["LegacyApis:Audit:Timeout"] ?? "30");
+
+                client.BaseAddress = new Uri(baseUrl);
+                client.Timeout = TimeSpan.FromSeconds(timeout);
+            });
+
             // Database - Using Pooled DbContext Factory for better performance
             services.AddPooledDbContextFactory<DebContext>((sp, options) =>
             {
@@ -121,6 +131,7 @@ namespace Nexus.DEB.Infrastructure
             services.AddTransient<ICurrentUserService, CurrentUserService>();
             services.AddTransient<IPawsService, PawsService>();
             services.AddTransient<IDmsService, DmsService>();
+            services.AddTransient<IAuditService, AuditService>();
             services.AddTransient<IDateTimeProvider, DateTimeProvider>();
             services.AddTransient<IApplicationSettingsService, ApplicationSettingsService>();
 

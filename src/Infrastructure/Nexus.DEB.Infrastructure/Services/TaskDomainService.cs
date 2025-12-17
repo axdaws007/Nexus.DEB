@@ -1,4 +1,5 @@
-﻿using Nexus.DEB.Application.Common.Interfaces;
+﻿using Nexus.DEB.Application.Common.Extensions;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Task = System.Threading.Tasks.Task;
@@ -14,17 +15,18 @@ namespace Nexus.DEB.Infrastructure.Services
             ICurrentUserService currentUserService,
             IDateTimeProvider dateTimeProvider,
             IDebService debService,
-            IPawsService pawsService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, EntityTypes.Task)
+            IPawsService pawsService,
+            IAuditService auditService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, auditService, EntityTypes.Task)
         {
         }
 
-        public async Task<Result<Domain.Models.Task>> CreateTaskAsync(Guid statementId, Guid taskOwnerId, short taskTypeId, int activityId, DateTime? dueDate, string title, string? description, CancellationToken cancellationToken = default)
+        public async Task<Result<TaskDetail>> CreateTaskAsync(Guid statementId, Guid taskOwnerId, short taskTypeId, int activityId, DateTime? dueDate, string title, string? description, CancellationToken cancellationToken = default)
         {
             await ValidateFieldsAsync(null, statementId, taskOwnerId, taskTypeId, activityId, dueDate, title, description);
 
             if (ValidationErrors.Count > 0)
             {
-                return Result<Domain.Models.Task>.Failure(ValidationErrors);
+                return Result<TaskDetail>.Failure(ValidationErrors);
             }
 
             try
@@ -44,22 +46,31 @@ namespace Nexus.DEB.Infrastructure.Services
                 task = await this.DebService.CreateTaskAsync(task, cancellationToken);
 
                 await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, task.EntityId, activityId, taskOwnerId, cancellationToken);
-                
-                return Result<Domain.Models.Task>.Success(task);
+
+                var taskDetail = await this.DebService.GetTaskDetailByIdAsync(task.EntityId, cancellationToken);
+
+                await this.AuditService.EntitySaved(
+                    taskDetail.EntityId,
+                    EntityTypes.Task,
+                    $"Task {taskDetail.SerialNumber} created.",
+                    await this.CurrentUserService.GetUserDetailsAsync(),
+                    taskDetail.ToAuditData());
+
+                return Result<TaskDetail>.Success(taskDetail);
             }
             catch (Exception ex)
             {
-                return Result<Domain.Models.Task>.Failure($"An error occurred creating the Task: {ex.Message}");
+                return Result<TaskDetail>.Failure($"An error occurred creating the Task: {ex.Message}");
             }
         }
 
-        public async Task<Result<Domain.Models.Task>> UpdateTaskAsync(Guid id, Guid statementId, Guid taskOwnerId, short taskTypeId, int activityId, DateTime? dueDate, string title, string? description, CancellationToken cancellationToken = default)
+        public async Task<Result<TaskDetail>> UpdateTaskAsync(Guid id, Guid statementId, Guid taskOwnerId, short taskTypeId, int activityId, DateTime? dueDate, string title, string? description, CancellationToken cancellationToken = default)
         {
             var task = await DebService.GetTaskByIdAsync(id);
 
             if (task == null)
             {
-                return Result<Domain.Models.Task>.Failure(new ValidationError()
+                return Result<TaskDetail>.Failure(new ValidationError()
                 {
                     Code = "INVALID_TASK_ID",
                     Field = nameof(id),
@@ -71,7 +82,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             if (ValidationErrors.Count > 0)
             {
-                return Result<Domain.Models.Task>.Failure(ValidationErrors);
+                return Result<TaskDetail>.Failure(ValidationErrors);
             }
 
             task.OwnedById = taskOwnerId;
@@ -101,11 +112,20 @@ namespace Nexus.DEB.Infrastructure.Services
                         cancellationToken);
                 }
 
-                return Result<Domain.Models.Task>.Success(task);
+                var taskDetail = await this.DebService.GetTaskDetailByIdAsync(task.EntityId, cancellationToken);
+
+                await this.AuditService.EntitySaved(
+                    taskDetail.EntityId,
+                    EntityTypes.Task,
+                    $"Task {taskDetail.SerialNumber} updated.",
+                    await this.CurrentUserService.GetUserDetailsAsync(),
+                    taskDetail.ToAuditData());
+
+                return Result<TaskDetail>.Success(taskDetail);
             }
             catch (Exception ex)
             {
-                return Result<Domain.Models.Task>.Failure($"An error occurred updating the Task: {ex.Message}");
+                return Result<TaskDetail>.Failure($"An error occurred updating the Task: {ex.Message}");
             }
 
         }

@@ -211,6 +211,75 @@ namespace Nexus.DEB.Infrastructure.Services
             }
         }
 
+        protected async Task SendAuthenticatedRequestAsync(
+            HttpMethod method,
+            string requestUri,
+            string operationName,
+            HttpContent? content = null) 
+        {
+            try
+            {
+                Logger.LogInformation("Executing {OperationName}: {Method} {RequestUri}",
+                    operationName, method, requestUri);
+
+                // Create request with cookie from current HTTP context
+                var request = CreateAuthenticatedRequest(method, requestUri);
+
+                if (content != null)
+                {
+                    request.Content = content;
+                }
+
+                var response = await HttpClient.SendAsync(request);
+
+                // Handle common HTTP status codes
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    Logger.LogWarning("{OperationName} failed: Unauthorized (401) for {RequestUri}",
+                        operationName, requestUri);
+                    return;
+                }
+
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    Logger.LogWarning("{OperationName} failed: Forbidden (403) for {RequestUri}",
+                        operationName, requestUri);
+                    return;
+                }
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    Logger.LogWarning("{OperationName} failed: Not Found (404) for {RequestUri}",
+                        operationName, requestUri);
+                    return;
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                Logger.LogInformation("{OperationName} completed successfully", operationName);
+                return;
+            }
+            catch (HttpRequestException ex)
+            {
+                Logger.LogError(ex, "{OperationName}: HTTP request failed for {RequestUri}",
+                    operationName, requestUri);
+                throw;
+            }
+            catch (JsonException ex)
+            {
+                Logger.LogError(ex, "{OperationName}: Failed to parse response from {RequestUri}",
+                    operationName, requestUri);
+                throw new InvalidOperationException(
+                    $"Failed to parse API response: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "{OperationName}: Unexpected error for {RequestUri}",
+                    operationName, requestUri);
+                throw;
+            }
+        }
+
         /// <summary>
         /// Sends an authenticated request and returns a boolean indicating success.
         /// Authentication cookie is automatically retrieved from the current HTTP context.

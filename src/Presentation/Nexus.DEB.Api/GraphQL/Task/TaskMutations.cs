@@ -1,4 +1,6 @@
 ﻿using HotChocolate.Authorization;
+using HotChocolate.Resolvers;
+using Nexus.DEB.Api.Security;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain;
@@ -36,7 +38,7 @@ namespace Nexus.DEB.Api.GraphQL.Task
                 throw ExceptionHelper.BuildException(result);
             }
 
-            return await debService.GetTaskDetailByIdAsync(result.Data.EntityId, cancellationToken);
+            return result.Data;
         }
 
         [Authorize(Policy = DebHelper.Policies.CanEditSoCTask)]
@@ -69,7 +71,7 @@ namespace Nexus.DEB.Api.GraphQL.Task
                 throw ExceptionHelper.BuildException(result);
             }
 
-            return await debService.GetTaskDetailByIdAsync(id, cancellationToken);
+            return result.Data;
         }
     }
 }

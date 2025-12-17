@@ -4,7 +4,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 {
     public interface ITaskDomainService
     {
-        Task<Result<Domain.Models.Task>> CreateTaskAsync(
+        Task<Result<TaskDetail>> CreateTaskAsync(
             Guid statementId,
             Guid taskOwnerId,
             short taskTypeId,
@@ -14,7 +14,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
             string? description,
             CancellationToken cancellationToken = default);
 
-        Task<Result<Domain.Models.Task>> UpdateTaskAsync(
+        Task<Result<TaskDetail>> UpdateTaskAsync(
             Guid id,
             Guid statementId,
             Guid taskOwnerId,

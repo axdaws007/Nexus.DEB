@@ -15,7 +15,8 @@ namespace Nexus.DEB.Infrastructure.Services
 			ICurrentUserService currentUserService,
 			IDateTimeProvider dateTimeProvider,
 			IDebService debService,
-			IPawsService pawsService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, string.Empty)
+			IPawsService pawsService,
+			IAuditService auditService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, auditService, string.Empty)
 		{
 		}
 

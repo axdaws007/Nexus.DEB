@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -29,6 +30,17 @@ namespace Nexus.DEB.Infrastructure.Services
             var libraryIdentifier = $"DMS:Libraries:{libraryName}";
 
             return _configuration.GetValue<Guid>(libraryIdentifier);
+        }
+
+        public AuditConfiguration GetAuditConfiguration()
+        {
+            return new AuditConfiguration()
+            {
+                PlatformTeam = _configuration.GetValue<string>("Audit:PlatformTeam", string.Empty),
+                ApplicationName = _configuration.GetValue<string>("Audit:ApplicationName", string.Empty),
+                ApplicationInstance = _configuration.GetValue<string>("Audit:ApplicationInstance", string.Empty),
+                EnvironmentName = _configuration.GetValue<string>("Audit:EnvironmentName")
+            };
         }
     }
 }

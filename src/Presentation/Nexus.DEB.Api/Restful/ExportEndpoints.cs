@@ -3,9 +3,11 @@ using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Api.Restful.Maps;
+using Nexus.DEB.Application.Common.Extensions;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Domain.Models.Common;
 using System.Globalization;
 using System.Text;
 
@@ -59,14 +61,19 @@ namespace Nexus.DEB.Api.Restful
             [FromBody] StandardVersionSummaryFilters? filters,
             [FromServices] IDebService debService,
             [FromServices] ILogger<Program> logger,
+            [FromServices] IAuditService auditService,
+            [FromServices] ICurrentUserService currentUserService,
             CancellationToken cancellationToken)
         {
             return await ExportToCsvAsync(
-                entityName: "StandardVersions",
+                entityName: EntityTypes.StandardVersion,
                 getDataQuery: () => debService.GetStandardVersionsForExport(filters),
                 fileNamePrefix: "standard-versions",
                 registerClassMap: csv => csv.Context.RegisterClassMap<StandardVersionExportMap>(),
+                filters: filters,
                 logger: logger,
+                auditService: auditService,
+                currentUserService: currentUserService,
                 cancellationToken: cancellationToken);
         }
 
@@ -74,28 +81,38 @@ namespace Nexus.DEB.Api.Restful
             [FromBody] TaskSummaryFilters? filters,
             [FromServices] IDebService debService,
             [FromServices] ILogger<Program> logger,
+            [FromServices] IAuditService auditService,
+            [FromServices] ICurrentUserService currentUserService,
             CancellationToken cancellationToken)
         {
             return await ExportToCsvAsync(
-                entityName: "Tasks",
+                entityName: EntityTypes.Task,
                 getDataQuery: () => debService.GetTasksForExport(filters),
                 fileNamePrefix: "tasks",
                 registerClassMap: csv => csv.Context.RegisterClassMap<TaskExportMap>(),
+                filters: filters,
                 logger: logger,
+                auditService: auditService,
+                currentUserService: currentUserService,
                 cancellationToken: cancellationToken);
         }
 
         private static async Task<IResult> ExportScopesAsCsv(
             [FromServices] IDebService debService,
             [FromServices] ILogger<Program> logger,
+            [FromServices] IAuditService auditService,
+            [FromServices] ICurrentUserService currentUserService,
             CancellationToken cancellationToken)
         {
             return await ExportToCsvAsync(
-                entityName: "Scopes",
+                entityName: EntityTypes.Scope,
                 getDataQuery: () => debService.GetScopesForExport(),
                 fileNamePrefix: "scopes",
                 registerClassMap: csv => csv.Context.RegisterClassMap<ScopeExportMap>(),
+                filters: null,
                 logger: logger,
+                auditService: auditService,
+                currentUserService: currentUserService,
                 cancellationToken: cancellationToken);
         }
 
@@ -103,14 +120,19 @@ namespace Nexus.DEB.Api.Restful
             [FromBody] RequirementSummaryFilters? filters,
             [FromServices] IDebService debService,
             [FromServices] ILogger<Program> logger,
+            [FromServices] IAuditService auditService,
+            [FromServices] ICurrentUserService currentUserService,
             CancellationToken cancellationToken)
         {
             return await ExportToCsvAsync(
-                entityName: "Requirements",
+                entityName: EntityTypes.Requirement,
                 getDataQuery: () => debService.GetRequirementsForExport(filters),
                 fileNamePrefix: "requirements",
                 registerClassMap: csv => csv.Context.RegisterClassMap<RequirementExportMap>(),
+                filters: filters,
                 logger: logger,
+                auditService: auditService,
+                currentUserService: currentUserService,
                 cancellationToken: cancellationToken);
         }
 
@@ -118,14 +140,19 @@ namespace Nexus.DEB.Api.Restful
             [FromBody] StatementSummaryFilters? filters,
             [FromServices] IDebService debService,
             [FromServices] ILogger<Program> logger,
+            [FromServices] IAuditService auditService,
+            [FromServices] ICurrentUserService currentUserService,
             CancellationToken cancellationToken)
         {
             return await ExportToCsvAsync(
-                entityName: "Statements",
+                entityName: EntityTypes.SoC,
                 getDataQuery: () => debService.GetStatementsForExport(filters),
                 fileNamePrefix: "statements",
                 registerClassMap: csv => csv.Context.RegisterClassMap<StatementExportMap>(),
+                filters: filters,
                 logger: logger,
+                auditService: auditService,
+                currentUserService: currentUserService,
                 cancellationToken: cancellationToken);
         }
 
@@ -144,19 +171,23 @@ namespace Nexus.DEB.Api.Restful
             Func<IQueryable<TData>> getDataQuery,
             string fileNamePrefix,
             Action<CsvWriter> registerClassMap,
+            object? filters,
             ILogger logger,
+            IAuditService auditService,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken)
         {
             try
             {
                 logger.LogInformation("Export request received for {EntityName}", entityName);
 
+                var userDetails = await currentUserService.GetUserDetailsAsync();
+
                 // Execute query to get data
                 var data = await getDataQuery()
                     .ToListAsync(cancellationToken);
 
-                logger.LogInformation("Retrieved {Count} {EntityName} for export",
-                    data.Count, entityName.ToLowerInvariant());
+                logger.LogInformation("Retrieved {Count} {EntityName} for export", data.Count, entityName);
 
                 // Generate CSV using CsvHelper
                 using var memoryStream = new MemoryStream();
@@ -177,6 +208,19 @@ namespace Nexus.DEB.Api.Restful
 
                 logger.LogInformation("Returning CSV file: {FileName} ({Size} bytes)",
                     fileName, csvBytes.Length);
+
+                await auditService.DataExported(
+                    null, 
+                    entityName, 
+                    $"CSV export of {entityName}. File name = {fileName}. File size = {csvBytes.Length} bytes", 
+                    userDetails,
+                    JsonElementExtensions.ToExportAuditData(
+                        fileName: fileName,
+                        fileContent: csvBytes,
+                        recordCount: data.Count,
+                        filters: filters,
+                        includeFileContent: true)
+                    );
 
                 return Results.File(
                     csvBytes,

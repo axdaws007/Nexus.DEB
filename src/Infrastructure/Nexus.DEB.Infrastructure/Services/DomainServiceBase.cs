@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.DataProtection.XmlEncryption;
-using Nexus.DEB.Application.Common.Interfaces;
+﻿using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
-using Nexus.DEB.Domain.Models.Common;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -14,6 +12,9 @@ namespace Nexus.DEB.Infrastructure.Services
         protected readonly IDebService DebService;
         protected readonly IApplicationSettingsService ApplicationSettingsService;
         protected readonly IPawsService PawsService;
+        protected readonly IAuditService AuditService;
+
+        protected UserDetails? UserDetails { get; init; }
 
         protected List<ValidationError> ValidationErrors = new List<ValidationError>();
 
@@ -29,6 +30,7 @@ namespace Nexus.DEB.Infrastructure.Services
             IDateTimeProvider dateTimeProvider,
             IDebService debService,
             IPawsService pawsService,
+            IAuditService auditService,
             string entityType)
         {
             this.CisService = cisService;
@@ -38,6 +40,7 @@ namespace Nexus.DEB.Infrastructure.Services
             this.DebService = debService;
             this.ApplicationSettingsService = applicationSettingsService;
             this.PawsService = pawsService;
+            this.AuditService = auditService;
 
             this.ModuleId = this.ApplicationSettingsService.GetModuleId("DEB");
             this.InstanceId = this.ApplicationSettingsService.GetInstanceId();

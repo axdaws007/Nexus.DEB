@@ -1,8 +1,8 @@
-﻿using Nexus.DEB.Application.Common.Interfaces;
+﻿using Nexus.DEB.Application.Common.Extensions;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
-using static Azure.Core.HttpHeader;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -16,7 +16,8 @@ namespace Nexus.DEB.Infrastructure.Services
             ICurrentUserService currentUserService,
             IDateTimeProvider dateTimeProvider,
             IApplicationSettingsService applicationSettingsService,
-            IPawsService pawsService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, EntityTypes.SoC)
+            IPawsService pawsService,
+            IAuditService auditService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, auditService, EntityTypes.SoC)
         {
         }
 
@@ -51,6 +52,14 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, statement.EntityId, null, null, cancellationToken);
 
+                var statementDetail = await this.DebService.GetStatementDetailByIdAsync(statement.EntityId, cancellationToken);
+
+                await this.AuditService.EntitySaved(
+                    statementDetail.EntityId,
+                    EntityTypes.SoC,
+                    $"Statement {statementDetail.SerialNumber} created.",
+                    await this.CurrentUserService.GetUserDetailsAsync(),
+                    statementDetail.ToAuditData());
 
                 return Result<Statement>.Success(statement);
             }
@@ -96,6 +105,15 @@ namespace Nexus.DEB.Infrastructure.Services
             try
             {
                 await this.DebService.UpdateStatementAsync(statement, requirementScopeCombinations, cancellationToken);
+
+                var statementDetail = await this.DebService.GetStatementDetailByIdAsync(statement.EntityId, cancellationToken);
+
+                await this.AuditService.EntitySaved(
+                    statementDetail.EntityId,
+                    EntityTypes.SoC,
+                    $"Statement {statementDetail.SerialNumber} updated.",
+                    await this.CurrentUserService.GetUserDetailsAsync(),
+                    statementDetail.ToAuditData());
 
                 return Result<Statement>.Success(statement);
             }

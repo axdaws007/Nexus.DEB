@@ -36,7 +36,9 @@ namespace Nexus.DEB.Infrastructure.Services
                     Title = title,
                     Description = description,
                     DueDate = dueDate,
-                    TaskTypeId = taskTypeId
+                    TaskTypeId = taskTypeId,
+                    EntityTypeTitle = EntityTypes.Task,
+                    SerialNumber = await DebService.GenerateSerialNumberAsync(this.ModuleId, this.InstanceId, EntityTypes.Task)
                 };
 
                 task = await this.DebService.CreateTaskAsync(task, cancellationToken);

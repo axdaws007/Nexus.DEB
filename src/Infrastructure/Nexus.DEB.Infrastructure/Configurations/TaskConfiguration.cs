@@ -10,7 +10,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Task> builder)
         {
-            builder.ToTable("Task", "deb");
+            builder.ToTable("Task", "deb", t => { t.HasTrigger("Task_ChangeTracking"); });
 
             builder.HasBaseType<EntityHead>();
 

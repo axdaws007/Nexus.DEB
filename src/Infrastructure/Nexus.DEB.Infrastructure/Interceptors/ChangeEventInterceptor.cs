@@ -12,11 +12,9 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 {
 	private const string SessionContextEventId = "EventId";
 	private const string SessionContextUserDetails = "UserDetails";
-	private readonly ICurrentUserService _currentUserService;
 
-	public ChangeEventInterceptor(ICurrentUserService currentUserService)
+	public ChangeEventInterceptor()
 	{
-		_currentUserService = currentUserService;
 	}
 
 	private async Task SetSessionContextAsync(DbContext context, string key, object value, CancellationToken cancellationToken)
@@ -87,10 +85,9 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 	{
 		if (eventData.Context != null)
 		{
-			var eventId = Guid.NewGuid();
-			var userDetails = await GetFormattedUser();
-			await SetSessionContextAsync(eventData.Context, SessionContextEventId, eventId, cancellationToken);
-			await SetSessionContextAsync(eventData.Context, SessionContextUserDetails, userDetails, cancellationToken);
+			var _context = (IDebContext)eventData.Context!;
+			await SetSessionContextAsync(eventData.Context, SessionContextEventId, _context.EventId, cancellationToken);
+			await SetSessionContextAsync(eventData.Context, SessionContextUserDetails, _context.UserDetails, cancellationToken);
 		}
 
 		return result;
@@ -103,17 +100,11 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 	{
 		if (eventData.Context != null)
 		{
-			var eventId = Guid.NewGuid();
-			SetSessionContext(eventData.Context, SessionContextEventId, eventId);
-			SetSessionContext(eventData.Context, SessionContextUserDetails, GetFormattedUser());
+			var _context = (IDebContext)eventData.Context!;
+			SetSessionContext(eventData.Context, SessionContextEventId, _context.EventId);
+			SetSessionContext(eventData.Context, SessionContextUserDetails, _context.UserDetails);
 		}
 
 		return result;
-	}
-
-	private async Task<string> GetFormattedUser()
-	{
-		var userdetails = await _currentUserService.GetUserDetailsAsync();
-		return string.Format("{0} ({1} {2})", userdetails.PostTitle, userdetails.FirstName, userdetails.LastName);
 	}
 }

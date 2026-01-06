@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Nexus.DEB.Api.Restful;
 using Nexus.DEB.Api.Security;
 using Nexus.DEB.Application;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Infrastructure;
 using Nexus.DEB.Infrastructure.Authentication;
@@ -190,6 +191,13 @@ app.UseCors("GraphQLPolicy");
 app.UseAuthentication();
 app.UseMiddleware<CapabilitiesHttpRequestInterceptor>();
 app.UseAuthorization();
+
+app.Use(async (ctx, next) =>
+{
+	var db = ctx.RequestServices.GetRequiredService<IDebContext>();
+	await db.SetFormattedUser();
+	await next();
+});
 
 app.MapGraphQL().WithOptions(new GraphQLServerOptions
 {

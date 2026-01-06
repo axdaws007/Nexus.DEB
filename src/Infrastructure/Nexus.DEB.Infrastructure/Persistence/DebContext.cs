@@ -6,18 +6,37 @@ using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Nexus.DEB.Domain.Models.Other;
+using Nexus.DEB.Infrastructure.Services;
+using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Persistence
 {
     public class DebContext : DbContext, IDebContext
     {
-        public DebContext(DbContextOptions<DebContext> options)
+        public Guid EventId { get; } = Guid.NewGuid();
+		public string? UserDetails { get; protected set; }
+		public DebContext(DbContextOptions<DebContext> options)
         : base(options)
         {
-        }
+            
+		}
 
-        // Lookups
-        public DbSet<CommentType> CommentTypes { get; set; }
+		public async Task SetFormattedUser()
+		{
+            if (!string.IsNullOrEmpty(UserDetails))
+                return;
+
+            var currentUserService = this.GetService<ICurrentUserService>();
+			var userdetails = await currentUserService.GetUserDetailsAsync();
+            if (userdetails != null)
+            {
+                UserDetails = string.Format("{0} ({1} {2})", userdetails.PostTitle, userdetails.FirstName, userdetails.LastName);
+            }
+            return;
+		}
+
+		// Lookups
+		public DbSet<CommentType> CommentTypes { get; set; }
         public DbSet<RequirementCategory> RequirementCategories { get; set; }
         public DbSet<RequirementType> RequirementTypes { get; set; }
         public DbSet<Standard> Standards { get; set; }

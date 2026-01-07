@@ -79,6 +79,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<int> GetChangeRecordsCountForEntityAsync(Guid entityId, CancellationToken cancellationToken);
         Task<ICollection<ChangeRecord>> GetChangeRecordsForEntityAsync(Guid entityId, CancellationToken cancellationToken);
 		Task<ICollection<ChangeRecordItem>> GetChangeRecordItemsForChangeRecordAsync(long changeRecordId, CancellationToken cancellationToken);
+        Task AddChangeRecordItem(Guid entityID, string fieldName, string friendlyFieldName, string oldValue, string newValue, CancellationToken cancellationToken);
 
 		Task<PawsEntityDetail?> GetCurrentWorkflowStatusForEntityAsync(Guid entityId, CancellationToken cancellationToken);
 

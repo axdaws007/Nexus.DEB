@@ -1,11 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Domain.Models;
+using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
     public partial class DebService
     {
-        public async Task<Guid?> GetWorkflowIdAsync(
+		#region Workflow
+		public async Task<Guid?> GetWorkflowIdAsync(
             Guid moduleId, 
             string entityType, 
             CancellationToken cancellationToken = default)
@@ -72,8 +75,10 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public async Task<IReadOnlyDictionary<Guid, string?>> GetWorkflowPseudoStateTitleForEntitiesAsync(List<Guid> entityIds, CancellationToken cancellationToken = default)
             => await _dbContext.PawsEntityDetails.AsNoTracking().Where(x => entityIds.Contains(x.EntityId)).ToDictionaryAsync(x => x.EntityId, x => x.PseudoStateTitle, cancellationToken);
+		#endregion Workflow
 
-        public async Task<ICollection<CommentDetail>> GetCommentsForEntityAsync(Guid entityId, CancellationToken cancellationToken)
+		#region Comments
+		public async Task<ICollection<CommentDetail>> GetCommentsForEntityAsync(Guid entityId, CancellationToken cancellationToken)
             => await _dbContext.CommentDetails.AsNoTracking()
                         .Where(x => x.EntityId == entityId)
                         .OrderByDescending(x => x.CreatedDate)
@@ -100,8 +105,10 @@ namespace Nexus.DEB.Infrastructure.Services
             long id, 
             CancellationToken cancellationToken)
             => (await _dbContext.Comments.Where(x => x.Id == id).ExecuteDeleteAsync(cancellationToken) == 1);
+		#endregion Comments
 
-        public async Task<int> GetChangeRecordsCountForEntityAsync(
+		#region ChangeRecords
+		public async Task<int> GetChangeRecordsCountForEntityAsync(
             Guid entityId,
             CancellationToken cancellationToken)
             => await _dbContext.ChangeRecords.AsNoTracking()
@@ -124,7 +131,24 @@ namespace Nexus.DEB.Infrastructure.Services
 				.OrderBy(x => x.FriendlyFieldName)
 				.ToListAsync(cancellationToken);
 
-        public async Task<ICollection<SavedSearch>> GetSavedSearchesByContextAsync(string context, CancellationToken cancellationToken)
+        public async Task AddChangeRecordItem(Guid entityId, string fieldName, string friendlyFieldName, string oldValue, string newValue, CancellationToken cancellationToken)
+        {
+            var eventId = _dbContext.EventId;
+            var userDetails = _dbContext.UserDetails;
+
+            _dbContext.Database.ExecuteSqlRawAsync(
+                "EXEC dbo.CreateChangeRecordItem @entityId, @fieldName, @friendlyFieldName, @oldValue, @newValue",
+                new SqlParameter("@entityId", entityId),
+                new SqlParameter("@fieldName", fieldName),
+                new SqlParameter("friendlyFieldName", friendlyFieldName),
+                new SqlParameter("@oldValue", oldValue),
+                new SqlParameter("@newValue", newValue)
+            );
+        }
+		#endregion ChangeRecords
+
+		#region SavedSearch
+		public async Task<ICollection<SavedSearch>> GetSavedSearchesByContextAsync(string context, CancellationToken cancellationToken)
         {
             var currentPostId = _currentUserService.PostId;
 			return await _dbContext.SavedSearches.AsNoTracking()
@@ -155,7 +179,9 @@ namespace Nexus.DEB.Infrastructure.Services
 
             return savedSearch;
 		}
+		#endregion SavedSearch
 
+		#region SerialNumber
 		public async Task<string> GenerateSerialNumberAsync(
             Guid moduleId,
             Guid instanceId,
@@ -278,6 +304,6 @@ namespace Nexus.DEB.Infrastructure.Services
 
             return current;
         }
-
-    }
+		#endregion SerialNumber
+	}
 }

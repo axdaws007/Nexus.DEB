@@ -1,7 +1,11 @@
-﻿using Nexus.DEB.Application.Common.Extensions;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Nexus.DEB.Application.Common.Extensions;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
+using System.Reflection;
+using System.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -96,10 +100,9 @@ namespace Nexus.DEB.Infrastructure.Services
                 await this.DebService.UpdateTaskAsync(task, cancellationToken);
 
                 var workflowStatus = await DebService.GetCurrentWorkflowStatusForEntityAsync(task.EntityId, cancellationToken);
-
-                if (activityId != workflowStatus.ActivityId)
-                {
-                    await PawsService.ApproveStepAsync(
+				if (activityId != workflowStatus.ActivityId)
+				{
+					await PawsService.ApproveStepAsync(
                         this.WorkflowId.Value,
                         task.EntityId,
                         workflowStatus.StepId,
@@ -110,7 +113,9 @@ namespace Nexus.DEB.Infrastructure.Services
                         null,
                         [taskOwnerId],
                         cancellationToken);
-                }
+
+					await AddChangeRecordItemForPAWSChange(task.EntityId, workflowStatus.ActivityTitle, activityId, cancellationToken);
+				}
 
                 var taskDetail = await this.DebService.GetTaskDetailByIdAsync(task.EntityId, cancellationToken);
 
@@ -130,7 +135,17 @@ namespace Nexus.DEB.Infrastructure.Services
 
         }
 
-        private async Task ValidateFieldsAsync(
+        private async Task AddChangeRecordItemForPAWSChange(Guid entityId, string oldActivity, int newActivityId, CancellationToken cancellationToken)
+        {
+			var moduleId = ApplicationSettingsService.GetModuleId("DEB");
+			var workflowId = await DebService.GetWorkflowIdAsync(moduleId, EntityTypes.Task, cancellationToken);
+			var activities = await PawsService.GetActivitiesForWorkflowAsync(workflowId.Value, false, cancellationToken);
+			var newActivity = activities.FirstOrDefault(f => f.ActivityID == newActivityId)?.Title.ToString();
+
+			await DebService.AddChangeRecordItem(entityId, "PendingActivity", "State", oldActivity, newActivity, cancellationToken);
+		}
+
+		private async Task ValidateFieldsAsync(
             Domain.Models.Task? task,
             Guid statementId, 
             Guid taskOwnerId, 

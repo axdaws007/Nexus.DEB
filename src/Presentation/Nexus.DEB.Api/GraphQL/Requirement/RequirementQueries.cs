@@ -46,16 +46,7 @@ namespace Nexus.DEB.Api.GraphQL
 			=> await debService.GetRequirementByIdAsync(requirementId, cancellationToken);
 
 		[Authorize]
-		public static async Task<RequirementChildCounts> GetChildCountsForRequirement(
-			Guid requirementId,
-			IDebService debService,
-			IApplicationSettingsService applicationSettingsService,
-			IDmsService dmsService,
-			CancellationToken cancellationToken)
-		{
-			var counts = await debService.GetChildCountsForRequirementAsync(requirementId, cancellationToken);
-
-			return counts;
-		}
+		public static async Task<RequirementChildCounts> GetChildCountsForRequirement(Guid requirementId, IDebService debService, CancellationToken cancellationToken)
+		    => await debService.GetChildCountsForRequirementAsync(requirementId, cancellationToken);
 	}
 }

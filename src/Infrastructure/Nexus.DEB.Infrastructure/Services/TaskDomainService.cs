@@ -138,7 +138,7 @@ namespace Nexus.DEB.Infrastructure.Services
         private async Task AddChangeRecordItemForPAWSChange(Guid entityId, string oldActivity, int newActivityId, CancellationToken cancellationToken)
         {
 			var moduleId = ApplicationSettingsService.GetModuleId("DEB");
-			var workflowId = await DebService.GetWorkflowIdAsync(moduleId, "Task", cancellationToken);
+			var workflowId = await DebService.GetWorkflowIdAsync(moduleId, EntityTypes.Task, cancellationToken);
 			var activities = await PawsService.GetActivitiesForWorkflowAsync(workflowId.Value, false, cancellationToken);
 			var newActivity = activities.FirstOrDefault(f => f.ActivityID == newActivityId)?.Title.ToString();
 

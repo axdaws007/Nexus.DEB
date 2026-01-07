@@ -184,7 +184,37 @@ namespace Nexus.DEB.Infrastructure.Services
             return query.OrderBy(x => x.SerialNumber);
         }
 
-        public IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId)
+		public async Task<RequirementDetail?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken)
+		{
+			var requirement = await _dbContext.Requirements.AsNoTracking()
+				.Include(r => r.RequirementType)
+				.Include(r => r.RequirementCategory)
+				.FirstOrDefaultAsync(s => s.EntityId == id, cancellationToken);
+
+			if (requirement == null)
+				return null;
+
+			var requirementDetail = requirement.Adapt<RequirementDetail>();
+
+            requirementDetail.RequirementTypeTitle = requirement.RequirementType?.Title;
+            requirementDetail.RequirementCategoryTitle = requirement.RequirementCategory?.Title;
+
+			return requirementDetail;
+		}
+
+		public async Task<RequirementChildCounts> GetChildCountsForRequirementAsync(Guid id, CancellationToken cancellationToken)
+		{
+			var numberOfComments = await GetCommentsCountForEntityAsync(id, cancellationToken);
+			var numberOfHistoryEvents = await GetChangeRecordsCountForEntityAsync(id, cancellationToken);
+
+			return new RequirementChildCounts()
+			{
+				CommentsCount = numberOfComments,
+				HistoryCount = numberOfHistoryEvents
+			};
+		}
+
+		public IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId)
         {
             var query = _dbContext.Requirements
                 .Include(x => x.StandardVersions)

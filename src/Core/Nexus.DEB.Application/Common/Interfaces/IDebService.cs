@@ -14,7 +14,9 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<Dictionary<Guid, EntityHead>> GetEntityHeadsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken);
         IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters);
         IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters);
-        IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId);
+		Task<RequirementDetail?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken);
+		Task<RequirementChildCounts> GetChildCountsForRequirementAsync(Guid id, CancellationToken cancellationToken);
+		IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId);
         Task<ICollection<RequirementWithScopes>> GetRequirementScopesForStatement(Guid statementId, CancellationToken cancellationToken);
         Task<List<StatementRequirementScope>> GetRequirementScopeCombinations(IEnumerable<(Guid RequirementId, Guid ScopeId)> combinations, CancellationToken cancellationToken);
         IQueryable<Scope> GetScopes();

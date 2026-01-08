@@ -18,7 +18,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
 -- Modified:	2016-09-29 - Added extra group filtering.
 -- Modified:    2026-01-08 - For DEB
 -- =============================================
-ALTER PROCEDURE [common].[GetMyWorkDetailDataForPost]
+CREATE PROCEDURE [common].[GetMyWorkDetailDataForPost]
 	
 	-- query args
 	@myPostID uniqueidentifier,	

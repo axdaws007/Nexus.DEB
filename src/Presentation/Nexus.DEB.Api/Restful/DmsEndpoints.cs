@@ -70,7 +70,10 @@ namespace Nexus.DEB.Api.Restful
         {
             try
             {
-                DebHelper.Dms.Libraries.ValidateOrThrow(library);
+                DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
+
+                if (string.IsNullOrEmpty(documentType)) 
+                    documentType = DebHelper.Dms.DocumentTypes.Document;
 
                 var libraryId = applicationSettingsService.GetLibraryId(library);
 
@@ -102,16 +105,11 @@ namespace Nexus.DEB.Api.Restful
                 }
 
                 // Validate documentType
-                var validDocTypes = new[] { "document", "note" };
-                var docType = string.IsNullOrWhiteSpace(documentType)
-                    ? "document"
-                    : documentType.ToLower();
-
-                if (!validDocTypes.Contains(docType))
+                if (!DebHelper.Dms.DocumentTypes.Validator.IsValid(documentType))
                 {
                     return Results.BadRequest(new
                     {
-                        error = "documentType must be 'document' or 'note'"
+                        error = $"documentType must be '{DebHelper.Dms.DocumentTypes.Document}' or '{DebHelper.Dms.DocumentTypes.Note}'"
                     });
                 }
 
@@ -122,7 +120,7 @@ namespace Nexus.DEB.Api.Restful
                     Title = title,
                     Description = description,
                     Author = author,
-                    DocumentType = docType
+                    DocumentType = documentType
                 };
 
                 var result = await dmsService.AddDocumentAsync(libraryId, file, metadata);
@@ -182,7 +180,7 @@ namespace Nexus.DEB.Api.Restful
         {
             try
             {
-                DebHelper.Dms.Libraries.ValidateOrThrow(library);
+                DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
 
                 var libraryId = applicationSettingsService.GetLibraryId(library);
 
@@ -259,7 +257,7 @@ namespace Nexus.DEB.Api.Restful
         {
             try
             {
-                DebHelper.Dms.Libraries.ValidateOrThrow(library);
+                DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
 
                 var libraryId = applicationSettingsService.GetLibraryId(library);
 

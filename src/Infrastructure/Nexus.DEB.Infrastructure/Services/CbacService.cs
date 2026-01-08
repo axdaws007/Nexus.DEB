@@ -62,5 +62,20 @@ namespace Nexus.DEB.Infrastructure.Services
             // Return empty list if null (consistent with original implementation)
             return postIds;
         }
+
+        public async Task<ICollection<CbacRole>?> GetRolesForPostAsync(Guid postId)
+        {
+            var requestUri = $"api/Roles/RolesForPost?postId={postId}";
+
+            // Use authenticated request - cookie retrieved from HttpContext automatically
+            var roles = await SendAuthenticatedRequestAsync<ICollection<CbacRole>>(
+                HttpMethod.Get,
+                requestUri,
+                operationName: $"RolesForPost for roles"
+                );
+
+            // Return empty list if null (consistent with original implementation)
+            return roles;
+        }
     }
 }

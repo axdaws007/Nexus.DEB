@@ -53,12 +53,12 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 var taskDetail = await this.DebService.GetTaskDetailByIdAsync(task.EntityId, cancellationToken);
 
-                await this.AuditService.EntitySaved(
-                    taskDetail.EntityId,
-                    EntityTypes.Task,
-                    $"Task {taskDetail.SerialNumber} created.",
-                    await this.CurrentUserService.GetUserDetailsAsync(),
-                    taskDetail.ToAuditData());
+                //await this.AuditService.EntitySaved(
+                //    taskDetail.EntityId,
+                //    EntityTypes.Task,
+                //    $"Task {taskDetail.SerialNumber} created.",
+                //    await this.CurrentUserService.GetUserDetailsAsync(),
+                //    taskDetail.ToAuditData());
 
                 return Result<TaskDetail>.Success(taskDetail);
             }
@@ -119,12 +119,12 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 var taskDetail = await this.DebService.GetTaskDetailByIdAsync(task.EntityId, cancellationToken);
 
-                await this.AuditService.EntitySaved(
-                    taskDetail.EntityId,
-                    EntityTypes.Task,
-                    $"Task {taskDetail.SerialNumber} updated.",
-                    await this.CurrentUserService.GetUserDetailsAsync(),
-                    taskDetail.ToAuditData());
+                //await this.AuditService.EntitySaved(
+                //    taskDetail.EntityId,
+                //    EntityTypes.Task,
+                //    $"Task {taskDetail.SerialNumber} updated.",
+                //    await this.CurrentUserService.GetUserDetailsAsync(),
+                //    taskDetail.ToAuditData());
 
                 return Result<TaskDetail>.Success(taskDetail);
             }

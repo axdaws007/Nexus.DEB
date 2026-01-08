@@ -27,5 +27,15 @@ namespace Nexus.DEB.Api.GraphQL.Cis
 
             return posts ?? new List<PostDetails>();
         }
+
+        public static async Task<ICollection<CisGroup>> GetGroups(
+            ICisService cisService,
+            ICbacService cbacService,
+            CancellationToken cancellationToken)
+        {
+            var groups = await cisService.GetAllGroups();
+
+            return groups ?? new List<CisGroup>();
+        }
     }
 }

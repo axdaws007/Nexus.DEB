@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.Identity.Client;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
@@ -55,9 +54,10 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<ChangeRecord> ChangeRecords { get; set; }
         public DbSet<ChangeRecordItem> ChangeRecordItems { get; set; }
         public DbSet<SavedSearch> SavedSearches { get; set; }
+        public DbSet<DashboardInfo> DashboardInfos { get; set; }
 
-		// Entities
-		public DbSet<EntityHead> EntityHeads { get; set; }
+        // Entities
+        public DbSet<EntityHead> EntityHeads { get; set; }
         public DbSet<Requirement> Requirements { get; set; }
         public DbSet<Scope> Scopes { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
@@ -81,6 +81,12 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<CommentDetail> CommentDetails { get; set; }
         public DbSet<ViewPost> ViewPosts { get; set; }
         public DbSet<PawsEntityDetail> PawsEntityDetails { get; set; }
+
+        // Stored procedures
+        public DbSet<MyWorkSummaryItem> MyWorkSummaryItems => Set<MyWorkSummaryItem>();
+        public DbSet<MyWorkActivity> MyWorkActivities=> Set<MyWorkActivity>();
+        public DbSet<MyWorkDetailItem> MyWorkDetailItems => Set<MyWorkDetailItem>();
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

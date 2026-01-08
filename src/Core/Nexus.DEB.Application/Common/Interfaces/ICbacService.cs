@@ -6,5 +6,6 @@ namespace Nexus.DEB.Application.Common.Interfaces
     {
         Task<List<CbacCapability>> GetCapabilitiesAsync(Guid moduleId);
         Task<ICollection<Guid>?> GetRolePostIdsAsync(ICollection<Guid> roleIds);
+        Task<ICollection<CbacRole>?> GetRolesForPostAsync(Guid postId);
     }
 }

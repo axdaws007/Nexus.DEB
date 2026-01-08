@@ -4,10 +4,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Infrastructure.Authentication;
+using Nexus.DEB.Infrastructure.Events;
 using Nexus.DEB.Infrastructure.Persistence;
 using Nexus.DEB.Infrastructure.Services;
 using Nexus.DEB.Infrastructure.Validators;
+using System.Reflection;
 
 namespace Nexus.DEB.Infrastructure
 {
@@ -153,6 +156,103 @@ namespace Nexus.DEB.Infrastructure
             services.AddScoped<ITransitionValidator, ValidateReviewDateTransitionValidator>();
 
             return services;
+        }
+
+        /// <summary>
+        /// Adds domain event publishing infrastructure and auto-discovers all subscribers.
+        /// </summary>
+        /// <param name="services">The service collection</param>
+        /// <param name="configure">Optional configuration action</param>
+        /// <returns>The service collection for chaining</returns>
+        public static IServiceCollection AddDomainEvents(
+            this IServiceCollection services,
+            Action<DomainEventOptions>? configure = null)
+        {
+            var options = new DomainEventOptions();
+            configure?.Invoke(options);
+
+            // Register the publisher
+            services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
+
+            // Auto-discover and register subscribers
+            RegisterSubscribers(services, options);
+
+            return services;
+        }
+
+        private static void RegisterSubscribers(IServiceCollection services, DomainEventOptions options)
+        {
+            var logger = options.Logger;
+            var subscriberInterfaceType = typeof(IDomainEventSubscriber<>);
+
+            // Get assemblies to scan
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic &&
+                            options.AssemblyPrefixes.Any(p =>
+                                a.GetName().Name?.StartsWith(p, StringComparison.OrdinalIgnoreCase) == true))
+                .ToList();
+
+            logger?.LogDebug(
+                "Scanning {Count} assemblies for IDomainEventSubscriber implementations",
+                assemblies.Count);
+
+            var registeredCount = 0;
+            var eventTypes = new HashSet<Type>();
+
+            foreach (var assembly in assemblies)
+            {
+                try
+                {
+                    var types = assembly.GetTypes()
+                        .Where(t => t is { IsClass: true, IsAbstract: false })
+                        .Where(t => t.GetInterfaces().Any(i =>
+                            i.IsGenericType &&
+                            i.GetGenericTypeDefinition() == subscriberInterfaceType))
+                        .ToList();
+
+                    if (types.Count > 0)
+                    {
+                        logger?.LogDebug(
+                            "Found {Count} subscriber(s) in {Assembly}",
+                            types.Count,
+                            assembly.GetName().Name);
+                    }
+
+                    foreach (var type in types)
+                    {
+                        var interfaces = type.GetInterfaces()
+                            .Where(i => i.IsGenericType &&
+                                        i.GetGenericTypeDefinition() == subscriberInterfaceType);
+
+                        foreach (var @interface in interfaces)
+                        {
+                            // Register the subscriber as the interface type
+                            services.AddScoped(@interface, type);
+
+                            var eventType = @interface.GetGenericArguments()[0];
+                            eventTypes.Add(eventType);
+                            registeredCount++;
+
+                            logger?.LogDebug(
+                                "Registered subscriber: {Type} for event {EventType}",
+                                type.Name,
+                                eventType.Name);
+                        }
+                    }
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    logger?.LogWarning(
+                        ex,
+                        "Could not load types from assembly {Assembly}",
+                        assembly.GetName().Name);
+                }
+            }
+
+            logger?.LogInformation(
+                "Domain events configured: {Count} subscriber(s) for {EventCount} event type(s)",
+                registeredCount,
+                eventTypes.Count);
         }
     }
 }

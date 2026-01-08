@@ -32,6 +32,11 @@ namespace Nexus.DEB.Infrastructure.Services
             return await _innerCisService.GetAllPosts();
         }
 
+        public async Task<ICollection<CisGroup>?> GetAllGroups()
+        {
+            return await _innerCisService.GetAllGroups();
+        }
+
         public async Task<IReadOnlyDictionary<Guid, string?>> GetNamesByIdsAsync(List<Guid> ids, CancellationToken cancellationToken = default)
         {
             return await _innerCisService.GetNamesByIdsAsync(ids, cancellationToken);

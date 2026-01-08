@@ -1,6 +1,9 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Domain.Models.Other;
+using System.Data;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -181,8 +184,156 @@ namespace Nexus.DEB.Infrastructure.Services
 		}
 		#endregion SavedSearch
 
+        #region Dashboard
+
+        public async Task<DashboardInfo> CreateDashBoardInfoAsync(DashboardInfo dashboardInfo, CancellationToken cancellationToken)
+        {
+            await _dbContext.DashboardInfos.AddAsync(dashboardInfo, cancellationToken);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return dashboardInfo;
+        }
+
+        public async Task<DashboardInfo> UpdateDashBoardInfoAsync(DashboardInfo dashboardInfo, CancellationToken cancellationToken)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return dashboardInfo;
+        }
+
+        public async Task<DashboardInfo?> GetDashboardInfoAsync(Guid id, CancellationToken cancellationToken)
+            => await _dbContext.DashboardInfos.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
+
+        public async Task<ICollection<MyWorkSummaryItem>> GetMyWorkSummaryItemsAsync(
+            Guid myPostID,
+            IEnumerable<Guid> teamPostIDs,
+            IEnumerable<Guid> groupIDs,
+            string createdByOption,
+            string ownedByOption,
+            string progressedByOption,
+            IEnumerable<Guid> roles,
+            CancellationToken cancellationToken)
+        {
+            var teamPostIdsCsv = string.Join(",", teamPostIDs ?? Enumerable.Empty<Guid>());
+            var groupIdsCsv = string.Join(",", groupIDs ?? Enumerable.Empty<Guid>());
+            var rolesCsv = string.Join(",", roles ?? Enumerable.Empty<Guid>());
+
+            var parameters = new[]
+            {
+                new SqlParameter("@myPostID", myPostID),
+                new SqlParameter("@csvTeamPostIDs", string.IsNullOrEmpty(teamPostIdsCsv) ? DBNull.Value : teamPostIdsCsv),
+                new SqlParameter("@createdByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[createdByOption]),
+                new SqlParameter("@ownedByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[ownedByOption]),
+                new SqlParameter("@progressedByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[progressedByOption]),
+                new SqlParameter("@myRoles", string.IsNullOrEmpty(rolesCsv) ? DBNull.Value : rolesCsv),
+                new SqlParameter("@csvGroupIDs", string.IsNullOrEmpty(groupIdsCsv) ? DBNull.Value : groupIdsCsv)
+            };
+
+            return await _dbContext.MyWorkSummaryItems
+                .FromSqlRaw(
+                    "EXEC [common].[GetMyWorkSummaryDataForPosts] @myPostID, @csvTeamPostIDs, " +
+                    "@createdByOption, @ownedByOption, @progressedByOption, @myRoles, @csvGroupIDs",
+                    parameters) 
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<ICollection<MyWorkActivity>> GetMyWorkActivitiesAsync(
+            Guid myPostID,
+            Guid? selectedPostID,
+            string entityTypeTitle,
+            IEnumerable<Guid> teamPostIDs,
+            IEnumerable<Guid> groupIDs,
+            string createdByOption,
+            string ownedByOption,
+            string progressedByOption,
+            IEnumerable<Guid> roles,
+            CancellationToken cancellationToken)
+        {
+            var teamPostIdsCsv = string.Join(",", teamPostIDs ?? Enumerable.Empty<Guid>());
+            var groupIdsCsv = string.Join(",", groupIDs ?? Enumerable.Empty<Guid>());
+            var rolesCsv = string.Join(",", roles ?? Enumerable.Empty<Guid>());
+
+            var parameters = new[]
+            {
+                new SqlParameter("@myPostID", myPostID),
+                new SqlParameter("@selectedPostID", selectedPostID.HasValue ? selectedPostID.Value : DBNull.Value),
+                new SqlParameter("@entityTypeTitle", entityTypeTitle),
+                new SqlParameter("@createdByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[createdByOption]),
+                new SqlParameter("@ownedByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[ownedByOption]),
+                new SqlParameter("@progressedByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[progressedByOption]),
+                new SqlParameter("@myRoles", string.IsNullOrEmpty(rolesCsv) ? DBNull.Value : rolesCsv),
+                new SqlParameter("@csvTeamPostIDs", string.IsNullOrEmpty(teamPostIdsCsv) ? DBNull.Value : teamPostIdsCsv),
+                new SqlParameter("@csvGroupIDs", string.IsNullOrEmpty(groupIdsCsv) ? DBNull.Value : groupIdsCsv)
+            };
+
+            return await _dbContext.MyWorkActivities
+                .FromSqlRaw(
+                    "EXEC [common].[GetMyWorkActivities] @myPostID, @selectedPostID, @entityTypeTitle, " +
+                    "@createdByOption, @ownedByOption, @progressedByOption, @myRoles, @csvTeamPostIDs, @csvGroupIDs",
+                    parameters)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<ICollection<MyWorkDetailItem>> GetMyWorkDetailItemsAsync(
+            Guid myPostID,
+            Guid? selectedPostID,
+            string entityTypeTitle,
+            IEnumerable<Guid> teamPostIDs,
+            IEnumerable<Guid> groupIDs,
+            string createdByOption,
+            string ownedByOption,
+            string progressedByOption,
+            IEnumerable<Guid> roles,
+            IEnumerable<int> activityIds,
+            DateTime? createdDateFrom,
+            DateTime? createdDateTo,
+            DateTime? assignedDateFrom,
+            DateTime? assignedDateTo,
+            Guid workflowId,
+            CancellationToken cancellationToken)
+        {
+            var teamPostIdsCsv = string.Join(",", teamPostIDs ?? Enumerable.Empty<Guid>());
+            var groupIdsCsv = string.Join(",", groupIDs ?? Enumerable.Empty<Guid>());
+            var rolesCsv = string.Join(",", roles ?? Enumerable.Empty<Guid>());
+            var activitiesCsv = string.Join(",", activityIds ?? Enumerable.Empty<int>());
+
+            var parameters = new[]
+            {
+                new SqlParameter("@myPostID", myPostID),
+                new SqlParameter("@selectedPostID", selectedPostID.HasValue ? selectedPostID.Value : DBNull.Value),
+                new SqlParameter("@entityTypeTitle", entityTypeTitle),
+                new SqlParameter("@createdByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[createdByOption]),
+                new SqlParameter("@ownedByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[ownedByOption]),
+                new SqlParameter("@progressedByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[progressedByOption]),
+                new SqlParameter("@myRoles", string.IsNullOrEmpty(rolesCsv) ? DBNull.Value : rolesCsv),
+                new SqlParameter("@activityIDs", string.IsNullOrEmpty(activitiesCsv) ? DBNull.Value : activitiesCsv),
+                new SqlParameter("@csvTeamPostIDs", string.IsNullOrEmpty(teamPostIdsCsv) ? DBNull.Value : teamPostIdsCsv),
+                new SqlParameter("@csvGroupIDs", string.IsNullOrEmpty(groupIdsCsv) ? DBNull.Value : groupIdsCsv),
+                new SqlParameter("@CreatedStart", createdDateFrom.HasValue ? createdDateFrom.Value : DBNull.Value),
+                new SqlParameter("@CreatedEnd", createdDateTo.HasValue ? createdDateTo.Value : DBNull.Value),
+                new SqlParameter("@TransferStart", assignedDateFrom.HasValue ? assignedDateFrom.Value : DBNull.Value),
+                new SqlParameter("@TransferEnd", assignedDateTo.HasValue ? assignedDateTo.Value : DBNull.Value),
+                new SqlParameter("@workflowID", workflowId)
+            };
+
+            return await _dbContext.MyWorkDetailItems
+                .FromSqlRaw(
+                    "EXEC [common].[GetMyWorkDetailDataForPost] @myPostID, @selectedPostID, @entityTypeTitle, " +
+                    "@createdByOption, @ownedByOption, @progressedByOption, @myRoles, @activityIDs, @csvTeamPostIDs, @csvGroupIDs, " +
+                    "@CreatedStart, @CreatedEnd, @TransferStart, @TransferEnd, @workflowID",
+                    parameters)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+        }
+
+        #endregion Dashboard
+
 		#region SerialNumber
-		public async Task<string> GenerateSerialNumberAsync(
+
+        public async Task<string> GenerateSerialNumberAsync(
             Guid moduleId,
             Guid instanceId,
             string entityType,
@@ -304,6 +455,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             return current;
         }
+
 		#endregion SerialNumber
 	}
 }

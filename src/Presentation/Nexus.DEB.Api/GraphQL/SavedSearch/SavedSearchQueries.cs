@@ -14,6 +14,11 @@ namespace Nexus.DEB.Api.GraphQL
 			CancellationToken cancellationToken)
 			=> await debService.GetSavedSearchesByContextAsync(context, cancellationToken);
 
+		public static async Task<ICollection<SavedSearch>> GetSavedSearchesForCurrentPostAsync(
+			IDebService debService,
+			CancellationToken cancellationToken)
+			=> await debService.GetSavedSearchesForCurrentPostAsync(cancellationToken);
+
 		[Authorize]
 		public static async Task<SavedSearch> GetSavedSearchAsync(
 			string context,

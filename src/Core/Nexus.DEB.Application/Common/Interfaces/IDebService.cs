@@ -88,6 +88,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<IReadOnlyDictionary<Guid, string?>> GetWorkflowPseudoStateTitleForEntitiesAsync(List<Guid> entityIds, CancellationToken cancellationToken = default);
 
         Task<ICollection<SavedSearch>> GetSavedSearchesByContextAsync(string context, CancellationToken cancellationToken);
+        Task<ICollection<SavedSearch>> GetSavedSearchesForCurrentPostAsync(CancellationToken cancellationToken);
 		Task<SavedSearch?> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken);
 		Task<SavedSearch> SaveSavedSearchAsync(SavedSearch savedSearch, bool isNew, CancellationToken cancellationToken);
 

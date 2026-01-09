@@ -1,6 +1,8 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -157,13 +159,27 @@ namespace Nexus.DEB.Infrastructure.Services
 				.ToListAsync(cancellationToken);
 		}
 
-		public async Task<ICollection<SavedSearch>> GetSavedSearchesForCurrentPostAsync(CancellationToken cancellationToken)
+		public IQueryable<SavedSearch> GetSavedSearchesForGridAsync(SavedSearchesGridFilters filters, CancellationToken cancellationToken)
 		{
 			var currentPostId = _currentUserService.PostId;
-			return await _dbContext.SavedSearches.AsNoTracking()
-				.Where(x => x.PostId == currentPostId)
-				.OrderBy(x => x.Name)
-				.ToListAsync(cancellationToken);
+            var savedSearches = _dbContext.SavedSearches
+                .Where(x => x.PostId == currentPostId)
+				.AsNoTracking();
+
+            if(filters != null)
+            {
+				if (!string.IsNullOrWhiteSpace(filters.SearchText))
+				{
+					savedSearches = savedSearches.Where(s => s.Name.Contains(filters.SearchText));
+				}
+
+				if (filters.Contexts != null && filters.Contexts.Count > 0)
+				{
+					savedSearches = savedSearches.Where(s => filters.Contexts.Contains(s.Context));
+				}
+			}
+
+            return savedSearches;
 		}
 
 		public async Task<SavedSearch?> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken)

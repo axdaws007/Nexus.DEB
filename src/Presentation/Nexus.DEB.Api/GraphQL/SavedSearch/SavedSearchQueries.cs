@@ -14,10 +14,24 @@ namespace Nexus.DEB.Api.GraphQL
 			CancellationToken cancellationToken)
 			=> await debService.GetSavedSearchesByContextAsync(context, cancellationToken);
 
-		public static async Task<ICollection<SavedSearch>> GetSavedSearchesForCurrentPostAsync(
+		[Authorize]
+		[UseOffsetPaging]
+		[UseSorting]
+		public static IQueryable<SavedSearch> GetSavedSearchesForGrid(
+			SavedSearchesGridFilters? filters,
 			IDebService debService,
 			CancellationToken cancellationToken)
-			=> await debService.GetSavedSearchesForCurrentPostAsync(cancellationToken);
+		{
+            var f = filters is null
+			? new Application.Common.Models.SavedSearchesGridFilters()
+			: new Application.Common.Models.SavedSearchesGridFilters
+			{
+				SearchText = filters.SearchText?.Trim(),
+				Contexts = filters.Contexts,
+			};
+
+			return debService.GetSavedSearchesForGridAsync(f, cancellationToken);
+        }
 
 		[Authorize]
 		public static async Task<SavedSearch> GetSavedSearchAsync(

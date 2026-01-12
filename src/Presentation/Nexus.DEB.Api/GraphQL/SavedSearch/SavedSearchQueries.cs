@@ -34,6 +34,22 @@ namespace Nexus.DEB.Api.GraphQL
         }
 
 		[Authorize]
+		public static async Task<ICollection<ContextFilterItem>> GetSavedSearchContextsLookupAsync(
+			IDebService debService,
+			CancellationToken cancellationToken)
+		{
+			var contexts = await debService.GetSavedSearchContextsAsync(cancellationToken);
+
+			return contexts
+				.Select(s => new ContextFilterItem
+				{
+					Id = s,
+					Value = s,
+					IsEnabled = true
+				}).ToList();
+		}
+
+		[Authorize]
 		public static async Task<SavedSearch> GetSavedSearchAsync(
 			string context,
 			string name,

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using Task = System.Threading.Tasks.Task;
@@ -180,6 +181,16 @@ namespace Nexus.DEB.Infrastructure.Services
 			}
 
             return savedSearches;
+		}
+
+		public async Task<ICollection<string>> GetSavedSearchContextsAsync(CancellationToken cancellationToken)
+		{
+			var currentPostId = _currentUserService.PostId;
+			return await _dbContext.SavedSearches
+				          .Where(x => x.PostId == currentPostId)
+                          .Select(s => s.Context)
+                          .Distinct()
+						  .Order().ToListAsync(cancellationToken);
 		}
 
 		public async Task<SavedSearch?> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken)

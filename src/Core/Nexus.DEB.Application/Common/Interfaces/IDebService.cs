@@ -89,6 +89,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task<ICollection<SavedSearch>> GetSavedSearchesByContextAsync(string context, CancellationToken cancellationToken);
 		IQueryable<SavedSearch> GetSavedSearchesForGridAsync(SavedSearchesGridFilters filters, CancellationToken cancellationToken);
+        Task<ICollection<string>> GetSavedSearchContextsAsync(CancellationToken cancellationToken);
 		Task<SavedSearch?> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken);
 		Task<SavedSearch> SaveSavedSearchAsync(SavedSearch savedSearch, bool isNew, CancellationToken cancellationToken);
 

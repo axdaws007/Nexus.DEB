@@ -28,8 +28,8 @@ namespace Nexus.DEB.Api.GraphQL
 		[Authorize]
 		[UseMutationConvention(Disable = true)]
 		public static async Task<bool> DeleteSavedSearchAsync(
-			string context,
 			string name,
+			string context,
 			IDebService debService,
 			CancellationToken cancellationToken = default)
 		{

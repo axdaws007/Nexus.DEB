@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Extensions;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models.Events;
 using Nexus.DEB.Domain.Interfaces;
-using Nexus.DEB.Domain.Models.Events;
 
 namespace Nexus.DEB.Infrastructure.Events.Subscribers
 {

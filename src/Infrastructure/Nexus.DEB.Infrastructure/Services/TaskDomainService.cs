@@ -1,11 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Nexus.DEB.Application.Common.Extensions;
-using Nexus.DEB.Application.Common.Interfaces;
+﻿using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
-using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
-using System.Reflection;
-using System.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -52,13 +47,6 @@ namespace Nexus.DEB.Infrastructure.Services
                 await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, task.EntityId, activityId, taskOwnerId, cancellationToken);
 
                 var taskDetail = await this.DebService.GetTaskDetailByIdAsync(task.EntityId, cancellationToken);
-
-                //await this.AuditService.EntitySaved(
-                //    taskDetail.EntityId,
-                //    EntityTypes.Task,
-                //    $"Task {taskDetail.SerialNumber} created.",
-                //    await this.CurrentUserService.GetUserDetailsAsync(),
-                //    taskDetail.ToAuditData());
 
                 return Result<TaskDetail>.Success(taskDetail);
             }
@@ -118,13 +106,6 @@ namespace Nexus.DEB.Infrastructure.Services
 				}
 
                 var taskDetail = await this.DebService.GetTaskDetailByIdAsync(task.EntityId, cancellationToken);
-
-                //await this.AuditService.EntitySaved(
-                //    taskDetail.EntityId,
-                //    EntityTypes.Task,
-                //    $"Task {taskDetail.SerialNumber} updated.",
-                //    await this.CurrentUserService.GetUserDetailsAsync(),
-                //    taskDetail.ToAuditData());
 
                 return Result<TaskDetail>.Success(taskDetail);
             }

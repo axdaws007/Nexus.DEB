@@ -1,4 +1,4 @@
-﻿namespace Nexus.DEB.Domain.Models.Events
+﻿namespace Nexus.DEB.Application.Common.Models.Events
 {
     public record EntityDeletedEvent : DomainEventBase
     {

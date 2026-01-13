@@ -4,6 +4,22 @@ namespace Nexus.DEB.Application.Common.Interfaces
 {
     public interface IPawsService
     {
+        Task<ICollection<EntityActivityStep>?> GetEntityActivityStepsAsync(
+            Guid entityId, 
+            Guid workflowId, 
+            CancellationToken cancellationToken = default);
+
+        Task<ICollection<EntityActivityStep>?> GetCompletedStepsAsync(
+            Guid entityId,
+            Guid workflowId,
+            string mutTag,
+            CancellationToken cancellationToken = default);
+
+        Task<EntityActivityOwner?> GetEntityActivityOwnerAsync(
+            Guid entityId, 
+            int activityId, 
+            CancellationToken cancellationToken = default);
+
         Task<ICollection<PendingActivity>?> GetPendingActivitiesAsync(
             Guid entityId,
             Guid workflowId,

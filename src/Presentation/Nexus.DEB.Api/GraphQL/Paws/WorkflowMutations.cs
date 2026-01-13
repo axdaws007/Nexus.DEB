@@ -1,6 +1,8 @@
 ﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Application.Common.Models.Events;
+using Nexus.DEB.Domain.Interfaces;
 
 namespace Nexus.DEB.Api.GraphQL.Paws
 {
@@ -20,6 +22,7 @@ namespace Nexus.DEB.Api.GraphQL.Paws
             IPawsService pawsService,
             IWorkflowSideEffectService workflowSideEffectService,
             IApplicationSettingsService applicationSettingsService,
+            IDomainEventPublisher eventPublisher,
             CancellationToken cancellationToken)
         {
             Result result;
@@ -108,6 +111,17 @@ namespace Nexus.DEB.Api.GraphQL.Paws
 
                 currentWorkflowStatus.AvailableTriggerStates = selectedPendingActivity.AvailableTriggerStates;
             }
+
+            await eventPublisher.PublishAsync(new WorkflowTransitionCompletedEvent
+            {
+                Entity = entity,
+                EntityType = entity.EntityTypeTitle,
+                EntityId = entity.EntityId,
+                SerialNumber = entity.SerialNumber ?? string.Empty,
+                OccurredAt = DateTime.UtcNow,
+                CurrentWorkflowStatus = currentWorkflowStatus,
+                WorkflowId = workflowId.Value
+            }, cancellationToken);
 
             return currentWorkflowStatus;
         }

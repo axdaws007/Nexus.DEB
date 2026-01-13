@@ -9,6 +9,7 @@ using Nexus.DEB.Infrastructure.Authentication;
 using Nexus.DEB.Infrastructure.Events;
 using Nexus.DEB.Infrastructure.Persistence;
 using Nexus.DEB.Infrastructure.Services;
+using Nexus.DEB.Infrastructure.Services.Registries;
 using Nexus.DEB.Infrastructure.Validators;
 using System.Reflection;
 
@@ -101,11 +102,11 @@ namespace Nexus.DEB.Infrastructure
                 return factory.CreateDbContext();
             });
 
-			services.AddSingleton<ChangeEventInterceptor>();
+            services.AddSingleton<ChangeEventInterceptor>();
 
-			// Other infrastructure services will be registered here
-			services.AddScoped<ILoginService, LoginService>();
-            services.AddScoped<IDebService, DebService>(); 
+            // Other infrastructure services will be registered here
+            services.AddScoped<ILoginService, LoginService>();
+            services.AddScoped<IDebService, DebService>();
 
             services.AddScoped<CbacService>();
             services.AddScoped<ICbacService>(provider =>
@@ -145,7 +146,7 @@ namespace Nexus.DEB.Infrastructure
             // Register domain services
             services.AddScoped<IStatementDomainService, StatementDomainService>();
             services.AddScoped<ICommentDomainService, CommentDomainService>();
-			services.AddScoped<ISavedSearchDomainService, SavedSearchDomainService>();
+            services.AddScoped<ISavedSearchDomainService, SavedSearchDomainService>();
             services.AddScoped<ITaskDomainService, TaskDomainService>();
 
             // Register validator registry
@@ -174,8 +175,14 @@ namespace Nexus.DEB.Infrastructure
             // Register the publisher
             services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
 
+            // Register the dashboard provider registry
+            services.AddScoped<IDashboardInfoProviderRegistry, DashboardInfoProviderRegistry>();
+
             // Auto-discover and register subscribers
             RegisterSubscribers(services, options);
+
+            // Auto-discover and register dashboard info providers
+            RegisterDashboardInfoProviders(services, options);
 
             return services;
         }
@@ -186,11 +193,7 @@ namespace Nexus.DEB.Infrastructure
             var subscriberInterfaceType = typeof(IDomainEventSubscriber<>);
 
             // Get assemblies to scan
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => !a.IsDynamic &&
-                            options.AssemblyPrefixes.Any(p =>
-                                a.GetName().Name?.StartsWith(p, StringComparison.OrdinalIgnoreCase) == true))
-                .ToList();
+            var assemblies = GetAssembliesToScan(options);
 
             logger?.LogDebug(
                 "Scanning {Count} assemblies for IDomainEventSubscriber implementations",
@@ -253,6 +256,70 @@ namespace Nexus.DEB.Infrastructure
                 "Domain events configured: {Count} subscriber(s) for {EventCount} event type(s)",
                 registeredCount,
                 eventTypes.Count);
+        }
+
+        private static void RegisterDashboardInfoProviders(IServiceCollection services, DomainEventOptions options)
+        {
+            var logger = options.Logger;
+            var providerInterfaceType = typeof(IDashboardInfoProvider);
+
+            var assemblies = GetAssembliesToScan(options);
+
+            logger?.LogDebug(
+                "Scanning {Count} assemblies for IDashboardInfoProvider implementations",
+                assemblies.Count);
+
+            var registeredCount = 0;
+
+            foreach (var assembly in assemblies)
+            {
+                try
+                {
+                    var types = assembly.GetTypes()
+                        .Where(t => t is { IsClass: true, IsAbstract: false })
+                        .Where(t => providerInterfaceType.IsAssignableFrom(t))
+                        .ToList();
+
+                    if (types.Count > 0)
+                    {
+                        logger?.LogDebug(
+                            "Found {Count} dashboard provider(s) in {Assembly}",
+                            types.Count,
+                            assembly.GetName().Name);
+                    }
+
+                    foreach (var type in types)
+                    {
+                        // Register as both the interface and concrete type
+                        services.AddScoped(providerInterfaceType, type);
+                        registeredCount++;
+
+                        logger?.LogDebug(
+                            "Registered dashboard provider: {Type}",
+                            type.Name);
+                    }
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    logger?.LogWarning(
+                        ex,
+                        "Could not load types from assembly {Assembly}",
+                        assembly.GetName().Name);
+                }
+            }
+
+            logger?.LogInformation(
+                "Dashboard providers configured: {Count} provider(s)",
+                registeredCount);
+        }
+
+        private static List<Assembly> GetAssembliesToScan(DomainEventOptions options)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic &&
+                            options.AssemblyPrefixes.Any(p =>
+                                a.GetName().Name?.StartsWith(p, StringComparison.OrdinalIgnoreCase) == true))
+                .ToList();
         }
     }
 }

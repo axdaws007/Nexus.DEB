@@ -1,7 +1,9 @@
 ﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Application.Common.Models.Events;
 using Nexus.DEB.Domain;
+using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL
@@ -17,6 +19,7 @@ namespace Nexus.DEB.Api.GraphQL
             DateTime? reviewDate,
             ICollection<RequirementScopes> requirementScopeCombinations,
             IStatementDomainService statementService,
+            IDomainEventPublisher eventPublisher,
             CancellationToken cancellationToken = default)
         {
             var result = await statementService.CreateStatementAsync(
@@ -32,6 +35,17 @@ namespace Nexus.DEB.Api.GraphQL
                 throw ExceptionHelper.BuildException(result);
             }
 
+            var statementDetail = result.Data!;
+
+            await eventPublisher.PublishAsync(new EntitySavedEvent
+            {
+                Entity = statementDetail,
+                EntityType = statementDetail.EntityTypeTitle,
+                EntityId = statementDetail.EntityId,
+                SerialNumber = statementDetail.SerialNumber ?? string.Empty,
+                IsNew = true,
+            }, cancellationToken);
+
             return result.Data;
         }
 
@@ -44,6 +58,7 @@ namespace Nexus.DEB.Api.GraphQL
             DateTime? reviewDate,
             ICollection<RequirementScopes> requirementScopeCombinations,
             IStatementDomainService statementService,
+            IDomainEventPublisher eventPublisher,
             CancellationToken cancellationToken = default)
         {
             var result = await statementService.UpdateStatementAsync(
@@ -59,6 +74,17 @@ namespace Nexus.DEB.Api.GraphQL
             {
                 throw ExceptionHelper.BuildException(result);
             }
+
+            var statementDetail = result.Data!;
+
+            await eventPublisher.PublishAsync(new EntitySavedEvent
+            {
+                Entity = statementDetail,
+                EntityType = statementDetail.EntityTypeTitle,
+                EntityId = statementDetail.EntityId,
+                SerialNumber = statementDetail.SerialNumber ?? string.Empty,
+                IsNew = true,
+            }, cancellationToken);
 
             return result.Data;
         }

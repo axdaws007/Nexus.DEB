@@ -49,6 +49,10 @@ namespace Nexus.DEB.Domain
                 public const int Pending = 1;
             }
 
+            public static class MutTags
+            {
+                public const string DashboardOpened = "DashboardOpened";
+            }
         }
 
         public static class Policies

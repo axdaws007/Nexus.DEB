@@ -1,10 +1,9 @@
 ﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Application.Common.Models.Events;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Interfaces;
-using Nexus.DEB.Domain.Models.Common;
-using Nexus.DEB.Domain.Models.Events;
 
 namespace Nexus.DEB.Api.GraphQL.Task
 {
@@ -22,7 +21,6 @@ namespace Nexus.DEB.Api.GraphQL.Task
             string? description,
             ITaskDomainService taskDomainService,
             IDomainEventPublisher eventPublisher,
-            ICurrentUserService currentUserService,
             CancellationToken cancellationToken = default)
         {
             var result = await taskDomainService.CreateTaskAsync(
@@ -45,11 +43,10 @@ namespace Nexus.DEB.Api.GraphQL.Task
             await eventPublisher.PublishAsync(new EntitySavedEvent
             {
                 Entity = taskDetail,
-                EntityType = EntityTypes.Task,
+                EntityType = taskDetail.EntityTypeTitle,
                 EntityId = taskDetail.EntityId,
                 SerialNumber = taskDetail.SerialNumber ?? string.Empty,
-                IsNew = true,
-                UserId = currentUserService.UserId
+                IsNew = true
             }, cancellationToken);
 
             return taskDetail;
@@ -67,7 +64,6 @@ namespace Nexus.DEB.Api.GraphQL.Task
             string? description,
             ITaskDomainService taskDomainService,
             IDomainEventPublisher eventPublisher,
-            ICurrentUserService currentUserService,
             CancellationToken cancellationToken = default)
         {
             var result = await taskDomainService.UpdateTaskAsync(
@@ -91,11 +87,10 @@ namespace Nexus.DEB.Api.GraphQL.Task
             await eventPublisher.PublishAsync(new EntitySavedEvent
             {
                 Entity = taskDetail,
-                EntityType = EntityTypes.Task,
+                EntityType = taskDetail.EntityTypeTitle,
                 EntityId = taskDetail.EntityId,
                 SerialNumber = taskDetail.SerialNumber ?? string.Empty,
-                IsNew = false,
-                UserId = currentUserService.UserId
+                IsNew = false
             }, cancellationToken);
 
             return taskDetail;

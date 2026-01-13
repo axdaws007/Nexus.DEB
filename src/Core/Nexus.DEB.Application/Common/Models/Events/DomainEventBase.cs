@@ -1,6 +1,6 @@
 ﻿using Nexus.DEB.Domain.Interfaces;
 
-namespace Nexus.DEB.Domain.Models.Events
+namespace Nexus.DEB.Application.Common.Models.Events
 {
     public abstract record DomainEventBase : IDomainEvent
     {

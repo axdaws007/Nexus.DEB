@@ -1,4 +1,5 @@
 ﻿using HotChocolate.Authorization;
+using Mapster;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain;
@@ -84,7 +85,7 @@ namespace Nexus.DEB.Api.GraphQL
         [Authorize]
         [UseOffsetPaging]
         [UseSorting]
-        public static async Task<ICollection<MyWorkDetailItem>> GetMyWorkDetailItems(
+        public static async Task<IQueryable<MyWorkDetailItem>> GetMyWorkDetailItems(
             MyWorkDetailFilters filters,
             IDebService debService,
             ICurrentUserService currentUserService,
@@ -93,13 +94,14 @@ namespace Nexus.DEB.Api.GraphQL
             IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
         {
-            var moduleId = applicationSettingsService.GetModuleId("DEB");
-            var workflowId = await debService.GetWorkflowIdAsync(moduleId, filters.EntityTypeTitle, cancellationToken);
-
-            List <Guid> roleIds;
             DebHelper.MyWork.FilterTypes.RequiringProgression.Validator.ValidateOrThrow(filters.RequiringProgressionBy);
             DebHelper.MyWork.FilterTypes.CreatedBy.Validator.ValidateOrThrow(filters.CreatedBy);
             DebHelper.MyWork.FilterTypes.OwnedBy.Validator.ValidateOrThrow(filters.OwnedBy);
+
+            var moduleId = applicationSettingsService.GetModuleId("DEB");
+            var workflowId = await debService.GetWorkflowIdAsync(moduleId, filters.EntityTypeTitle, cancellationToken);
+
+            List<Guid> roleIds;
 
             var postId = currentUserService.PostId;
             var roles = await cbacService.GetRolesForPostAsync(postId);
@@ -109,25 +111,15 @@ namespace Nexus.DEB.Api.GraphQL
             else
                 roleIds = [.. roles.Select(x => x.RoleID)];
 
-            var details = await debService.GetMyWorkDetailItemsAsync(
-                    postId,
-                    filters.SelectedPostId,
-                    filters.EntityTypeTitle,
-                    filters.MyTeamPostIds,
-                    filters.ResponsibleGroupIds,
-                    filters.CreatedBy,
-                    filters.OwnedBy,
-                    filters.RequiringProgressionBy,
-                    roleIds,
-                    filters.ActivityIds,
-                    filters.CreatedDateFrom,
-                    filters.CreatedDateTo,
-                    filters.AssignedDateFrom,
-                    filters.AssignedDateTo,
-                    workflowId.Value,
-                    cancellationToken);
+            var supplementedFilters = filters.Adapt<MyWorkDetailSupplementedFilters>();
 
-            return details ?? [];
+            supplementedFilters.WorkflowId = workflowId.Value;
+            supplementedFilters.PostId = currentUserService.PostId;
+            supplementedFilters.RoleIds = roleIds;
+
+            var details = debService.GetMyWorkDetailItems(supplementedFilters);
+
+            return details;
         }
     }
 }

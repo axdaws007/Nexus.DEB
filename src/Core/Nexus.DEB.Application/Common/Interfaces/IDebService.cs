@@ -131,6 +131,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task<DashboardInfo> UpdateDashBoardInfoAsync(DashboardInfo dashboardInfo, CancellationToken cancellationToken);
 
+        Task<DashboardInfo> UpsertDashboardInfoAsync(DashboardInfo dashboardInfo, CancellationToken cancellationToken = default);
+
         Task<DashboardInfo?> GetDashboardInfoAsync(Guid id, CancellationToken cancellationToken);
 
         Task<ICollection<MyWorkSummaryItem>> GetMyWorkSummaryItemsAsync(
@@ -155,23 +157,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
             IEnumerable<Guid> roles,
             CancellationToken cancellationToken);
 
-        Task<ICollection<MyWorkDetailItem>> GetMyWorkDetailItemsAsync(
-            Guid myPostID,
-            Guid? selectedPostID,
-            string entityTypeTitle,
-            IEnumerable<Guid> teamPostIDs,
-            IEnumerable<Guid> groupIDs,
-            string createdByOption,
-            string ownedByOption,
-            string progressedByOption,
-            IEnumerable<Guid> roles,
-            IEnumerable<int> activityIds,
-            DateTime? createdDateFrom,
-            DateTime? createdDateTo,
-            DateTime? assignedDateFrom,
-            DateTime? assignedDateTo,
-            Guid workflowId,
-            CancellationToken cancellationToken);
+        IQueryable<MyWorkDetailItem> GetMyWorkDetailItems(MyWorkDetailSupplementedFilters filters);
 
         #endregion Dashboard
     }

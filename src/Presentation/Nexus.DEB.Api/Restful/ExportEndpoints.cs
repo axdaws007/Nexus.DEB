@@ -1,5 +1,6 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Api.Restful.Maps;
@@ -7,7 +8,9 @@ using Nexus.DEB.Application.Common.Extensions;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models.Common;
+using Nexus.DEB.Infrastructure.Services;
 using System.Globalization;
 using System.Text;
 
@@ -53,6 +56,13 @@ namespace Nexus.DEB.Api.Restful
                 .RequireAuthorization()
                 .WithName("ExportStatementsAsCsv")
                 .WithSummary("Export statements as CSV file")
+                .Produces<FileResult>(StatusCodes.Status200OK, contentType: "text/csv")
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            exportGroup.MapPost("/mywork-csv", ExportMyWorkAsCsv)
+                .RequireAuthorization()
+                .WithName("ExportMyWorkAsCsv")
+                .WithSummary("Export my work as CSV file")
                 .Produces<FileResult>(StatusCodes.Status200OK, contentType: "text/csv")
                 .Produces(StatusCodes.Status401Unauthorized);
         }
@@ -156,6 +166,52 @@ namespace Nexus.DEB.Api.Restful
                 cancellationToken: cancellationToken);
         }
 
+        private static async Task<IResult> ExportMyWorkAsCsv(
+            [FromBody] MyWorkDetailFilters? providedFilters,
+            [FromServices] IDebService debService,
+            [FromServices] ILogger<Program> logger,
+            [FromServices] IAuditService auditService,
+            [FromServices] ICbacService cbacService,
+            [FromServices] ICurrentUserService currentUserService,
+            [FromServices] IApplicationSettingsService applicationSettingsService,
+            CancellationToken cancellationToken)
+        {
+            DebHelper.MyWork.FilterTypes.RequiringProgression.Validator.ValidateOrThrow(providedFilters.RequiringProgressionBy);
+            DebHelper.MyWork.FilterTypes.CreatedBy.Validator.ValidateOrThrow(providedFilters.CreatedBy);
+            DebHelper.MyWork.FilterTypes.OwnedBy.Validator.ValidateOrThrow(providedFilters.OwnedBy);
+
+            var moduleId = applicationSettingsService.GetModuleId("DEB");
+            var workflowId = await debService.GetWorkflowIdAsync(moduleId, providedFilters.EntityTypeTitle, cancellationToken);
+
+            List<Guid> roleIds;
+
+            var postId = currentUserService.PostId;
+            var roles = await cbacService.GetRolesForPostAsync(postId);
+
+            if (roles == null)
+                roleIds = [];
+            else
+                roleIds = [.. roles.Select(x => x.RoleID)];
+
+            var supplementedFilters = providedFilters.Adapt<MyWorkDetailSupplementedFilters>();
+
+            supplementedFilters.WorkflowId = workflowId.Value;
+            supplementedFilters.PostId = currentUserService.PostId;
+            supplementedFilters.RoleIds = roleIds;
+
+            return await ExportToCsvAsync(
+                entityName: "MyWork",
+                getDataQuery: () => debService.GetMyWorkDetailItems(supplementedFilters),
+                fileNamePrefix: "mywork",
+                registerClassMap: csv => csv.Context.RegisterClassMap<MyWorkExportMap>(),
+                filters: supplementedFilters,
+                logger: logger,
+                auditService: auditService,
+                currentUserService: currentUserService,
+                cancellationToken: cancellationToken);
+        }
+
+
         /// <summary>
         /// Generic helper method to export data to CSV format
         /// </summary>
@@ -184,8 +240,21 @@ namespace Nexus.DEB.Api.Restful
                 var userDetails = await currentUserService.GetUserDetailsAsync();
 
                 // Execute query to get data
-                var data = await getDataQuery()
-                    .ToListAsync(cancellationToken);
+                var query = getDataQuery();
+
+                // Handle both EF-backed queryables (can use ToListAsync) 
+                // and in-memory queryables (must use ToList)
+                List<TData> data;
+                if (query is IAsyncEnumerable<TData>)
+                {
+                    // EF Core queryable - use async
+                    data = await query.ToListAsync(cancellationToken);
+                }
+                else
+                {
+                    // In-memory queryable (e.g., from stored procedure) - use sync
+                    data = query.ToList();
+                }
 
                 logger.LogInformation("Retrieved {Count} {EntityName} for export", data.Count, entityName);
 

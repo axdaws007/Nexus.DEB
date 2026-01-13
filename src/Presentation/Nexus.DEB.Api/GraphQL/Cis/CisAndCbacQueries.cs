@@ -1,4 +1,5 @@
-﻿using Nexus.DEB.Application.Common.Interfaces;
+﻿using Microsoft.Extensions.Hosting;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 
 namespace Nexus.DEB.Api.GraphQL.Cis
@@ -15,27 +16,52 @@ namespace Nexus.DEB.Api.GraphQL.Cis
         {
             var posts = await cisService.GetAllPosts();
 
-            if (roleIds != null && roleIds.Count > 0)
+            if (posts != null && posts.Count > 0)
             {
-                var postIds = await cbacService.GetRolePostIdsAsync(roleIds);
+                var query = posts.AsQueryable();
 
-                return posts.Where(x => postIds.Contains(x.ID)).ToList();
+                if (roleIds != null && roleIds.Count > 0)
+                {
+                    var postIds = await cbacService.GetRolePostIdsAsync(roleIds);
+
+                    if (postIds != null)
+                    {
+                        query = query.Where(x => postIds.Contains(x.ID));
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(searchText))
+                {
+                    query = query.Where(x => x.PostTitle.Contains(searchText, StringComparison.CurrentCultureIgnoreCase));
+                }
+
+                posts = query.OrderBy(x => x.PostTitle).ToList();
             }
 
-            if (posts != null && posts.Count > 0 && !string.IsNullOrEmpty(searchText))
-                return posts.Where(x => x.PostTitle.ToLower().Contains(searchText.ToLower())).OrderBy(x => x.PostTitle).ToList();
-
-            return posts ?? new List<PostDetails>();
+            return posts ?? [];
         }
 
         public static async Task<ICollection<CisGroup>> GetGroups(
+            string? searchText,
             ICisService cisService,
             ICbacService cbacService,
             CancellationToken cancellationToken)
         {
             var groups = await cisService.GetAllGroups();
 
-            return groups ?? new List<CisGroup>();
+            if (groups != null && groups.Count > 0)
+            {
+                var query = groups.AsQueryable();
+
+                if (!string.IsNullOrEmpty(searchText))
+                {
+                    query = query.Where(x => x.Name.Contains(searchText, StringComparison.CurrentCultureIgnoreCase));
+                }
+
+                groups = query.OrderBy(x => x.Name).ToList();
+            }
+
+            return groups ?? [];
         }
     }
 }

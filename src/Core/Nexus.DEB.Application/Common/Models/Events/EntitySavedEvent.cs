@@ -1,4 +1,4 @@
-﻿namespace Nexus.DEB.Domain.Models.Events
+﻿namespace Nexus.DEB.Application.Common.Models.Events
 {
     public record EntitySavedEvent : DomainEventBase
     {
@@ -26,11 +26,6 @@
         /// Whether this was a create (true) or update (false)
         /// </summary>
         public required bool IsNew { get; init; }
-
-        /// <summary>
-        /// ID of the user who performed the save
-        /// </summary>
-        public required Guid UserId { get; init; }
 
         /// <summary>
         /// Gets the event context message for audit logging.

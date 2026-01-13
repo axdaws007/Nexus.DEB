@@ -5,19 +5,19 @@ using Nexus.DEB.Domain.Interfaces;
 
 namespace Nexus.DEB.Infrastructure.Events.Subscribers
 {
-    public class EntitySavedDashboardSubscriber : IDomainEventSubscriber<EntitySavedEvent>
+    public class WorkflowTransitionCompletedDashboardSubscriber : IDomainEventSubscriber<WorkflowTransitionCompletedEvent>
     {
-        private readonly ILogger<EntitySavedDashboardSubscriber> _logger;
+        private readonly ILogger<WorkflowTransitionCompletedDashboardSubscriber> _logger;
         private readonly IDashboardInfoProviderRegistry _providerRegistry;
         private readonly IDebService _debService;
 
-        public string Name => "EntitySavedDashboard";
+        public string Name => "WorkflowTransitionCompletedDashboard";
 
         // Run after audit logging
         public int Order => 50;
 
-        public EntitySavedDashboardSubscriber(
-            ILogger<EntitySavedDashboardSubscriber> logger,
+        public WorkflowTransitionCompletedDashboardSubscriber(
+            ILogger<WorkflowTransitionCompletedDashboardSubscriber> logger,
             IDashboardInfoProviderRegistry providerRegistry,
             IDebService debService)
         {
@@ -26,10 +26,10 @@ namespace Nexus.DEB.Infrastructure.Events.Subscribers
             _debService = debService;
         }
 
-        public async Task HandleAsync(EntitySavedEvent @event, CancellationToken cancellationToken = default)
+        public async Task HandleAsync(WorkflowTransitionCompletedEvent @event, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation(
-                "Processing entity saved dashboard update for {EntityType} {SerialNumber} ({EntityId})",
+                "Processing workflow transition dashboard update for {EntityType} {SerialNumber} ({EntityId})",
                 @event.EntityType,
                 @event.SerialNumber,
                 @event.EntityId);

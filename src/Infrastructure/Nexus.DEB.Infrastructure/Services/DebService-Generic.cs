@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Other;
@@ -148,6 +149,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 new SqlParameter("@newValue", newValue)
             );
         }
+
 		#endregion ChangeRecords
 
 		#region SavedSearch
@@ -200,6 +202,36 @@ namespace Nexus.DEB.Infrastructure.Services
             await _dbContext.SaveChangesAsync(cancellationToken);
 
             return dashboardInfo;
+        }
+
+        public async Task<DashboardInfo> UpsertDashboardInfoAsync(
+            DashboardInfo dashboardInfo,
+            CancellationToken cancellationToken = default)
+        {
+            var existingDashboardInfo = await _dbContext.DashboardInfos
+                .FirstOrDefaultAsync(x => x.EntityId == dashboardInfo.EntityId, cancellationToken);
+
+            if (existingDashboardInfo == null)
+            {
+                // Insert new record
+                await _dbContext.DashboardInfos.AddAsync(dashboardInfo, cancellationToken);
+            }
+            else
+            {
+                // Update existing record
+                existingDashboardInfo.DueDate = dashboardInfo.DueDate;
+                existingDashboardInfo.IsOpen = dashboardInfo.IsOpen;
+                existingDashboardInfo.AssignedToPostId = dashboardInfo.AssignedToPostId;
+                existingDashboardInfo.EntityOpenDate = dashboardInfo.EntityOpenDate;
+                existingDashboardInfo.EntityClosedDate = dashboardInfo.EntityClosedDate;
+                existingDashboardInfo.IsWorkflowActive = dashboardInfo.IsWorkflowActive;
+                existingDashboardInfo.ReviewDate = dashboardInfo.ReviewDate;
+                existingDashboardInfo.ResponsibleOwnerId = dashboardInfo.ResponsibleOwnerId;
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return existingDashboardInfo ?? dashboardInfo;
         }
 
         public async Task<DashboardInfo?> GetDashboardInfoAsync(Guid id, CancellationToken cancellationToken)
@@ -277,61 +309,47 @@ namespace Nexus.DEB.Infrastructure.Services
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<ICollection<MyWorkDetailItem>> GetMyWorkDetailItemsAsync(
-            Guid myPostID,
-            Guid? selectedPostID,
-            string entityTypeTitle,
-            IEnumerable<Guid> teamPostIDs,
-            IEnumerable<Guid> groupIDs,
-            string createdByOption,
-            string ownedByOption,
-            string progressedByOption,
-            IEnumerable<Guid> roles,
-            IEnumerable<int> activityIds,
-            DateTime? createdDateFrom,
-            DateTime? createdDateTo,
-            DateTime? assignedDateFrom,
-            DateTime? assignedDateTo,
-            Guid workflowId,
-            CancellationToken cancellationToken)
+        public IQueryable<MyWorkDetailItem> GetMyWorkDetailItems(MyWorkDetailSupplementedFilters filters)
         {
-            var teamPostIdsCsv = string.Join(",", teamPostIDs ?? Enumerable.Empty<Guid>());
-            var groupIdsCsv = string.Join(",", groupIDs ?? Enumerable.Empty<Guid>());
-            var rolesCsv = string.Join(",", roles ?? Enumerable.Empty<Guid>());
-            var activitiesCsv = string.Join(",", activityIds ?? Enumerable.Empty<int>());
+            var teamPostIdsCsv = string.Join(",", filters.MyTeamPostIds ?? Enumerable.Empty<Guid>());
+            var groupIdsCsv = string.Join(",", filters.ResponsibleGroupIds ?? Enumerable.Empty<Guid>());
+            var rolesCsv = string.Join(",", filters.RoleIds ?? Enumerable.Empty<Guid>());
+            var activitiesCsv = string.Join(",", filters.ActivityIds ?? Enumerable.Empty<int>());
 
             var parameters = new[]
             {
-                new SqlParameter("@myPostID", myPostID),
-                new SqlParameter("@selectedPostID", selectedPostID.HasValue ? selectedPostID.Value : DBNull.Value),
-                new SqlParameter("@entityTypeTitle", entityTypeTitle),
-                new SqlParameter("@createdByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[createdByOption]),
-                new SqlParameter("@ownedByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[ownedByOption]),
-                new SqlParameter("@progressedByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[progressedByOption]),
+                new SqlParameter("@myPostID", filters.PostId),
+                new SqlParameter("@selectedPostID", filters.SelectedPostId.HasValue ? filters.SelectedPostId.Value : DBNull.Value),
+                new SqlParameter("@entityTypeTitle", filters.EntityTypeTitle),
+                new SqlParameter("@createdByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[filters.CreatedBy]),
+                new SqlParameter("@ownedByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[filters.OwnedBy]),
+                new SqlParameter("@progressedByOption", DebHelper.MyWork.FilterTypes.MapToIntegerValue[filters.RequiringProgressionBy]),
                 new SqlParameter("@myRoles", string.IsNullOrEmpty(rolesCsv) ? DBNull.Value : rolesCsv),
                 new SqlParameter("@activityIDs", string.IsNullOrEmpty(activitiesCsv) ? DBNull.Value : activitiesCsv),
                 new SqlParameter("@csvTeamPostIDs", string.IsNullOrEmpty(teamPostIdsCsv) ? DBNull.Value : teamPostIdsCsv),
                 new SqlParameter("@csvGroupIDs", string.IsNullOrEmpty(groupIdsCsv) ? DBNull.Value : groupIdsCsv),
-                new SqlParameter("@CreatedStart", createdDateFrom.HasValue ? createdDateFrom.Value : DBNull.Value),
-                new SqlParameter("@CreatedEnd", createdDateTo.HasValue ? createdDateTo.Value : DBNull.Value),
-                new SqlParameter("@TransferStart", assignedDateFrom.HasValue ? assignedDateFrom.Value : DBNull.Value),
-                new SqlParameter("@TransferEnd", assignedDateTo.HasValue ? assignedDateTo.Value : DBNull.Value),
-                new SqlParameter("@workflowID", workflowId)
+                new SqlParameter("@CreatedStart", filters.CreatedDateFrom.HasValue ? filters.CreatedDateFrom.Value : DBNull.Value),
+                new SqlParameter("@CreatedEnd", filters.CreatedDateTo.HasValue ? filters.CreatedDateTo.Value : DBNull.Value),
+                new SqlParameter("@TransferStart", filters.AssignedDateFrom.HasValue ? filters.AssignedDateFrom.Value : DBNull.Value),
+                new SqlParameter("@TransferEnd", filters.AssignedDateTo.HasValue ? filters.AssignedDateTo.Value : DBNull.Value),
+                new SqlParameter("@workflowID", filters.WorkflowId)
             };
 
-            return await _dbContext.MyWorkDetailItems
-                .FromSqlRaw(
-                    "EXEC [common].[GetMyWorkDetailDataForPost] @myPostID, @selectedPostID, @entityTypeTitle, " +
-                    "@createdByOption, @ownedByOption, @progressedByOption, @myRoles, @activityIDs, @csvTeamPostIDs, @csvGroupIDs, " +
-                    "@CreatedStart, @CreatedEnd, @TransferStart, @TransferEnd, @workflowID",
-                    parameters)
-                .AsNoTracking()
-                .ToListAsync(cancellationToken);
+            var data = _dbContext.MyWorkDetailItems
+                            .FromSqlRaw(
+                                "EXEC [common].[GetMyWorkDetailDataForPost] @myPostID, @selectedPostID, @entityTypeTitle, " +
+                                "@createdByOption, @ownedByOption, @progressedByOption, @myRoles, @activityIDs, @csvTeamPostIDs, @csvGroupIDs, " +
+                                "@CreatedStart, @CreatedEnd, @TransferStart, @TransferEnd, @workflowID",
+                                parameters)
+                            .AsNoTracking()
+                            .ToList();
+
+            return data.AsQueryable();
         }
 
         #endregion Dashboard
 
-		#region SerialNumber
+        #region SerialNumber
 
         public async Task<string> GenerateSerialNumberAsync(
             Guid moduleId,

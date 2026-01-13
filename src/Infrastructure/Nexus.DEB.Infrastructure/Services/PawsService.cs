@@ -107,6 +107,61 @@ namespace Nexus.DEB.Infrastructure.Services
             */
         }
 
+        public async Task<ICollection<EntityActivityStep>?> GetEntityActivityStepsAsync(Guid entityId, Guid workflowId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var response = await SendAuthenticatedRequestAsync<ICollection<EntityActivityStep>>(
+                HttpMethod.Get,
+                $"api/PAWSClient/GetEntityActivitySteps?entityID={entityId}&workflowID={workflowId}",
+                operationName: $"GetEntityActivitySteps for {entityId} entity and {workflowId} workflow");
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error fetching entity activity steps");
+                throw;
+            }
+        }
+
+        public async Task<ICollection<EntityActivityStep>?> GetCompletedStepsAsync(Guid entityId, Guid workflowId, string mutTag, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var response = await SendAuthenticatedRequestAsync<ICollection<EntityActivityStep>>(
+                HttpMethod.Get,
+                $"api/PAWSClient/GetCompletedSteps?entityID={entityId}&workflowID={workflowId}&mutTag={mutTag}",
+                operationName: $"GetCompletedSteps for {entityId} entity, {workflowId} workflow and {mutTag} MUT tag.");
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error fetching completed steps");
+                throw;
+            }
+        }
+
+        public async Task<EntityActivityOwner?> GetEntityActivityOwnerAsync(Guid entityId, int activityId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var response = await SendAuthenticatedRequestAsync<EntityActivityOwner> (
+                HttpMethod.Get,
+                $"api/PAWSClient/GetEntityActivityOwner?entityID={entityId}&activityId={activityId}",
+                operationName: $"GetCompleGetEntityActivityOwnertedSteps for {entityId} entity, {activityId} activity");
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error fetching entity activity owner");
+                throw;
+            }
+        }
+
+
         public async Task<ICollection<WorkflowActivity>?> GetActivitiesForWorkflowAsync(Guid workflowId, bool includeRemoved = false, CancellationToken cancellationToken = default)
         {
             try

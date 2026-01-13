@@ -193,6 +193,32 @@ namespace Nexus.DEB.Infrastructure.Services
 						  .Order().ToListAsync(cancellationToken);
 		}
 
+        public async Task<bool> DeleteSavedSearchAsync(SavedSearch savedSearch, CancellationToken cancellationToken)
+		=> (await _dbContext.SavedSearches.Where(x => x.Name == savedSearch.Name && x.Context == savedSearch.Context && x.PostId == savedSearch.PostId).ExecuteDeleteAsync(cancellationToken) == 1);
+
+        public async Task<Result> DeleteSavedSearchAsync(string name, string context, CancellationToken cancellationToken)
+        {
+			var currentPostId = _currentUserService.PostId;
+			var savedSearch = await _dbContext.SavedSearches
+				.Where(x => x.Name == name && x.Context == context && x.PostId == currentPostId)
+				.FirstOrDefaultAsync(cancellationToken);
+			if (savedSearch == null)
+			{
+				return Result.Failure(new ValidationError()
+				{
+					Code = "SAVED_SEARCH_NOT_FOUND",
+					Field = "SavedSearch",
+					Message = $"Saved search '{name}' in context '{context}' not found for current post."
+				});
+			}
+			var isDeleted = await DeleteSavedSearchAsync(savedSearch, cancellationToken);
+            if(!isDeleted)
+            {
+				return Result.Failure("The Saved Search could not be deleted.");
+			}
+			return Result.Success();
+		}
+
 		public async Task<SavedSearch?> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken)
         {
 			var currentPostId = _currentUserService.PostId;

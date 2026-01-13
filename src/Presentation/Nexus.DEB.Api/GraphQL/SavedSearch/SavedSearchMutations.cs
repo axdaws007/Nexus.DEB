@@ -24,5 +24,21 @@ namespace Nexus.DEB.Api.GraphQL
 
 			return result.Data;
 		}
+
+		[Authorize]
+		[UseMutationConvention(Disable = true)]
+		public static async Task<bool> DeleteSavedSearchAsync(
+			string context,
+			string name,
+			IDebService debService,
+			CancellationToken cancellationToken = default)
+		{
+			var result = await debService.DeleteSavedSearchAsync(name, context, cancellationToken);
+			if (!result.IsSuccess)
+			{
+				throw ExceptionHelper.BuildException(result);
+			}
+			return true;
+		}
 	}
 }

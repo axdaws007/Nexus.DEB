@@ -1,10 +1,12 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Other;
 using System.Data;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -162,7 +164,66 @@ namespace Nexus.DEB.Infrastructure.Services
 				.ToListAsync(cancellationToken);
 		}
 
-        public async Task<SavedSearch?> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken)
+		public IQueryable<SavedSearch> GetSavedSearchesForGridAsync(SavedSearchesGridFilters filters, CancellationToken cancellationToken)
+		{
+			var currentPostId = _currentUserService.PostId;
+            var savedSearches = _dbContext.SavedSearches
+                .Where(x => x.PostId == currentPostId)
+				.AsNoTracking();
+
+            if(filters != null)
+            {
+				if (!string.IsNullOrWhiteSpace(filters.SearchText))
+				{
+					savedSearches = savedSearches.Where(s => s.Name.Contains(filters.SearchText));
+				}
+
+				if (filters.Contexts != null && filters.Contexts.Count > 0)
+				{
+					savedSearches = savedSearches.Where(s => filters.Contexts.Contains(s.Context));
+				}
+			}
+
+            return savedSearches;
+		}
+
+		public async Task<ICollection<string>> GetSavedSearchContextsAsync(CancellationToken cancellationToken)
+		{
+			var currentPostId = _currentUserService.PostId;
+			return await _dbContext.SavedSearches
+				          .Where(x => x.PostId == currentPostId)
+                          .Select(s => s.Context)
+                          .Distinct()
+						  .Order().ToListAsync(cancellationToken);
+		}
+
+        public async Task<bool> DeleteSavedSearchAsync(SavedSearch savedSearch, CancellationToken cancellationToken)
+		=> (await _dbContext.SavedSearches.Where(x => x.Name == savedSearch.Name && x.Context == savedSearch.Context && x.PostId == savedSearch.PostId).ExecuteDeleteAsync(cancellationToken) == 1);
+
+        public async Task<Result> DeleteSavedSearchAsync(string name, string context, CancellationToken cancellationToken)
+        {
+			var currentPostId = _currentUserService.PostId;
+			var savedSearch = await _dbContext.SavedSearches
+				.Where(x => x.Name == name && x.Context == context && x.PostId == currentPostId)
+				.FirstOrDefaultAsync(cancellationToken);
+			if (savedSearch == null)
+			{
+				return Result.Failure(new ValidationError()
+				{
+					Code = "SAVED_SEARCH_NOT_FOUND",
+					Field = "SavedSearch",
+					Message = $"Saved search '{name}' in context '{context}' not found for current post."
+				});
+			}
+			var isDeleted = await DeleteSavedSearchAsync(savedSearch, cancellationToken);
+            if(!isDeleted)
+            {
+				return Result.Failure("The Saved Search could not be deleted.");
+			}
+			return Result.Success();
+		}
+
+		public async Task<SavedSearch?> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken)
         {
 			var currentPostId = _currentUserService.PostId;
 			return await _dbContext.SavedSearches.AsNoTracking()
@@ -336,12 +397,12 @@ namespace Nexus.DEB.Infrastructure.Services
             };
 
             var data = _dbContext.MyWorkDetailItems
-                            .FromSqlRaw(
-                                "EXEC [common].[GetMyWorkDetailDataForPost] @myPostID, @selectedPostID, @entityTypeTitle, " +
-                                "@createdByOption, @ownedByOption, @progressedByOption, @myRoles, @activityIDs, @csvTeamPostIDs, @csvGroupIDs, " +
-                                "@CreatedStart, @CreatedEnd, @TransferStart, @TransferEnd, @workflowID",
-                                parameters)
-                            .AsNoTracking()
+                .FromSqlRaw(
+                    "EXEC [common].[GetMyWorkDetailDataForPost] @myPostID, @selectedPostID, @entityTypeTitle, " +
+                    "@createdByOption, @ownedByOption, @progressedByOption, @myRoles, @activityIDs, @csvTeamPostIDs, @csvGroupIDs, " +
+                    "@CreatedStart, @CreatedEnd, @TransferStart, @TransferEnd, @workflowID",
+                    parameters)
+                .AsNoTracking()
                             .ToList();
 
             return data.AsQueryable();
@@ -349,9 +410,9 @@ namespace Nexus.DEB.Infrastructure.Services
 
         #endregion Dashboard
 
-        #region SerialNumber
+		#region SerialNumber
 
-        public async Task<string> GenerateSerialNumberAsync(
+		public async Task<string> GenerateSerialNumberAsync(
             Guid moduleId,
             Guid instanceId,
             string entityType,

@@ -89,6 +89,10 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<IReadOnlyDictionary<Guid, string?>> GetWorkflowPseudoStateTitleForEntitiesAsync(List<Guid> entityIds, CancellationToken cancellationToken = default);
 
         Task<ICollection<SavedSearch>> GetSavedSearchesByContextAsync(string context, CancellationToken cancellationToken);
+		IQueryable<SavedSearch> GetSavedSearchesForGridAsync(SavedSearchesGridFilters filters, CancellationToken cancellationToken);
+        Task<ICollection<string>> GetSavedSearchContextsAsync(CancellationToken cancellationToken);
+        Task<bool> DeleteSavedSearchAsync(SavedSearch savedSearch, CancellationToken cancellationToken);
+        Task<Result> DeleteSavedSearchAsync(string name, string context, CancellationToken cancellationToken);
 		Task<SavedSearch?> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken);
 		Task<SavedSearch> SaveSavedSearchAsync(SavedSearch savedSearch, bool isNew, CancellationToken cancellationToken);
 

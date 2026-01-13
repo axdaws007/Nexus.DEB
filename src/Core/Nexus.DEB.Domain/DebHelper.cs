@@ -1,6 +1,9 @@
 ﻿using Nexus.DEB.Domain.Models.Common;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Reflection;
+using static Nexus.DEB.Domain.DebHelper.Dms;
 
 namespace Nexus.DEB.Domain
 {
@@ -39,6 +42,11 @@ namespace Nexus.DEB.Domain
                     Open,
                     Active
                 ]);
+            }
+
+            public static class Status
+            {
+                public const int Pending = 1;
             }
 
         }
@@ -128,12 +136,62 @@ namespace Nexus.DEB.Domain
             public static ReadOnlyCollection<string> AllDeleteCommentCapabilities => AllDeleteAnyCommentCapabilities.Union(AllDeleteOwnedCommentCapabilities).ToList().AsReadOnly();
         }
 
+        public static class MyWork
+        {
+            private const string ANYONE = "ANYONE";
+            private const string MYPOST = "MYPOST";
+            private const string MYTEAM = "MYTEAM";
+            private const string MYROLES = "MYROLES";
+            private const string GROUP = "GROUP";
+
+            public static class FilterTypes
+            {
+                public static class RequiringProgression
+                {
+                    public const string Anyone = ANYONE;
+                    public const string MyPost = MYPOST;
+                    public const string MyTeam = MYTEAM;
+                    public const string MyRoles = MYROLES;
+
+                    public static ConstantStringValidator Validator { get; } = new(typeof(RequiringProgression));
+                }
+
+                public static class CreatedBy
+                {
+                    public const string Anyone = ANYONE;
+                    public const string MyPost = MYPOST;
+                    public const string MyTeam = MYTEAM;
+                    public static ConstantStringValidator Validator { get; } = new(typeof(CreatedBy));
+                }
+
+                public static class OwnedBy
+                {
+                    public const string Anyone = ANYONE;
+                    public const string MyPost = MYPOST;
+                    public const string MyTeam = MYTEAM;
+                    public const string Group = GROUP;
+                    public static ConstantStringValidator Validator { get; } = new(typeof(OwnedBy));
+                }
+
+                public static ImmutableDictionary<string, int> MapToIntegerValue = new Dictionary<string, int>()
+                {
+                    { ANYONE, 0 },
+                    { MYPOST, 1 },
+                    { MYTEAM, 2 },
+                    { MYROLES, 3 },
+                    { GROUP, 4 }
+                }.ToImmutableDictionary();
+            }
+        }
+
         public static class Dms
         {
             public static class DocumentTypes
             {
                 public const string Document = "document";
                 public const string Note = "note";
+
+                public static ConstantStringValidator Validator { get; } = new(typeof(DocumentTypes));
             }
 
             public static class Libraries
@@ -142,63 +200,79 @@ namespace Nexus.DEB.Domain
                 public const string CommonDocuments = "common-documents";
                 // Add new constants here - they'll automatically be discovered
 
-                /// <summary>
-                /// Automatically discovers all public const string fields in this class.
-                /// Cached for performance.
-                /// </summary>
-                private static readonly Lazy<HashSet<string>> _validLibraries = new(() =>
-                {
-                    var libraryType = typeof(Dms.Libraries);
-                    var constants = libraryType
-                        .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
-                        .Where(fi => fi.IsLiteral && !fi.IsInitOnly && fi.FieldType == typeof(string))
-                        .Select(fi => fi.GetValue(null) as string)
-                        .Where(value => !string.IsNullOrWhiteSpace(value))
-                        .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-                    return constants!;
-                });
-
-                private static HashSet<string> ValidLibraries => _validLibraries.Value;
-
-                public static bool IsValid(string? library)
-                {
-                    return !string.IsNullOrWhiteSpace(library) && ValidLibraries.Contains(library);
-                }
-
-                public static void ValidateOrThrow(string? library)
-                {
-                    if (string.IsNullOrWhiteSpace(library))
-                    {
-                        throw new ArgumentException("Library name cannot be null or empty", nameof(library));
-                    }
-
-                    if (!ValidLibraries.Contains(library))
-                    {
-                        throw new ArgumentException($"Invalid library name '{library}'.", nameof(library));
-                    }
-                }
-
-                public static IReadOnlyCollection<string> GetAll()
-                {
-                    return ValidLibraries.ToList().AsReadOnly();
-                }
-
-                public static bool TryGetNormalized(string? library, out string? normalizedLibrary)
-                {
-                    normalizedLibrary = null;
-
-                    if (string.IsNullOrWhiteSpace(library))
-                    {
-                        return false;
-                    }
-
-                    normalizedLibrary = ValidLibraries.FirstOrDefault(
-                        v => v.Equals(library, StringComparison.OrdinalIgnoreCase));
-
-                    return normalizedLibrary != null;
-                }
+                public static ConstantStringValidator Validator { get; } = new(typeof(Libraries));
             }
         }
+
+    }
+}
+
+public sealed class ConstantStringValidator
+{
+    private readonly Lazy<HashSet<string>> _validValues;
+    private readonly string _valueName;
+
+    public ConstantStringValidator(Type constantsType, string? overrrideValueName = null)
+    {
+        if (!string.IsNullOrEmpty(overrrideValueName))
+        {
+            _valueName = overrrideValueName;
+        }
+        else
+        {
+            _valueName = constantsType.Name;
+        }
+
+        _validValues = new Lazy<HashSet<string>>(() =>
+        {
+            var constants = constantsType
+                .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+                .Where(fi => fi.IsLiteral && !fi.IsInitOnly && fi.FieldType == typeof(string))
+                .Select(fi => fi.GetValue(null) as string)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)!;
+
+            return constants;
+        });
+    }
+
+    private HashSet<string> ValidValues => _validValues.Value;
+
+    public bool IsValid(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value) && ValidValues.Contains(value);
+    }
+
+    public void ValidateOrThrow(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new ArgumentException($"{_valueName} cannot be null or empty", nameof(value));
+        }
+
+        if (!ValidValues.Contains(value))
+        {
+            throw new ArgumentException($"Invalid {_valueName} '{value}'.", nameof(value));
+        }
+    }
+
+    public IReadOnlyCollection<string> GetAll()
+    {
+        return ValidValues.ToList().AsReadOnly();
+    }
+
+    public bool TryGetNormalized(string? value, out string? normalizedValue)
+    {
+        normalizedValue = null;
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        normalizedValue = ValidValues.FirstOrDefault(
+            v => v.Equals(value, StringComparison.OrdinalIgnoreCase));
+
+        return normalizedValue != null;
     }
 }

@@ -26,7 +26,7 @@ namespace Nexus.DEB.Api.GraphQL
         {
             try
             {
-                DebHelper.Dms.Libraries.ValidateOrThrow(library);
+                DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
             }
             catch(Exception ex)
             {
@@ -57,7 +57,7 @@ namespace Nexus.DEB.Api.GraphQL
         {
             try
             {
-                DebHelper.Dms.Libraries.ValidateOrThrow(library);
+                DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
             }
             catch (Exception ex)
             {
@@ -86,7 +86,7 @@ namespace Nexus.DEB.Api.GraphQL
         {
             try
             {
-                DebHelper.Dms.Libraries.ValidateOrThrow(library);
+                DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
             }
             catch (Exception ex)
             {
@@ -114,7 +114,7 @@ namespace Nexus.DEB.Api.GraphQL
         {
             try
             {
-                DebHelper.Dms.Libraries.ValidateOrThrow(library);
+                DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
             }
             catch (Exception ex)
             {

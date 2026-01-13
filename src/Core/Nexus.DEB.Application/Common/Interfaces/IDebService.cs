@@ -2,6 +2,7 @@
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
+using Nexus.DEB.Domain.Models.Other;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Application.Common.Interfaces
@@ -127,5 +128,55 @@ namespace Nexus.DEB.Application.Common.Interfaces
             CancellationToken cancellationToken = default);
 
         #endregion Other
+
+        #region Dashboard 
+
+        Task<DashboardInfo> CreateDashBoardInfoAsync(DashboardInfo dashboardInfo, CancellationToken cancellationToken);
+
+        Task<DashboardInfo> UpdateDashBoardInfoAsync(DashboardInfo dashboardInfo, CancellationToken cancellationToken);
+
+        Task<DashboardInfo?> GetDashboardInfoAsync(Guid id, CancellationToken cancellationToken);
+
+        Task<ICollection<MyWorkSummaryItem>> GetMyWorkSummaryItemsAsync(
+            Guid myPostID,
+            IEnumerable<Guid> teamPostIDs,
+            IEnumerable<Guid> groupIDs,
+            string createdByOption,
+            string ownedByOption,
+            string progressedByOption,
+            IEnumerable<Guid> roles,
+            CancellationToken cancellationToken);
+
+        Task<ICollection<MyWorkActivity>> GetMyWorkActivitiesAsync(
+            Guid myPostID,
+            Guid? selectedPostID,
+            string entityTypeTitle,
+            IEnumerable<Guid> teamPostIDs,
+            IEnumerable<Guid> groupIDs,
+            string createdByOption,
+            string ownedByOption,
+            string progressedByOption,
+            IEnumerable<Guid> roles,
+            CancellationToken cancellationToken);
+
+        Task<ICollection<MyWorkDetailItem>> GetMyWorkDetailItemsAsync(
+            Guid myPostID,
+            Guid? selectedPostID,
+            string entityTypeTitle,
+            IEnumerable<Guid> teamPostIDs,
+            IEnumerable<Guid> groupIDs,
+            string createdByOption,
+            string ownedByOption,
+            string progressedByOption,
+            IEnumerable<Guid> roles,
+            IEnumerable<int> activityIds,
+            DateTime? createdDateFrom,
+            DateTime? createdDateTo,
+            DateTime? assignedDateFrom,
+            DateTime? assignedDateTo,
+            Guid workflowId,
+            CancellationToken cancellationToken);
+
+        #endregion Dashboard
     }
 }

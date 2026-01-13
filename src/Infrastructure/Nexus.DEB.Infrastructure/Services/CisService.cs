@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
-using System.Net;
 using System.Net.Http.Json;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -149,6 +148,17 @@ namespace Nexus.DEB.Infrastructure.Services
         {
             // This method should never actually be called.
             throw new NotImplementedException();
+        }
+
+        public async Task<ICollection<CisGroup>?> GetAllGroups()
+        {
+            var requestUri = $"api/Groups/AllGroups";
+
+            // Use authenticated request - cookie retrieved from HttpContext automatically
+            return await SendAuthenticatedRequestAsync<ICollection<CisGroup>>(
+                HttpMethod.Get,
+                requestUri,
+                operationName: $"GetAllGroups");
         }
     }
 }

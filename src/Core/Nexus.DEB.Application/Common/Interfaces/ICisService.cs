@@ -18,5 +18,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<ICollection<PostDetails>?> GetAllPosts();
 
         void InvalidateUserCache(Guid userId, Guid postId);
+
+        Task<ICollection<CisGroup>?> GetAllGroups();
     }
 }

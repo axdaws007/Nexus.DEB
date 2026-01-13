@@ -69,6 +69,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(configuration);
+builder.Services.AddDomainEvents();
 
 builder.Services.AddHttpContextAccessor();
 

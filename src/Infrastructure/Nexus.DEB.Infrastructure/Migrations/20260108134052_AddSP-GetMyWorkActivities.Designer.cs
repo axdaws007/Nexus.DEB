@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20260108134052_AddSP-GetMyWorkActivities")]
+    partial class AddSPGetMyWorkActivities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -342,12 +345,12 @@ namespace Nexus.DEB.Infrastructure.Migrations
                 {
                     b.Property<int>("ActivityID")
                         .HasColumnType("int")
-                        .HasColumnName("ActivityID");
+                        .HasColumnName("PostID");
 
                     b.Property<string>("ActivityTitle")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
-                        .HasColumnName("ActivityTitle");
+                        .HasColumnName("PostTitle");
 
                     b.Property<int>("FormCount")
                         .HasColumnType("int")
@@ -1692,12 +1695,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
                     b.HasIndex("TaskTypeId");
 
-                    b.ToTable("Task", "deb", t =>
-                        {
-                            t.HasTrigger("Task_ChangeTracking");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.ToTable("Task", "deb");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.ChangeRecordItem", b =>

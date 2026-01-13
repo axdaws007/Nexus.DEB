@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20260107165737_AddViewGroupSynonym")]
+    partial class AddViewGroupSynonym
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -336,82 +339,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.ToTable((string)null);
 
                     b.ToView("vw_EntityHeadDetail", "common");
-                });
-
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.MyWorkActivity", b =>
-                {
-                    b.Property<int>("ActivityID")
-                        .HasColumnType("int")
-                        .HasColumnName("ActivityID");
-
-                    b.Property<string>("ActivityTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("ActivityTitle");
-
-                    b.Property<int>("FormCount")
-                        .HasColumnType("int")
-                        .HasColumnName("FormCount");
-
-                    b.ToTable((string)null);
-                });
-
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.MyWorkSummaryItem", b =>
-                {
-                    b.Property<string>("EntityTypeTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("EntityTypeTitle");
-
-                    b.Property<int>("FormCount")
-                        .HasColumnType("int")
-                        .HasColumnName("FormCount");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("PostID");
-
-                    b.Property<string>("PostTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("PostTitle");
-
-                    b.ToTable((string)null);
-                });
-
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.DashboardInfo", b =>
-                {
-                    b.Property<Guid>("EntityId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("AssignedToPostId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("DueDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("EntityClosedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("EntityOpenDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsOpen")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsWorkflowActive")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid?>("ResponsibleOwnerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("ReviewDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("EntityId");
-
-                    b.ToTable("DashboardInfo", "common");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ModuleInfo", b =>
@@ -1692,12 +1619,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
                     b.HasIndex("TaskTypeId");
 
-                    b.ToTable("Task", "deb", t =>
-                        {
-                            t.HasTrigger("Task_ChangeTracking");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.ToTable("Task", "deb");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.ChangeRecordItem", b =>

@@ -1,9 +1,10 @@
 ﻿using HotChocolate.Authorization;
-using HotChocolate.Resolvers;
-using Nexus.DEB.Api.Security;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain;
+using Nexus.DEB.Domain.Interfaces;
+using Nexus.DEB.Domain.Models.Common;
+using Nexus.DEB.Domain.Models.Events;
 
 namespace Nexus.DEB.Api.GraphQL.Task
 {
@@ -20,7 +21,8 @@ namespace Nexus.DEB.Api.GraphQL.Task
             string title,
             string? description,
             ITaskDomainService taskDomainService,
-            IDebService debService,
+            IDomainEventPublisher eventPublisher,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken = default)
         {
             var result = await taskDomainService.CreateTaskAsync(
@@ -38,7 +40,19 @@ namespace Nexus.DEB.Api.GraphQL.Task
                 throw ExceptionHelper.BuildException(result);
             }
 
-            return result.Data;
+            var taskDetail = result.Data!;
+
+            await eventPublisher.PublishAsync(new EntitySavedEvent
+            {
+                Entity = taskDetail,
+                EntityType = EntityTypes.Task,
+                EntityId = taskDetail.EntityId,
+                SerialNumber = taskDetail.SerialNumber ?? string.Empty,
+                IsNew = true,
+                UserId = currentUserService.UserId
+            }, cancellationToken);
+
+            return taskDetail;
         }
 
         [Authorize(Policy = DebHelper.Policies.CanEditSoCTask)]
@@ -52,7 +66,8 @@ namespace Nexus.DEB.Api.GraphQL.Task
             string title,
             string? description,
             ITaskDomainService taskDomainService,
-            IDebService debService,
+            IDomainEventPublisher eventPublisher,
+            ICurrentUserService currentUserService,
             CancellationToken cancellationToken = default)
         {
             var result = await taskDomainService.UpdateTaskAsync(
@@ -71,7 +86,19 @@ namespace Nexus.DEB.Api.GraphQL.Task
                 throw ExceptionHelper.BuildException(result);
             }
 
-            return result.Data;
+            var taskDetail = result.Data!;
+
+            await eventPublisher.PublishAsync(new EntitySavedEvent
+            {
+                Entity = taskDetail,
+                EntityType = EntityTypes.Task,
+                EntityId = taskDetail.EntityId,
+                SerialNumber = taskDetail.SerialNumber ?? string.Empty,
+                IsNew = false,
+                UserId = currentUserService.UserId
+            }, cancellationToken);
+
+            return taskDetail;
         }
     }
 }

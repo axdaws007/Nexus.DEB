@@ -79,5 +79,10 @@ namespace Nexus.DEB.Infrastructure.Services
             // This could also be cached if needed, but capabilities are the priority
             return await _innerCbacService.GetRolePostIdsAsync(roleIds);
         }
+
+        public async Task<ICollection<CbacRole>?> GetRolesForPostAsync(Guid postId)
+        {
+            return await _innerCbacService.GetRolesForPostAsync(postId);
+        }
     }
 }

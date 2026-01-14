@@ -1,4 +1,5 @@
-﻿using Nexus.DEB.Domain.Models;
+﻿using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -9,7 +10,7 @@ namespace Nexus.DEB.Api.GraphQL
         public DateTime? DueDateFrom { get; set; }
         public DateTime? DueDateTo { get; set; }
 
-        [ID(nameof(Standard))]
+        [ID]
         public ICollection<short>? TaskTypeIds { get; set; }
 
         public string? OwnedBy { get; set; }

@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL.Cis
 {
@@ -63,5 +64,15 @@ namespace Nexus.DEB.Api.GraphQL.Cis
 
             return groups ?? [];
         }
+
+        [Authorize]
+        [UseOffsetPaging]
+        [UseSorting]
+        public static IQueryable<UserAndPost> GetPostsWithUsers(
+            IDebService debService,
+            string? searchText, 
+            bool includeDeletedUsers = false, 
+            bool includeDeletedPosts = false)
+            => debService.GetPostsWithUsers(searchText, includeDeletedUsers, includeDeletedPosts);
     }
 }

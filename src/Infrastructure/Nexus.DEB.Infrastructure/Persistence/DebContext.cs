@@ -81,6 +81,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<CommentDetail> CommentDetails { get; set; }
         public DbSet<ViewPost> ViewPosts { get; set; }
         public DbSet<PawsEntityDetail> PawsEntityDetails { get; set; }
+        public DbSet<UserAndPost> UsersAndPosts { get; set; }
 
         // Stored procedures
         public DbSet<MyWorkSummaryItem> MyWorkSummaryItems => Set<MyWorkSummaryItem>();

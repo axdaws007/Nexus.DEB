@@ -127,6 +127,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
             Func<int, Dictionary<string, object>?>? tokenValuesFactory = null,
             CancellationToken cancellationToken = default);
 
+        IQueryable<UserAndPost> GetPostsWithUsers(string? searchText, bool includeDeletedUsers = false, bool includedDeletedPosts = false);
+
         #endregion Other
 
         #region Dashboard 

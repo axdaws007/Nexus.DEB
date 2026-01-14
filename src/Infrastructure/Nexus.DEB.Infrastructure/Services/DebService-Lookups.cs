@@ -61,5 +61,23 @@ namespace Nexus.DEB.Infrastructure.Services
                           }).ToListAsync(cancellationToken);
         }
 
+        public IQueryable<UserAndPost> GetPostsWithUsers(string? searchText, bool includeDeletedUsers = false, bool includeDeletedPosts = false)
+        {
+            var query = _dbContext.UsersAndPosts.AsNoTracking();
+
+            if (!includeDeletedPosts)
+                query = query.Where(x => x.IsPostDeleted == false);
+
+            if (!includeDeletedUsers)
+                query = query.Where(x => x.IsUserDeleted == false);
+
+            if (!string.IsNullOrEmpty(searchText))
+            {
+                var searchTextLower = searchText.ToLower();
+                query = query.Where(x => x.PostTitle.ToLower().Contains(searchTextLower) || x.UserName.ToLower().Contains(searchTextLower));
+            }
+
+            return query;
+        }
     }
 }

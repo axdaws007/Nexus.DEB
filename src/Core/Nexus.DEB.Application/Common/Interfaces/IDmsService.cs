@@ -74,5 +74,10 @@ namespace Nexus.DEB.Application.Common.Interfaces
         /// <param name="entityId">The entity ID</param>
         /// <returns>Document count</returns>
         Task<int> GetEntityDocumentCountAsync(Guid libraryId, Guid entityId);
-    }
+
+        Task AddDocumentAddedAuditRecordAsync(Guid documentId, Guid entityId);
+        Task AddDocumentUpdatedAuditRecordAsync(Guid documentId, Guid entityId);
+        Task AddDocumentDeletedAuditRecordAsync(Guid libraryId, Guid documentId);
+
+	}
 }

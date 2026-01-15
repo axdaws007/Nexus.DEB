@@ -36,19 +36,19 @@ namespace Nexus.DEB.Infrastructure.Validators
 
             var statement = await _debService.GetStatementDetailByIdAsync(context.EntityId, cancellationToken);
 
-            if (statement.ReviewDate.HasValue == false || statement.ReviewDate.Value < _dateTimeProvider.Now.AddDays(7))
-            {
-                return Result.Failure(new ValidationError
-                {
-                    Field = "reviewDate",
-                    Message = $"The Review Date must be at least one week into the future.",
-                    Code = "INVALID_REVIEW_DATE",
-                    Meta = new Dictionary<string, object>
-                    {
-                        ["reviewDate"] = statement.ReviewDate.HasValue ? statement.ReviewDate.Value : "<null>"
-                    }
-                });
-            }
+            //if (statement.ReviewDate.HasValue == false || statement.ReviewDate.Value < _dateTimeProvider.Now.AddDays(7))
+            //{
+            //    return Result.Failure(new ValidationError
+            //    {
+            //        Field = "reviewDate",
+            //        Message = $"The Review Date must be at least one week into the future.",
+            //        Code = "INVALID_REVIEW_DATE",
+            //        Meta = new Dictionary<string, object>
+            //        {
+            //            ["reviewDate"] = statement.ReviewDate.HasValue ? statement.ReviewDate.Value : "<null>"
+            //        }
+            //    });
+            //}
 
             return Result.Success();
         }

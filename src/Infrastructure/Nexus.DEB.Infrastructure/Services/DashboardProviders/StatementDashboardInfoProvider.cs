@@ -11,7 +11,7 @@ namespace Nexus.DEB.Infrastructure.Services.DashboardProviders
         {
         }
 
-        protected override DateTime? DetermineReviewDate(object entity, Guid entityId)
+        protected override DateOnly? DetermineReviewDate(object entity, Guid entityId)
         {
             if (entity is StatementDetail statementDetail)
             {

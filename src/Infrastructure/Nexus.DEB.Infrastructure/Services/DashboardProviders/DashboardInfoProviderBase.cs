@@ -62,12 +62,12 @@ namespace Nexus.DEB.Infrastructure.Services
             return dashboardInfo;
         }
 
-        protected virtual DateTime? DetermineDueDate(object entity, Guid entityId)
+        protected virtual DateOnly? DetermineDueDate(object entity, Guid entityId)
         {
             return null;
         }
 
-        protected virtual DateTime? DetermineReviewDate(object entity, Guid entityId)
+        protected virtual DateOnly? DetermineReviewDate(object entity, Guid entityId)
         {
             return null;
         }

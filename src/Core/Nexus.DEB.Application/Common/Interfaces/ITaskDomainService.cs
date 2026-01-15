@@ -9,7 +9,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
             Guid taskOwnerId,
             short taskTypeId,
             int activityId,
-            DateTime? dueDate,
+            DateOnly? dueDate,
             string title,
             string? description,
             CancellationToken cancellationToken = default);
@@ -20,7 +20,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
             Guid taskOwnerId,
             short taskTypeId,
             int activityId,
-            DateTime? dueDate,
+            DateOnly? dueDate,
             string title,
             string? description,
             CancellationToken cancellationToken = default);

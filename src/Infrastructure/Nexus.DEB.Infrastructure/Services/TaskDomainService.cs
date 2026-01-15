@@ -19,7 +19,7 @@ namespace Nexus.DEB.Infrastructure.Services
         {
         }
 
-        public async Task<Result<TaskDetail>> CreateTaskAsync(Guid statementId, Guid taskOwnerId, short taskTypeId, int activityId, DateTime? dueDate, string title, string? description, CancellationToken cancellationToken = default)
+        public async Task<Result<TaskDetail>> CreateTaskAsync(Guid statementId, Guid taskOwnerId, short taskTypeId, int activityId, DateOnly? dueDate, string title, string? description, CancellationToken cancellationToken = default)
         {
             await ValidateFieldsAsync(null, statementId, taskOwnerId, taskTypeId, activityId, dueDate, title, description);
 
@@ -56,7 +56,7 @@ namespace Nexus.DEB.Infrastructure.Services
             }
         }
 
-        public async Task<Result<TaskDetail>> UpdateTaskAsync(Guid id, Guid statementId, Guid taskOwnerId, short taskTypeId, int activityId, DateTime? dueDate, string title, string? description, CancellationToken cancellationToken = default)
+        public async Task<Result<TaskDetail>> UpdateTaskAsync(Guid id, Guid statementId, Guid taskOwnerId, short taskTypeId, int activityId, DateOnly? dueDate, string title, string? description, CancellationToken cancellationToken = default)
         {
             var task = await DebService.GetTaskByIdAsync(id);
 
@@ -132,7 +132,7 @@ namespace Nexus.DEB.Infrastructure.Services
             Guid taskOwnerId, 
             short taskTypeId, 
             int statusId, 
-            DateTime? dueDate, 
+            DateOnly? dueDate, 
             string title, 
             string? description)
         {

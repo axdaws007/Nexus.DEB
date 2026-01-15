@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20260115142237_ChangeDateTimeToDateOnlyForReviweDateAndDueDate")]
+    partial class ChangeDateTimeToDateOnlyForReviweDateAndDueDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -456,8 +459,8 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.Property<Guid?>("AssignedToPostId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateOnly?>("DueDate")
-                        .HasColumnType("date");
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("EntityClosedDate")
                         .HasColumnType("datetime2");
@@ -474,8 +477,8 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.Property<Guid?>("ResponsibleOwnerId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateOnly?>("ReviewDate")
-                        .HasColumnType("date");
+                    b.Property<DateTime?>("ReviewDate")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("EntityId");
 
@@ -1265,8 +1268,8 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("OwnedById");
 
-                    b.Property<DateOnly?>("ReviewDate")
-                        .HasColumnType("date")
+                    b.Property<DateTime?>("ReviewDate")
+                        .HasColumnType("datetime2")
                         .HasColumnName("ReviewDate");
 
                     b.Property<string>("SerialNumber")
@@ -1376,8 +1379,8 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("Description");
 
-                    b.Property<DateOnly?>("DueDate")
-                        .HasColumnType("date")
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime2")
                         .HasColumnName("DueDate");
 
                     b.Property<Guid>("EntityId")

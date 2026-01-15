@@ -2,7 +2,7 @@
 {
 	public class TaskDetail : EntityDetailBase
 	{
-		public DateTime? DueDate { get; set; }
+		public DateOnly? DueDate { get; set; }
 		public int TaskTypeId { get; set; }
 		public string TaskType { get; set; } = string.Empty;
 		public int? ActivityId { get; set; }

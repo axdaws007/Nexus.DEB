@@ -2,6 +2,6 @@
 {
     public class StatementDetailView : EntityDetailViewBase
     {
-        public DateTime? ReviewDate { get; set; }
+        public DateOnly? ReviewDate { get; set; }
     }
 }

@@ -24,7 +24,7 @@ namespace Nexus.DEB.Infrastructure.Services
             Guid ownerId,
             string title,
             string statementText,
-            DateTime? reviewDate,
+            DateOnly? reviewDate,
             ICollection<RequirementScopes>? requirementScopeCombinations,
             CancellationToken cancellationToken)
         {
@@ -66,7 +66,7 @@ namespace Nexus.DEB.Infrastructure.Services
             Guid ownerId,
             string title,
             string statementText,
-            DateTime? reviewDate,
+            DateOnly? reviewDate,
             ICollection<RequirementScopes>? requirementScopeCombinations,
             CancellationToken cancellationToken)
         {
@@ -113,7 +113,7 @@ namespace Nexus.DEB.Infrastructure.Services
             Guid ownerId,
             string title,
             string statementText,
-            DateTime? reviewDate,
+            DateOnly? reviewDate,
             ICollection<RequirementScopes>? requirementScopeCombinations)
         {
             await ValidateOwnerAsync(ownerId);
@@ -123,9 +123,6 @@ namespace Nexus.DEB.Infrastructure.Services
 
             // Validate statement text
             ValidateStatementText(statementText);
-
-            // Validate review date
-            ValidateReviewDate(reviewDate);
 
             await ValidateRequirementScopeCombinations(statement, requirementScopeCombinations);
         }
@@ -200,23 +197,6 @@ namespace Nexus.DEB.Infrastructure.Services
                         Field = nameof(statementText),
                         Message = "The 'statement text' is empty."
                     });
-            }
-        }
-
-        private void ValidateReviewDate(DateTime? reviewDate)
-        {
-            if (reviewDate.HasValue)
-            {
-                if (reviewDate.Value < DateTimeProvider.Now)
-                {
-                    ValidationErrors.Add(
-                        new ValidationError()
-                        {
-                            Code = "INVALID_REVIEW_DATE",
-                            Field = nameof(reviewDate),
-                            Message = "A 'review date' cannot be in the past."
-                        });
-                }
             }
         }
     }

@@ -416,19 +416,5 @@ namespace Nexus.DEB.Infrastructure.Services
 					libid = documentId
 				}).ToAuditData("document"));
         }
-
-        private JsonElement GetDocumentIdAuditJsonElement(Guid documentId)
-        {
-			var json = JsonSerializer.Serialize(documentId, new JsonSerializerOptions
-			{
-				DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-				WriteIndented = false
-			});
-
-			using var doc = JsonDocument.Parse(json);
-			var element = doc.RootElement.Clone();
-
-            return element;
-		}
 	}
 }

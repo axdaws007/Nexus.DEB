@@ -115,12 +115,14 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Date range filter
                 if (filters.ModifiedFrom.HasValue)
                 {
-                    query = query.Where(r => r.LastModifiedDate >= filters.ModifiedFrom.Value);
+                    var from = filters.ModifiedFrom.Value.ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(r => r.LastModifiedDate >= from);
                 }
 
                 if (filters.ModifiedTo.HasValue)
                 {
-                    query = query.Where(r => r.LastModifiedDate <= filters.ModifiedTo.Value);
+                    var to = filters.ModifiedTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(r => r.LastModifiedDate < to);
                 }
 
                 if (filters.StatementId.HasValue)
@@ -172,12 +174,14 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Date range filter
                 if (filters.ModifiedFrom.HasValue)
                 {
-                    query = query.Where(r => r.LastModifiedDate >= filters.ModifiedFrom.Value);
+                    var from = filters.ModifiedFrom.Value.ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(r => r.LastModifiedDate >= from);
                 }
 
                 if (filters.ModifiedTo.HasValue)
                 {
-                    query = query.Where(r => r.LastModifiedDate <= filters.ModifiedTo.Value);
+                    var to = filters.ModifiedTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(r => r.LastModifiedDate < to);
                 }
             }
 
@@ -487,12 +491,14 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Date range filter
                 if (filters.ModifiedFrom.HasValue)
                 {
-                    query = query.Where(s => s.LastModifiedDate >= filters.ModifiedFrom.Value);
+                    var from = filters.ModifiedFrom.Value.ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(s => s.LastModifiedDate >= from);
                 }
 
                 if (filters.ModifiedTo.HasValue)
                 {
-                    query = query.Where(s => s.LastModifiedDate <= filters.ModifiedTo.Value);
+                    var to = filters.ModifiedTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(s => s.LastModifiedDate < to);
                 }
 
                 if (filters.StatusIds != null && filters.StatusIds.Count > 0)
@@ -545,12 +551,14 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Date range filter
                 if (filters.ModifiedFrom.HasValue)
                 {
-                    query = query.Where(r => r.LastModifiedDate >= filters.ModifiedFrom.Value);
+                    var from = filters.ModifiedFrom.Value.ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(s => s.LastModifiedDate >= from);
                 }
 
                 if (filters.ModifiedTo.HasValue)
                 {
-                    query = query.Where(r => r.LastModifiedDate <= filters.ModifiedTo.Value);
+                    var to = filters.ModifiedTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(s => s.LastModifiedDate < to);
                 }
 
                 if (filters.StatusIds != null && filters.StatusIds.Count > 0)
@@ -749,12 +757,14 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 if (filters.EffectiveFromDate.HasValue)
                 {
-                    query = query.Where(r => r.EffectiveFrom >= filters.EffectiveFromDate.Value);
+                    var from = filters.EffectiveFromDate.Value.ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(r => r.EffectiveFrom >= from);
                 }
 
                 if (filters.EffectiveToDate.HasValue)
                 {
-                    query = query.Where(r => r.EffectiveTo < filters.EffectiveToDate.Value.AddDays(1));
+                    var to = filters.EffectiveToDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(r => r.EffectiveTo < to);
                 }
             }
 
@@ -779,12 +789,14 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 if (filters.EffectiveFromDate.HasValue)
                 {
-                    query = query.Where(r => r.EffectiveStartDate >= filters.EffectiveFromDate.Value);
+                    var from = filters.EffectiveFromDate.Value.ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(r => r.EffectiveStartDate >= from);
                 }
 
                 if (filters.EffectiveToDate.HasValue)
                 {
-                    query = query.Where(r => r.EffectiveEndDate < filters.EffectiveToDate.Value.AddDays(1));
+                    var to = filters.EffectiveToDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(r => r.EffectiveEndDate < to);
                 }
             }
 
@@ -888,12 +900,14 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Date range filter
                 if (filters.DueDateFrom.HasValue)
                 {
-                    query = query.Where(r => r.DueDate >= filters.DueDateFrom.Value);
+                    var from = filters.DueDateFrom.Value.ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(r => r.DueDate >= from);
                 }
 
                 if (filters.DueDateTo.HasValue)
                 {
-                    query = query.Where(r => r.DueDate <= filters.DueDateTo.Value);
+                    var to = filters.DueDateTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(r => r.DueDate < to);
                 }
 
                 if (filters.StatusIds != null && filters.StatusIds.Count > 0)
@@ -942,12 +956,14 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Date range filter
                 if (filters.DueDateFrom.HasValue)
                 {
-                    query = query.Where(r => r.DueDate >= filters.DueDateFrom.Value);
+                    var from = filters.DueDateFrom.Value.ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(r => r.DueDate >= from);
                 }
 
                 if (filters.DueDateTo.HasValue)
                 {
-                    query = query.Where(r => r.DueDate <= filters.DueDateTo.Value);
+                    var to = filters.DueDateTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(r => r.DueDate < to);
                 }
 
                 if (filters.StatusIds != null && filters.StatusIds.Count > 0)

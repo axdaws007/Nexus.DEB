@@ -1,14 +1,11 @@
-﻿using Nexus.DEB.Application.Common.Models.Filters;
-using Nexus.DEB.Domain.Models;
-
-namespace Nexus.DEB.Api.GraphQL
+﻿namespace Nexus.DEB.Api.GraphQL
 {
     public class TaskSummaryFilters
     {
         public ICollection<Guid>? StandardVersionIds { get; set; }
         public string? SearchText { get; set; }
-        public DateTime? DueDateFrom { get; set; }
-        public DateTime? DueDateTo { get; set; }
+        public DateOnly? DueDateFrom { get; set; }
+        public DateOnly? DueDateTo { get; set; }
 
         [ID]
         public ICollection<short>? TaskTypeIds { get; set; }

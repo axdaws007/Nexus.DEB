@@ -72,9 +72,7 @@ namespace Nexus.DEB.Api.Restful
             [FromForm] string? documentType,
             [FromServices] IApplicationSettingsService applicationSettingsService,
             [FromServices] IDmsService dmsService,
-            [FromServices] IDebService debService,
-			[FromServices] IAuditService auditService,
-            [FromServices] ICurrentUserService currentUserService)
+            [FromServices] IDebService debService)
         {
             try
             {

@@ -11,6 +11,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Runtime.CompilerServices;
 using System.Reflection.Metadata;
+using Nexus.DEB.Application.Common.Extensions;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -384,7 +385,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 null, 
                 string.Format("Serial: {0}", entityHead.SerialNumber), 
                 userDetails, 
-                new AuditData(GetDocumentIdAuditJsonElement(documentId), "Guid"));
+                documentId.ToAuditData("Guid"));
 		}
 
 		public async Task AddDocumentUpdatedAuditRecordAsync(Guid documentId, Guid entityId)
@@ -396,33 +397,24 @@ namespace Nexus.DEB.Infrastructure.Services
                 entityId, 
                 null, 
                 string.Format("Serial: {0}", entityHead.SerialNumber), 
-                userDetails, 
-                new AuditData(GetDocumentIdAuditJsonElement(documentId), "Guid"));
+                userDetails,
+				documentId.ToAuditData("Guid"));
 		}
 
         public async Task AddDocumentDeletedAuditRecordAsync(Guid libraryId, Guid documentId)
         {
 			var userDetails = await _currentUserService.GetUserDetailsAsync();
 
-            var json = JsonSerializer.Serialize(new
-            {
-				docid = libraryId,
-				libid = documentId
-			}, new JsonSerializerOptions
-			{
-				DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-				WriteIndented = false
-			});
-
-			using var doc = JsonDocument.Parse(json);
-			var element = doc.RootElement.Clone();
-
-			await _auditService.EntitySaved(
+            await _auditService.EntitySaved(
                 documentId, 
                 "Document", 
                 "Document marked as deleted", 
-                userDetails, 
-                new AuditData(element, "document"));
+                userDetails,
+				(new
+				{
+					docid = libraryId,
+					libid = documentId
+				}).ToAuditData("document"));
         }
 
         private JsonElement GetDocumentIdAuditJsonElement(Guid documentId)

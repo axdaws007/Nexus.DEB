@@ -2,25 +2,40 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Dms;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using System.Runtime.CompilerServices;
+using System.Reflection.Metadata;
+using Nexus.DEB.Application.Common.Extensions;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
     public class DmsService : LegacyApiServiceBase<DmsService>, IDmsService
     {
         protected override string HttpClientName => "DmsApi";
+        private readonly IDebService _debService;
+		private readonly IAuditService _auditService;
+		private readonly ICurrentUserService _currentUserService;
 
-        public DmsService(
+		public DmsService(
             IHttpClientFactory httpClientFactory,
             ILogger<DmsService> logger,
             IHttpContextAccessor httpContextAccessor,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IDebService debService,
+            IAuditService auditService,
+            ICurrentUserService currentUserService)
             : base(httpClientFactory, logger, httpContextAccessor, configuration)
         {
-        }
+			_debService = debService;
+			_auditService = auditService;
+			_currentUserService = currentUserService;
+		}
 
         /// <summary>
         /// Adds a new document to a library.
@@ -163,10 +178,17 @@ namespace Nexus.DEB.Infrastructure.Services
         {
             var requestUri = $"api/libraries/{libraryId}/document/{documentId}";
 
-            return await SendAuthenticatedValidationRequestAsync(
+            var successful = await SendAuthenticatedValidationRequestAsync(
                 HttpMethod.Delete,
                 requestUri,
                 operationName: $"DeleteDocument {documentId} from library {libraryId}");
+
+            if(successful)
+            {
+                await AddDocumentDeletedAuditRecordAsync(libraryId, documentId);
+			}
+
+            return successful;
         }
 
         /// <summary>
@@ -349,9 +371,50 @@ namespace Nexus.DEB.Infrastructure.Services
             if (!string.IsNullOrWhiteSpace(metadata.Author))
             {
                 content.Add(new StringContent(metadata.Author, Encoding.UTF8), "author");
-            }
-
-            return content;
+			}
+			return content;
         }
-    }
+
+        public async Task AddDocumentAddedAuditRecordAsync(Guid documentId, Guid entityId)
+        {
+			var userDetails = await _currentUserService.GetUserDetailsAsync();
+			var entityHead = await _debService.GetEntityHeadAsync(entityId, new CancellationToken());
+
+			await _auditService.DataImported(
+                entityId, 
+                null, 
+                string.Format("Serial: {0}", entityHead.SerialNumber), 
+                userDetails, 
+                documentId.ToAuditData("Guid"));
+		}
+
+		public async Task AddDocumentUpdatedAuditRecordAsync(Guid documentId, Guid entityId)
+		{
+			var userDetails = await _currentUserService.GetUserDetailsAsync();
+			var entityHead = await _debService.GetEntityHeadAsync(entityId, new CancellationToken());
+
+			await _auditService.EntitySaved(
+                entityId, 
+                null, 
+                string.Format("Serial: {0}", entityHead.SerialNumber), 
+                userDetails,
+				documentId.ToAuditData("Guid"));
+		}
+
+        public async Task AddDocumentDeletedAuditRecordAsync(Guid libraryId, Guid documentId)
+        {
+			var userDetails = await _currentUserService.GetUserDetailsAsync();
+
+            await _auditService.EntitySaved(
+                documentId, 
+                "Document", 
+                "Document marked as deleted", 
+                userDetails,
+				(new
+				{
+					docid = libraryId,
+					libid = documentId
+				}).ToAuditData("document"));
+        }
+	}
 }

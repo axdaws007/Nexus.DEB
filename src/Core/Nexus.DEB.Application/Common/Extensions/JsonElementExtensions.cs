@@ -1,6 +1,7 @@
 ﻿using Nexus.DEB.Application.Common.Models;
 using System.Collections;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -73,34 +74,47 @@ public static class JsonElementExtensions
         {
             return JsonDocument.Parse("null").RootElement.Clone();
         }
-
-        var dictionary = new Dictionary<string, object?>();
-        var type = value.GetType();
-
-        foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        if (IsScalarType(value.GetType()))
         {
-            if (!prop.CanRead) continue;
-            if (prop.GetIndexParameters().Length > 0) continue;
+			var json = JsonSerializer.Serialize(value, new JsonSerializerOptions
+			{
+				DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+				WriteIndented = false
+			});
 
-            var propType = prop.PropertyType;
+			using var doc = JsonDocument.Parse(json);
+			return doc.RootElement.Clone();
+		}
+        else
+        {
+            var dictionary = new Dictionary<string, object?>();
+            var type = value.GetType();
 
-            if (IsScalarType(propType))
+            foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                try
+                if (!prop.CanRead) continue;
+                if (prop.GetIndexParameters().Length > 0) continue;
+
+                var propType = prop.PropertyType;
+
+                if (IsScalarType(propType))
                 {
-                    var propValue = prop.GetValue(value);
-                    dictionary[prop.Name] = propValue;
-                }
-                catch
-                {
-                    // Skip properties that throw on access
+                    try
+                    {
+                        var propValue = prop.GetValue(value);
+                        dictionary[prop.Name] = propValue;
+                    }
+                    catch
+                    {
+                        // Skip properties that throw on access
+                    }
                 }
             }
-        }
 
-        var json = JsonSerializer.Serialize(dictionary, DefaultOptions);
-        using var doc = JsonDocument.Parse(json);
-        return doc.RootElement.Clone();
+            var json = JsonSerializer.Serialize(dictionary, DefaultOptions);
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.Clone();
+        }
     }
 
     #endregion

@@ -2,7 +2,12 @@
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Domain;
+using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Infrastructure.Services;
+using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using HotChocolate.Execution;
 
 namespace Nexus.DEB.Api.Restful
 {
@@ -66,7 +71,8 @@ namespace Nexus.DEB.Api.Restful
             [FromForm] string? author,
             [FromForm] string? documentType,
             [FromServices] IApplicationSettingsService applicationSettingsService,
-            [FromServices] IDmsService dmsService)
+            [FromServices] IDmsService dmsService,
+            [FromServices] IDebService debService)
         {
             try
             {
@@ -132,7 +138,12 @@ namespace Nexus.DEB.Api.Restful
                         statusCode: StatusCodes.Status500InternalServerError);
                 }
 
-                return Results.Ok(result);
+                if (result.DocumentId.HasValue)
+                {
+                    await dmsService.AddDocumentAddedAuditRecordAsync(result.DocumentId.Value, new Guid(entityId));
+                }
+
+				return Results.Ok(result);
             }
             catch (ArgumentException ex)
             {
@@ -215,9 +226,19 @@ namespace Nexus.DEB.Api.Restful
                     return Results.Problem(
                         detail: "Failed to update document. The service returned no data.",
                         statusCode: StatusCodes.Status500InternalServerError);
-                }
+				}
 
-                return Results.Ok(result);
+				if (result.DocumentId.HasValue)
+				{
+                    var dmsDocument = await dmsService.GetDocumentAsync(libraryId, documentId);
+
+                    if (dmsDocument != null && dmsDocument.EntityId.HasValue)
+                    {
+                        await dmsService.AddDocumentUpdatedAuditRecordAsync(result.DocumentId.Value, dmsDocument.EntityId.Value);
+                    }
+				}
+
+				return Results.Ok(result);
             }
             catch (ArgumentException ex)
             {

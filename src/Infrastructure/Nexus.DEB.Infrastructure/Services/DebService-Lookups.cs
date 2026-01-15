@@ -61,7 +61,7 @@ namespace Nexus.DEB.Infrastructure.Services
                           }).ToListAsync(cancellationToken);
         }
 
-        public IQueryable<UserAndPost> GetPostsWithUsers(string? searchText, bool includeDeletedUsers = false, bool includeDeletedPosts = false)
+        public IQueryable<UserAndPost> GetPostsWithUsers(string? searchText, ICollection<Guid> postIds, bool includeDeletedUsers = false, bool includeDeletedPosts = false)
         {
             var query = _dbContext.UsersAndPosts.AsNoTracking();
 
@@ -75,6 +75,11 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 var searchTextLower = searchText.ToLower();
                 query = query.Where(x => x.PostTitle.ToLower().Contains(searchTextLower) || x.UserName.ToLower().Contains(searchTextLower));
+            }
+
+            if (postIds.Count > 0)
+            {
+                query = query.Where(x => postIds.Contains(x.PostId));
             }
 
             return query;

@@ -2,6 +2,8 @@
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Infrastructure.Services;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Nexus.DEB.Api.GraphQL.Cis
 {
@@ -68,11 +70,23 @@ namespace Nexus.DEB.Api.GraphQL.Cis
         [Authorize]
         [UseOffsetPaging]
         [UseSorting]
-        public static IQueryable<UserAndPost> GetPostsWithUsers(
+        public static async Task<IQueryable<UserAndPost>> GetPostsWithUsers(
             IDebService debService,
-            string? searchText, 
+            ICbacService cbacService,
+            string? searchText,
+            ICollection<Guid>? roleIds,
             bool includeDeletedUsers = false, 
             bool includeDeletedPosts = false)
-            => debService.GetPostsWithUsers(searchText, includeDeletedUsers, includeDeletedPosts);
+        {
+            ICollection<Guid> postIds = [];
+
+            if (roleIds != null && roleIds.Count > 0)
+            {
+                postIds = await cbacService.GetRolePostIdsAsync(roleIds) ?? [];
+            }
+
+            return debService.GetPostsWithUsers(searchText, postIds, includeDeletedUsers, includeDeletedPosts);
+        }
+        
     }
 }

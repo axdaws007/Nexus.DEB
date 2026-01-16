@@ -19,5 +19,7 @@ namespace Nexus.DEB.Domain.Models
         public virtual Standard Standard { get; set; }
 
         public ICollection<Requirement> Requirements { get; set; }
+
+        public string VersionTitle { get; set; } = string.Empty;
     }
 }

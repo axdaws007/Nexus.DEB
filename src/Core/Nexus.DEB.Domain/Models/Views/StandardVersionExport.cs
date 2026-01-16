@@ -17,5 +17,6 @@
         public int StatusId { get; set; }
         public string? Status {  get; set; }
         public int NumberOfLinkedScopes { get; set; }
+        public string VersionTitle { get; set; } = string.Empty;
     }
 }

@@ -46,6 +46,8 @@ namespace Nexus.DEB.Infrastructure.Configurations
                     // Join table configuration
                     j => j.ToTable("StandardVersionRequirement", "deb")
                 );
+
+            builder.Property(x => x.VersionTitle).HasDefaultValue(string.Empty).HasMaxLength(50);
         }
     }
 }

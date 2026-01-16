@@ -1,7 +1,6 @@
 ﻿using Bogus;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Nexus.DEB.Api.Restful.Models;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain.Models;
@@ -14,18 +13,64 @@ namespace Nexus.DEB.Api.Restful
     {
         public static void MapTestDataEndpoints(this WebApplication app)
         {
-                var testGroup = app.MapGroup("/api/testdata")
-                    .WithTags("TestData")
-                    .WithOpenApi();
+            var testGroup = app.MapGroup("/api/testdata")
+                .WithTags("TestData")
+                .WithOpenApi();
 
-                testGroup.MapPost("/statements-and-tasks", GenerateStatementsAndTasks)
-                    .RequireAuthorization()
-                    .WithName("GenerateStatementsAndTasks")
-                    .WithSummary("Generate sample statements and tasks")
-                    .Produces(StatusCodes.Status200OK)
-                    .Produces(StatusCodes.Status401Unauthorized);
+            testGroup.MapPost("/statements-and-tasks", GenerateStatementsAndTasks)
+                .RequireAuthorization()
+                .WithName("GenerateStatementsAndTasks")
+                .WithSummary("Generate sample statements and tasks")
+                .Produces(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            testGroup.MapPost("/paws-for-requirements", GeneratePawsForRequirements)
+                .RequireAuthorization()
+                .WithName("GeneratePawsForRequirements")
+                .WithSummary("Generate initial PAWS records for requirements")
+                .Produces(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status401Unauthorized);
         }
 
+
+        private static async Task<IResult> GeneratePawsForRequirements(
+            [FromServices] IDebService debService,
+            [FromServices] IPawsService pawsService,
+            [FromServices] ICurrentUserService currentUserService,
+            [FromServices] IConfiguration configuration,
+            [FromServices] ILogger<Program> logger,
+            [FromServices] IHttpContextAccessor httpContextAccessor, // For current user
+            [FromServices] IApplicationSettingsService applicationSettingsService,
+            CancellationToken cancellationToken)
+        {
+            var moduleId = applicationSettingsService.GetModuleId("DEB");
+
+            // Get current user ID (adjust based on your auth setup)
+            var currentPostId = currentUserService.PostId;
+
+            var workflowId = await debService.GetWorkflowIdAsync(moduleId, EntityTypes.Requirement, cancellationToken);
+
+            var requirements = debService.GetRequirementsForExport(null); // Get all the requirements...
+
+            int count = 0;
+            foreach (var requirement in requirements)
+            {
+                var pawsData = await debService.GetCurrentWorkflowStatusForEntityAsync(requirement.EntityId, cancellationToken);
+
+                if (pawsData == null)
+                {
+                    await pawsService.CreateWorkflowInstanceAsync(workflowId.Value, requirement.EntityId, null, null, cancellationToken);
+                    count++;
+                }
+            }
+
+            return Results.Ok(new
+            {
+                NumberOfRequirements = requirements.Count(),
+                PawsRecordCreated = count,
+                Message = "Paws records generated successfully"
+            });
+        }
 
         private static async Task<IResult> GenerateStatementsAndTasks(
             [FromBody] StatementAndTasksParameters? parameters,

@@ -7,7 +7,7 @@ namespace Nexus.DEB.Api.GraphQL
     [MutationType]
     public static class DmsMutations
     {
-        [Authorize(Policy = DebHelper.Policies.CanDeleteSoCEvidence)]
+        [Authorize(Policy = DebHelper.Policies.CanDeleteDocuments)]
         [UseMutationConvention(Disable = true)]
         public static async Task<bool> DeleteDocument(
            string library,

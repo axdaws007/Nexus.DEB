@@ -145,10 +145,11 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(DebHelper.Policies.CanAddComments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllCreateCommentCapabilities));
     options.AddPolicy(DebHelper.Policies.CanDeleteComments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllDeleteCommentCapabilities));
-    options.AddPolicy(DebHelper.Policies.CanAddSoCEvidence, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanAddSoCEvidence));
-    options.AddPolicy(DebHelper.Policies.CanEditSoCEvidence, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoCEvidence));
-    options.AddPolicy(DebHelper.Policies.CanDeleteSoCEvidence, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanDeleteSoCEvidence));
-    options.AddPolicy(DebHelper.Policies.CanViewSoCEvidence, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanViewSoCEvidence));
+    
+    options.AddPolicy(DebHelper.Policies.CanAddDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllCreateDocCapabilities));
+    options.AddPolicy(DebHelper.Policies.CanDeleteDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllDeleteDocCapabilities));
+    options.AddPolicy(DebHelper.Policies.CanEditDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllEditDocCapabilities));
+    options.AddPolicy(DebHelper.Policies.CanViewDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllViewDocCapabilities));
 
     options.AddPolicy(DebHelper.Policies.CanCreateOrEditSoC, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoC));
     options.AddPolicy(DebHelper.Policies.CanCreateSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanCreateSoCTask));

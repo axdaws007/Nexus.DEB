@@ -59,37 +59,55 @@ namespace Nexus.DEB.Domain
         {
             public const string CanAddComments = "CanAddComments";
             public const string CanDeleteComments = "CanDeleteComments";
-            public const string CanAddSoCEvidence = "CanAddSoCEvidence";
-            public const string CanEditSoCEvidence = "CanEditSoCEvidence";
-            public const string CanDeleteSoCEvidence = "CanDeleteSoCEvidence";
-            public const string CanViewSoCEvidence = "CanViewSoCEvidence";
             public const string CanCreateOrEditSoC = "CanCreateOrEditSoC";
             public const string CanCreateSoCTask = "CanCreateSoCTask";
             public const string CanEditSoCTask = "CanEditSoCTask";
-        }
+            public const string CanAddDocuments = "CanAddDocuments";
+            public const string CanDeleteDocuments = "CanDeleteDocuments";
+            public const string CanEditDocuments = "CanEditDocuments";
+			public const string CanViewDocuments = "CanViewDocuments";
+		}
 
         public static class Capabilites
         {
-            public const string CanCreateSoCComments = "CanCreateSoCComments";
-            public const string CanCreateScopeComments = "CanCreateScopeComments";
-            public const string CanCreateStdVersionComments = "CanCreateStdVersionComments";
-            public const string CanCreateRequirementComments = "CanCreateRequirementComments";
-            public const string CanCreateTaskComments = "CanCreateTaskComments";
-            public const string CanEditSoC = "CanEditSoC";
+			#region SoC
+			public const string CanEditSoC = "CanEditSoC";
             public const string CanViewSoCEvidence = "CanViewSoCEvidence";
             public const string CanEditSoCEvidence = "CanEditSoCEvidence";
             public const string CanDeleteSoCEvidence = "CanDeleteSoCEvidence";
             public const string CanAddSoCEvidence = "CanAddSocEvidence";
             public const string CanCreateSoCTask = "CanCreateSoCTask";
             public const string CanEditSoCTask = "CanEditSoCTask";
-            public const string CanUpVersionStdVersion = "CanUpVersionStdVersion";
+			#endregion SoC
+
+			#region StandardVersion
+			public const string CanUpVersionStdVersion = "CanUpVersionStdVersion";
             public const string CanEditStdVersion = "CanEditStdVersion";
-            public const string CanEditRequirement = "CanEditRequirement";
-            public const string CanEditScope = "CanEditScope";
-            public const string CanViewReports = "CanViewReports";
+			#endregion StandardVersion
+
+			#region Requirement
+			public const string CanEditRequirement = "CanEditRequirement";
+			#endregion Requirement
+
+			#region Scope
+			public const string CanEditScope = "CanEditScope";
+            public const string CanViewScopeAttachments = "CanViewScopeAttachments";
+			public const string CanCreateScopeAttachments = "CanCreateScopeAttachments";
+			public const string CanEditScopeAttachments = "CanEditScopeAttachments";
+			public const string CanDeleteScopeAttachments = "CanDeleteScopeAttachments";
+			#endregion Scope
+
+			public const string CanViewReports = "CanViewReports";
             public const string CanViewCommonDocuments = "CanViewCommonDocuments";
             public const string CanEditCommonDocuments = "CanEditCommonDocuments";
-            public const string CanDeleteAllSoCComments = "CanDeleteAllSoCComments";
+			
+            #region Comments
+			public const string CanCreateSoCComments = "CanCreateSoCComments";
+			public const string CanCreateScopeComments = "CanCreateScopeComments";
+			public const string CanCreateStdVersionComments = "CanCreateStdVersionComments";
+			public const string CanCreateRequirementComments = "CanCreateRequirementComments";
+			public const string CanCreateTaskComments = "CanCreateTaskComments";
+			public const string CanDeleteAllSoCComments = "CanDeleteAllSoCComments";
             public const string CanDeleteAllScopeComments = "CanDeleteAllScopeComments";
             public const string CanDeleteAllStdVersionComments = "CanDeleteAllStdVersionComments";
             public const string CanDeleteAllRequirementComments = "CanDeleteAllRequirementComments";
@@ -99,6 +117,7 @@ namespace Nexus.DEB.Domain
             public const string CanDeleteOwnedStdVersionComments = "CanDeleteOwnedStdVersionComments ";
             public const string CanDeleteOwnedRequirementComments = "CanDeleteOwnedRequirementComments";
             public const string CanDeleteOwnedTaskComments = "CanDeleteOwnedTaskComments";
+            #endregion Comments
 
 
             public static readonly IReadOnlyDictionary<string, string> EditCapabilityByEntityType = new Dictionary<string, string>
@@ -137,7 +156,33 @@ namespace Nexus.DEB.Domain
                 CanDeleteOwnedTaskComments,
             ]);
 
-            public static ReadOnlyCollection<string> AllDeleteCommentCapabilities => AllDeleteAnyCommentCapabilities.Union(AllDeleteOwnedCommentCapabilities).ToList().AsReadOnly();
+            public static ReadOnlyCollection<string> AllCreateDocCapabilities => new(
+			[
+				CanAddSoCEvidence,
+				CanCreateScopeAttachments,
+			]);
+
+			public static ReadOnlyCollection<string> AllDeleteDocCapabilities => new(
+			[
+				CanDeleteSoCEvidence,
+				CanDeleteScopeAttachments,
+			]);
+
+			public static ReadOnlyCollection<string> AllEditDocCapabilities => new(
+			[
+				CanEditCommonDocuments,
+				CanEditSoCEvidence,
+				CanEditScopeAttachments,
+			]);
+
+			public static ReadOnlyCollection<string> AllViewDocCapabilities => new(
+			[
+				CanViewCommonDocuments,
+				CanViewSoCEvidence,
+				CanViewScopeAttachments,
+			]);
+
+			public static ReadOnlyCollection<string> AllDeleteCommentCapabilities => AllDeleteAnyCommentCapabilities.Union(AllDeleteOwnedCommentCapabilities).ToList().AsReadOnly();
         }
 
         public static class MyWork

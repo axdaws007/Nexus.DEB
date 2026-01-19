@@ -21,7 +21,7 @@ namespace Nexus.DEB.Api.Restful
                 .WithOpenApi();
 
             dmsGroup.MapPost("/libraries/{library}/document", AddDocument)
-                .RequireAuthorization(policyNames: [DebHelper.Policies.CanAddSoCEvidence])
+                .RequireAuthorization(policyNames: [DebHelper.Policies.CanAddDocuments])
                 .WithName("AddDocument")
                 .WithSummary("Add a new document to the library")
                 .DisableAntiforgery() // Required for file uploads
@@ -32,7 +32,7 @@ namespace Nexus.DEB.Api.Restful
                 .Produces(StatusCodes.Status500InternalServerError);
 
             dmsGroup.MapPost("/libraries/{library}/document/{documentId:guid}", UpdateDocument)
-                .RequireAuthorization(policyNames: [DebHelper.Policies.CanEditSoCEvidence])
+                .RequireAuthorization(policyNames: [DebHelper.Policies.CanEditDocuments])
                 .WithName("UpdateDocument")
                 .WithSummary("Update an existing document")
                 .DisableAntiforgery() // Required for file uploads
@@ -43,7 +43,7 @@ namespace Nexus.DEB.Api.Restful
                 .Produces(StatusCodes.Status500InternalServerError);
 
             dmsGroup.MapGet("/libraries/{library}/document/{documentId:guid}/file", GetDocumentFile)
-                .RequireAuthorization(policyNames: [DebHelper.Policies.CanViewSoCEvidence])
+                .RequireAuthorization(policyNames: [DebHelper.Policies.CanViewDocuments])
                 .WithName("GetDocumentFile")
                 .WithSummary("Download a document file")
                 .Produces<FileResult>(StatusCodes.Status200OK)

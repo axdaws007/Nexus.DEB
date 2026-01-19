@@ -90,7 +90,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 var workflowStatus = await DebService.GetCurrentWorkflowStatusForEntityAsync(task.EntityId, cancellationToken);
 				if (activityId != workflowStatus.ActivityId)
 				{
-					await PawsService.ApproveStepAsync(
+					var successful = await PawsService.ApproveStepAsync(
                         this.WorkflowId.Value,
                         task.EntityId,
                         workflowStatus.StepId,
@@ -102,7 +102,10 @@ namespace Nexus.DEB.Infrastructure.Services
                         [taskOwnerId],
                         cancellationToken);
 
-					await AddChangeRecordItemForPAWSChange(task.EntityId, workflowStatus.ActivityTitle, activityId, cancellationToken);
+                    if (successful)
+                    {
+                        await AddChangeRecordItemForPAWSChange(task.EntityId, workflowStatus.ActivityTitle, activityId, cancellationToken);
+                    }
 				}
 
                 var taskDetail = await this.DebService.GetTaskDetailByIdAsync(task.EntityId, cancellationToken);

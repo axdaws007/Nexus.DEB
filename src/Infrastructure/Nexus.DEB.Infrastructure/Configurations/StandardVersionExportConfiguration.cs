@@ -63,6 +63,10 @@ namespace Nexus.DEB.Infrastructure.Configurations
             builder.Property(e => e.NumberOfLinkedScopes)
                 .HasColumnName("ScopeCount")
                 .IsRequired();
+
+            builder.Property(e => e.VersionTitle)
+                .HasColumnName("VersionTitle")
+                .IsRequired();
         }
     }
 }

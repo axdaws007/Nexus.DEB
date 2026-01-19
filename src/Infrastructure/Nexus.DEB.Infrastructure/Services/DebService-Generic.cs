@@ -142,7 +142,7 @@ namespace Nexus.DEB.Infrastructure.Services
             var eventId = _dbContext.EventId;
             var userDetails = _dbContext.UserDetails;
 
-            _dbContext.Database.ExecuteSqlRawAsync(
+            await _dbContext.Database.ExecuteSqlRawAsync(
                 "EXEC dbo.CreateChangeRecordItem @entityId, @fieldName, @friendlyFieldName, @oldValue, @newValue",
                 new SqlParameter("@entityId", entityId),
                 new SqlParameter("@fieldName", fieldName),

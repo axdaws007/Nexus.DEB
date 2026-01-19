@@ -221,9 +221,9 @@ app.MapExportEndpoints();
 app.MapWorkflowDiagramEndpoints();
 app.MapDmsEndpoints();
 
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.MapTestDataEndpoints();
-}
+//}
 
 app.RunWithGraphQLCommands(args);

@@ -75,7 +75,7 @@ namespace Nexus.DEB.Infrastructure.Services
                         .Select(srs => srs.StatementId)
                         .Distinct()
                         .ToList(),
-                    StandardVersionTitles = r.StandardVersions.Select(sv => sv.Standard.Title + sv.Delimiter + sv.Title).ToList()
+                    StandardVersionTitles = r.StandardVersions.Select(sv => sv.Title).ToList()
                 })
                 .AsNoTracking();
 
@@ -256,7 +256,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     SerialNumber = g.Key.SerialNumber,
                     Title = g.Key.Title,
                     StandardVersionReference = g.First().Requirement.StandardVersions
-                        .Select(sv => sv.Standard.Title + sv.Delimiter + sv.Title)
+                        .Select(sv => sv.Title)
                         .FirstOrDefault() ?? string.Empty,
                     Scopes = g.Select(srs => new ScopeCondensed
                     {
@@ -350,7 +350,7 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 var svR = new StandardVersionRequirements();
                 svR.StandardVersionId = sv.EntityId;
-				svR.StandardVersionTitle = sv.Standard.Title + sv.Delimiter + sv.Title;
+				svR.StandardVersionTitle = sv.Title;
                 svR.Status = standardVersionStates.FirstOrDefault(s => s.EntityId == sv.EntityId)?.PseudoStateTitle ?? string.Empty;
                 svR.TotalRequirements = sv.Requirements.Count;
                 svR.TotalRequirementsInScope = scopeRequirements.Where(w => w.StandardVersions.Any(a => a.EntityId == sv.EntityId)).Count();
@@ -607,7 +607,7 @@ namespace Nexus.DEB.Infrastructure.Services
                         Title = requirement.Title,
 
                         // StandardVersion info (single values)
-                        StandardVersionReference = standardVersion.Standard.Title + standardVersion.Delimiter + standardVersion.Title,
+                        StandardVersionReference = standardVersion.Title,
 
                         // All scopes for this requirement (from this statement)
                         Scopes = g.Select(x => new ScopeCondensed
@@ -732,7 +732,7 @@ namespace Nexus.DEB.Infrastructure.Services
                                   select new FilterItemEntity()
                                   {
                                       Id = sv.EntityId,
-                                      Value = sv.Standard.Title + sv.Delimiter + sv.Title,
+                                      Value = sv.Title,
                                       IsEnabled = !sv.IsRemoved
                                   }).ToListAsync(cancellationToken);
 

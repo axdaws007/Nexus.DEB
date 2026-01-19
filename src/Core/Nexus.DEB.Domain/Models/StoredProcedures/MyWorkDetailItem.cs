@@ -10,7 +10,7 @@
 
         public string Title { get; set; } = string.Empty;
 
-        public string SerialNumber { get; set; } = string.Empty;
+        public string? SerialNumber { get; set; }
 
         public DateTime CreatedDate { get; set; }
 
@@ -26,7 +26,7 @@
 
         public string? OwnerGroup { get; set; }
 
-        public string OwnerPost { get; set; } = string.Empty;
+        public string? OwnerPost { get; set; }
 
         public string TransferDates { get; set; } = string.Empty;
     }

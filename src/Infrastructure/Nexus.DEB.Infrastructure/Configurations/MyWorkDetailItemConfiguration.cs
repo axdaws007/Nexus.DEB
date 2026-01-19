@@ -21,7 +21,8 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .HasColumnName("EntityID");
 
             builder.Property(e => e.SerialNumber)
-                .HasColumnName("SerialNumber");
+                .HasColumnName("SerialNumber")
+                .IsRequired(false);
 
             builder.Property(e => e.Title)
                 .HasColumnName("Title");
@@ -51,7 +52,8 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .IsRequired(false);
 
             builder.Property(e => e.OwnerPost)
-                .HasColumnName("OwnerPost");
+                .HasColumnName("OwnerPost")
+                .IsRequired(false);
 
             builder.Property(e => e.TransferDates)
                 .HasColumnName("TransferDates");

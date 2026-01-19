@@ -28,7 +28,8 @@ namespace Nexus.DEB.Api.GraphQL
                     SearchText = filters.SearchText?.Trim(),
                     StandardVersionIds = filters.StandardVersionIds,
                     StatementId = filters.StatementId,
-                    StatusIds = filters.StatusIds
+                    StatusIds = filters.StatusIds,
+                    OnlyShowAvailableRequirementScopeCombinations = filters.OnlyShowAvailableRequirementScopeCombinations,
                 };
 
             return debService.GetRequirementsForGrid(f);

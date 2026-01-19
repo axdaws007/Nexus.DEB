@@ -129,6 +129,20 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     query = query.Where(r => r.StatementIds.Contains(filters.StatementId.Value));
                 }
+
+                if (filters.OnlyShowAvailableRequirementScopeCombinations && filters.ScopeIds != null && filters.ScopeIds.Count > 0)
+                {
+                    var requirementIdsWithAvailableCombinations = _dbContext.Set<Requirement>()
+                        .Where(r => r.Scopes.Any(s =>
+                            // Scope is in our filter list
+                            filters.ScopeIds.Contains(s.EntityId) &&
+                            // AND this requirement/scope combination doesn't exist in allocations
+                            // (r.StatementsRequirementsScopes is already scoped to THIS requirement)
+                            !r.StatementsRequirementsScopes.Any(srs => srs.ScopeId == s.EntityId)))
+                        .Select(r => r.EntityId);
+
+                    query = query.Where(r => requirementIdsWithAvailableCombinations.Contains(r.EntityId));
+                }
             }
 
             return query;

@@ -5,6 +5,7 @@ using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
+using System.Collections.Generic;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -753,7 +754,33 @@ namespace Nexus.DEB.Infrastructure.Services
             return results.OrderBy(x => x.Value).ToList();
         }
 
-        public IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters)
+		public async Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLookupAsync(Guid standardVersionId, CancellationToken cancellationToken)
+		{
+            var returnList = new List<FilterItemEntity>();
+            try
+            {
+                var results = await _dbContext.Sections.Where(w => w.StandardVersionId == standardVersionId)
+                                    .OrderBy(o => o.Ordinal)
+                                    .ThenBy(t => t.IsReferenceDisplayed ? t.Reference : null)
+									.ThenBy(t => t.IsTitleDisplayed ? t.Title : null)
+									.Select(s => new FilterItemEntity()
+                                    {
+                                        Id = s.Id,
+                                        Value = string.Format("{0} {1}", (s.IsReferenceDisplayed ? s.Reference : string.Empty), (s.IsTitleDisplayed ? s.Title : string.Empty)).Trim(),
+                                        IsEnabled = true
+                                    })
+                                    .ToListAsync(cancellationToken);
+                returnList.AddRange(results);
+            }
+            catch(Exception ex)
+            {
+                // Log and swallow exception to avoid breaking the calling query
+                Console.WriteLine(ex.Message);
+			}
+			return returnList;
+		}
+
+		public IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters)
         {
             var query = _dbContext.StandardVersionSummaries.AsNoTracking();
 

@@ -49,12 +49,6 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<TaskChildCounts> GetChildCountsForTaskAsync(Guid id, CancellationToken cancellationToken);
         Task<Domain.Models.Task> CreateTaskAsync(Domain.Models.Task task, CancellationToken cancellationToken = default);
         Task<Domain.Models.Task> UpdateTaskAsync(Domain.Models.Task task, CancellationToken cancellationToken = default);
-
-
-
-        Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(CancellationToken cancellationToken);
-        Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(CancellationToken cancellationToken);
-
         #endregion Entity methods
 
         #region Lookup methods
@@ -62,8 +56,10 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<CommentType> GetCommentTypes();
         IQueryable<Standard> GetStandards();
         Task<ICollection<FilterItem>> GetStandardsLookupAsync(CancellationToken cancellationToken);
-
-        IQueryable<TaskType> GetTaskTypes();
+		Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(CancellationToken cancellationToken);
+		Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLookupAsync(Guid standardVersionId, CancellationToken cancellationToken);
+		Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(CancellationToken cancellationToken);
+		IQueryable<TaskType> GetTaskTypes();
         Task<ICollection<FilterItem>> GetTaskTypesLookupAsync(CancellationToken cancellationToken);
 
         #endregion

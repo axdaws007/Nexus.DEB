@@ -71,6 +71,14 @@ namespace Nexus.DEB.Api.GraphQL
             CancellationToken cancellationToken)
             => await debService.GetStandardVersionsLookupAsync(cancellationToken);
 
+        [Authorize]
+        public async static Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLookupAsync(
+			Guid standardVersionId,
+			IDebService debService,
+			IResolverContext resolverContext,
+			CancellationToken cancellationToken)
+			=> await debService.GetStandardVersionSectionsLookupAsync(standardVersionId, cancellationToken);
+
 		[Authorize]
 		public static async Task<StandardVersionChildCounts> GetChildCountsForStandardVersion(
 			Guid standardVersionId,

@@ -35,7 +35,26 @@ namespace Nexus.DEB.Api.GraphQL
             return debService.GetRequirementsForGrid(f);
         }
 
-        [Authorize]
+		[Authorize]
+		[UseOffsetPaging]
+		[UseSorting]
+		public static IQueryable<StandardVersionRequirementDetail> GetStandardVersionRequirementsForGrid(
+			StandardVersionRequirementsFilters? filters,
+			IDebService debService)
+		{
+			var f = filters is null
+			? new Application.Common.Models.StandardVersionRequirementsFilters()
+			: new Application.Common.Models.StandardVersionRequirementsFilters
+			{
+				StandardVersionId = filters.StandardVersionId,
+                SectionId = filters.SectionId,
+				SearchText = filters.SearchText?.Trim(),
+			};
+
+			return debService.GetStandardVersionRequirementsForGrid(f);
+		}
+
+		[Authorize]
         public static async Task<ICollection<RequirementWithScopes>> GetRequirementScopesForStatement(
             Guid statementId,
             IDebService debService,

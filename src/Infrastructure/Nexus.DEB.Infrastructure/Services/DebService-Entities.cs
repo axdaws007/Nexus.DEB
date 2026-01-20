@@ -149,7 +149,45 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
-        public IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters)
+        public IQueryable<StandardVersionRequirementDetail> GetStandardVersionRequirementsForGrid(StandardVersionRequirementsFilters? filters)
+		{
+            var query = from svr in _dbContext.StandardVersionRequirements
+                        join r in (_dbContext.Requirements.Include(r => r.Scopes)) on svr.RequirementId equals r.EntityId
+                        select new StandardVersionRequirementDetail
+                        {
+							RequirementId = svr.RequirementId,
+                            SerialNumber = svr.SerialNumber,
+                            Title = svr.Title,
+                            StandardVersionId = svr.StandardVersionId,
+                            StandardVersion = svr.StandardVersion,
+                            SectionId = svr.SectionId,
+                            Section = svr.Section,
+                            OtherScopes = r.Scopes.Where(w => filters == null || filters.ScopeId == null || w.EntityId != filters.ScopeId).Count()
+                        };
+
+            if(filters != null)
+            {
+                if(filters.StandardVersionId.HasValue)
+				{
+					query = query.Where(w => w.StandardVersionId == filters.StandardVersionId.Value);
+				}
+
+                if(filters.SectionId.HasValue)
+                {
+					query = query.Where(w => w.SectionId == filters.SectionId.Value);
+				}
+
+                if(filters.SearchText != null && !string.IsNullOrWhiteSpace(filters.SearchText))
+                {
+					query = query.Where(w => w.Title.Contains(filters.SearchText) || w.SerialNumber.Contains(filters.SearchText));
+				}
+			}
+
+			return query;
+		}
+
+
+		public IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters)
         {
             var query = _dbContext.RequirementExport.AsNoTracking();
 

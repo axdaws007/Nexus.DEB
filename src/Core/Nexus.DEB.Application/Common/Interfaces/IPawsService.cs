@@ -72,5 +72,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<byte[]?> GetWorkflowDiagramImageAsync(string cacheKey, CancellationToken cancellationToken);
 
         Task<ICollection<WorkflowActivity>?> GetActivitiesForWorkflowAsync(Guid workflowId, bool includeRemoved = false, CancellationToken cancellationToken = default);
+
+        Task<WorkflowActivity?> GetActivityAsync(int activityId, CancellationToken cancellationToken = default);
     }
 }

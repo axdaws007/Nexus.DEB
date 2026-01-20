@@ -938,6 +938,11 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     query = query.Where(x => filters.OwnedByIds.Contains(x.OwnedById));
                 }
+
+                if (filters.TaskTypeIds != null && filters.TaskTypeIds.Count > 0)
+                {
+                    query = query.Where(x => filters.TaskTypeIds.Contains(x.TaskTypeId));
+                }
             }
 
             return query;
@@ -993,6 +998,11 @@ namespace Nexus.DEB.Infrastructure.Services
                 if (filters.OwnedByIds != null && filters.OwnedByIds.Count > 0)
                 {
                     query = query.Where(x => filters.OwnedByIds.Contains(x.OwnedById));
+                }
+
+                if (filters.TaskTypeIds != null && filters.TaskTypeIds.Count > 0)
+                {
+                    query = query.Where(x => filters.TaskTypeIds.Contains(x.TaskTypeId));
                 }
             }
 

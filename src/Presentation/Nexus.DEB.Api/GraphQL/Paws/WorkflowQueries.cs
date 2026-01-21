@@ -1,4 +1,6 @@
 ﻿using HotChocolate.Authorization;
+using HotChocolate.Resolvers;
+using Nexus.DEB.Api.Security;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
@@ -56,9 +58,12 @@ namespace Nexus.DEB.Api.GraphQL.Paws
             Guid entityId,
             IDebService debService,
             IPawsService pawsService,
+            ICbacService cbacService,
+            IResolverContext resolverContext,
             IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
         {
+            var debUser = new DebUser(resolverContext.GetUser());
             var moduleId = applicationSettingsService.GetModuleId("DEB");
             var entity = await debService.GetEntityHeadAsync(entityId, cancellationToken);
 
@@ -88,11 +93,23 @@ namespace Nexus.DEB.Api.GraphQL.Paws
 
             if (currentWorkflowStatus.StatusId == 1)
             {
-                var pendingActivities = await pawsService.GetPendingActivitiesAsync(entityId, workflowId.Value, cancellationToken);
+                var activity = await pawsService.GetActivityAsync(currentWorkflowStatus.ActivityId, cancellationToken);
+                var postRoles = await cbacService.GetRolesForPostAsync(debUser.PostId);
+                var postRoleIds = (postRoles != null && postRoles.Count > 0) ? postRoles.Select(x => x.RoleID).ToList() : [];
 
-                var selectedPendingActivity = pendingActivities.FirstOrDefault(x => x.ActivityID == currentWorkflowStatus.ActivityId);
+                if (activity != null && activity.OwnerRoleIDs.Any())
+                {
+                    currentWorkflowStatus.CanApprove = activity.OwnerRoleIDs.Intersect(postRoleIds).Any();
+                }
 
-                currentWorkflowStatus.AvailableTriggerStates = selectedPendingActivity.AvailableTriggerStates;
+                if (currentWorkflowStatus.CanApprove)
+                {
+                    var pendingActivities = await pawsService.GetPendingActivitiesAsync(entityId, workflowId.Value, cancellationToken);
+
+                    var selectedPendingActivity = pendingActivities.FirstOrDefault(x => x.ActivityID == currentWorkflowStatus.ActivityId);
+
+                    currentWorkflowStatus.AvailableTriggerStates = selectedPendingActivity.AvailableTriggerStates;
+                }
             }
 
             return currentWorkflowStatus;

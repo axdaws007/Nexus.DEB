@@ -161,6 +161,24 @@ namespace Nexus.DEB.Infrastructure.Services
             }
         }
 
+        public async Task<WorkflowActivity?> GetActivityAsync(int activityId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var response = await SendAuthenticatedRequestAsync<WorkflowActivity>(
+                    HttpMethod.Get,
+                    $"api/PAWSClient/GetActivity?activityId={activityId}",
+                    operationName: $"GetActivity for {activityId} activityId");
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error fetching activity");
+                throw;
+            }
+        }
+
 
         public async Task<ICollection<WorkflowActivity>?> GetActivitiesForWorkflowAsync(Guid workflowId, bool includeRemoved = false, CancellationToken cancellationToken = default)
         {

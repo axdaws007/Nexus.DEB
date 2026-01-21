@@ -10,5 +10,6 @@
         public string? PseudoStateTitle { get; set; }
         public int StepId { get; set; }
         public ICollection<TriggerStates>? AvailableTriggerStates { get; set; } = new List<TriggerStates>();
+        public bool CanApprove { get; set; }
     }
 }

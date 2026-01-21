@@ -10,6 +10,7 @@ namespace Nexus.DEB.Domain.Models
         public Guid OwnedById { get; set; }
         public string? OwnedBy { get; set; }
         public DateTime? DueDate { get; set; }
+        public short TaskTypeId { get; set; }
         public string TaskTypeTitle { get; set; } = string.Empty;
         public int? StatusId { get; set; }
         public string? Status { get; set; }

@@ -45,6 +45,10 @@ namespace Nexus.DEB.Infrastructure.Configurations
             builder.Property(e => e.DueDate)
                 .HasColumnName("DueDate");
 
+            builder.Property(e => e.TaskTypeId)
+                .HasColumnName("TaskTypeId")
+                .IsRequired();
+
             builder.Property(e => e.TaskTypeTitle)
                 .HasColumnName("TaskTypeTitle")
                 .IsRequired();

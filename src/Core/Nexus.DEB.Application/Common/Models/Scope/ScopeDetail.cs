@@ -2,7 +2,7 @@
 {
 	public class ScopeDetail : EntityDetailBase
 	{
-		public DateTime? TargetImplementationDate { get; set; }
+		public DateOnly? TargetImplementationDate { get; set; }
 
 		public List<StandardVersionRequirements> StandardVersionRequirements { get; set; } = new();
 	}

@@ -4,7 +4,7 @@ namespace Nexus.DEB.Domain.Models
 {
     public class Scope : EntityHead
     {
-        public DateTime? TargetImplementationDate { get; set; }
+        public DateOnly? TargetImplementationDate { get; set; }
         public virtual ICollection<Requirement> Requirements { get; set; }
         public virtual ICollection<StatementRequirementScope> StatementsRequirementsScopes { get; set; }
 

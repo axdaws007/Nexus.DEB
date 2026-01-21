@@ -16,6 +16,7 @@ namespace Nexus.DEB.Api.GraphQL
 			Guid ownerId,
 			string title,
 			string description,
+			DateOnly? targetImplementationDate,
 			IScopeDomainService scopeService,
 			IDomainEventPublisher eventPublisher,
 			CancellationToken cancellationToken = default)
@@ -24,6 +25,7 @@ namespace Nexus.DEB.Api.GraphQL
 				ownerId,
 				title,
 				description,
+				targetImplementationDate,
 				cancellationToken);
 
 			if (!result.IsSuccess)
@@ -51,6 +53,7 @@ namespace Nexus.DEB.Api.GraphQL
 			Guid ownerId,
 			string title,
 			string description,
+			DateOnly? targetImplementationDate,
 			IScopeDomainService scopeService,
 			IDomainEventPublisher eventPublisher,
 			CancellationToken cancellationToken = default)
@@ -60,6 +63,7 @@ namespace Nexus.DEB.Api.GraphQL
 				ownerId,
 				title,
 				description,
+				targetImplementationDate,
 				cancellationToken);
 
 			if (!result.IsSuccess)

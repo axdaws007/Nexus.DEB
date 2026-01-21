@@ -28,6 +28,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			Guid ownerId,
 			string title,
 			string description,
+			DateOnly? targetImplementationDate,
 			CancellationToken cancellationToken)
 		{
 			await ValidateFieldsAsync(null, ownerId, title);
@@ -45,7 +46,8 @@ namespace Nexus.DEB.Infrastructure.Services
 					OwnedById = ownerId,
 					SerialNumber = await DebService.GenerateSerialNumberAsync(this.ModuleId, this.InstanceId, EntityTypes.Scope),
 					Description = description,
-					Title = title
+					Title = title,
+					TargetImplementationDate = targetImplementationDate,
 				};
 
 				scope = await this.DebService.CreateScopeAsync(scope, cancellationToken);
@@ -65,6 +67,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			Guid ownerId,
 			string title,
 			string description,
+			DateOnly? targetImplementationDate,
 			CancellationToken cancellationToken)
 		{
 			var scope = await DebService.GetScopeByIdAsync(id, cancellationToken);
@@ -89,6 +92,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			scope.OwnedById = ownerId;
 			scope.Title = title;
 			scope.Description = description;
+			scope.TargetImplementationDate = targetImplementationDate;
 
 			try
 			{

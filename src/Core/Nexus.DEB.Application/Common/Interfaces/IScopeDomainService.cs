@@ -14,6 +14,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 			Guid ownerId,
 			string title,
 			string description,
+			DateOnly? targetImplementationDate,
 			CancellationToken cancellationToken);
 
 		Task<Result<Scope>> UpdateScopeAsync(
@@ -21,6 +22,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 			Guid ownerId,
 			string title,
 			string description,
+			DateOnly? targetImplementationDate,
 			CancellationToken cancellationToken);
 	}
 }

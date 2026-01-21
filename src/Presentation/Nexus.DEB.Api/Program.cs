@@ -152,7 +152,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(DebHelper.Policies.CanViewDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllViewDocCapabilities));
 
     options.AddPolicy(DebHelper.Policies.CanCreateOrEditSoC, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoC));
-    options.AddPolicy(DebHelper.Policies.CanCreateSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanCreateSoCTask));
+    options.AddPolicy(DebHelper.Policies.CanCreateOrEditScope, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditScope));
+	options.AddPolicy(DebHelper.Policies.CanCreateSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanCreateSoCTask));
     options.AddPolicy(DebHelper.Policies.CanEditSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoCTask));
 });
 

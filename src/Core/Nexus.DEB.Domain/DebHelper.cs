@@ -60,7 +60,8 @@ namespace Nexus.DEB.Domain
             public const string CanAddComments = "CanAddComments";
             public const string CanDeleteComments = "CanDeleteComments";
             public const string CanCreateOrEditSoC = "CanCreateOrEditSoC";
-            public const string CanCreateSoCTask = "CanCreateSoCTask";
+			public const string CanCreateOrEditScope = "CanCreateOrEditScope";
+			public const string CanCreateSoCTask = "CanCreateSoCTask";
             public const string CanEditSoCTask = "CanEditSoCTask";
             public const string CanAddDocuments = "CanAddDocuments";
             public const string CanDeleteDocuments = "CanDeleteDocuments";

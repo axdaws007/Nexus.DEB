@@ -14,7 +14,9 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<EntityHeadDetail?> GetEntityHeadDetailAsync(Guid id, CancellationToken cancellationToken);
         Task<Dictionary<Guid, EntityHead>> GetEntityHeadsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken);
         IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters);
-        IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters);
+        IQueryable<StandardVersionRequirementDetail> GetStandardVersionRequirementsForGrid(StandardVersionRequirementsFilters? filters);
+
+		IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters);
 		Task<RequirementDetail?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken);
 		Task<RequirementChildCounts> GetChildCountsForRequirementAsync(Guid id, CancellationToken cancellationToken);
 		IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId);
@@ -23,10 +25,14 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<Scope> GetScopes();
         IQueryable<ScopeSummary> GetScopesForGrid();
         IQueryable<ScopeExport> GetScopesForExport();
-        Task<ScopeDetail?> GetScopeByIdAsync(Guid id, CancellationToken cancellationToken);
+		Task<Scope?> GetScopeByIdAsync(Guid id, CancellationToken cancellationToken);
+		Task<ScopeDetail?> GetScopeDetailByIdAsync(Guid id, CancellationToken cancellationToken);
 		Task<ScopeChildCounts> GetChildCountsForScopeAsync(Guid id, CancellationToken cancellationToken);
 		Task<ICollection<ScopeCondensed>> GetScopesForRequirementAsync(Guid requirementId, Guid? statementId, CancellationToken cancellationToken);
-        Task<StandardVersion?> GetStandardVersionByIdAsync(Guid id, CancellationToken cancellationToken);
+		Task<Scope> CreateScopeAsync(Scope scope, CancellationToken cancellationToken = default);
+		Task<Scope> UpdateScopeAsync(Scope scope, CancellationToken cancellationToken = default);
+
+		Task<StandardVersion?> GetStandardVersionByIdAsync(Guid id, CancellationToken cancellationToken);
         IQueryable<StandardVersion> GetStandardVersions();
         IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters);
         Task<StandardVersionDetail?> GetStandardVersionDetailByIdAsync(Guid id, CancellationToken cancellationToken);
@@ -49,12 +55,6 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<TaskChildCounts> GetChildCountsForTaskAsync(Guid id, CancellationToken cancellationToken);
         Task<Domain.Models.Task> CreateTaskAsync(Domain.Models.Task task, CancellationToken cancellationToken = default);
         Task<Domain.Models.Task> UpdateTaskAsync(Domain.Models.Task task, CancellationToken cancellationToken = default);
-
-
-
-        Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(CancellationToken cancellationToken);
-        Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(CancellationToken cancellationToken);
-
         #endregion Entity methods
 
         #region Lookup methods
@@ -62,8 +62,10 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<CommentType> GetCommentTypes();
         IQueryable<Standard> GetStandards();
         Task<ICollection<FilterItem>> GetStandardsLookupAsync(CancellationToken cancellationToken);
-
-        IQueryable<TaskType> GetTaskTypes();
+		Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(CancellationToken cancellationToken);
+		Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLookupAsync(Guid standardVersionId, CancellationToken cancellationToken);
+		Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(CancellationToken cancellationToken);
+		IQueryable<TaskType> GetTaskTypes();
         Task<ICollection<FilterItem>> GetTaskTypesLookupAsync(CancellationToken cancellationToken);
 
         #endregion

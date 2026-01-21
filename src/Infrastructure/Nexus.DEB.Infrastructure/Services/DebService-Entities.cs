@@ -5,7 +5,7 @@ using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
-using System.Collections.Generic;
+using System.Threading;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -186,8 +186,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			return query;
 		}
 
-
-		public IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters)
+        public IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters)
         {
             var query = _dbContext.RequirementExport.AsNoTracking();
 
@@ -379,7 +378,10 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public IQueryable<ScopeExport> GetScopesForExport() => _dbContext.ScopeExport.AsNoTracking();
 
-        public async Task<ScopeDetail?> GetScopeByIdAsync(Guid id, CancellationToken cancellationToken)
+		public async Task<Scope?> GetScopeByIdAsync(Guid id, CancellationToken cancellationToken)
+			=> await _dbContext.Scopes.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
+
+		public async Task<ScopeDetail?> GetScopeDetailByIdAsync(Guid id, CancellationToken cancellationToken)
 		{
             var scope = await _dbContext.Scopes.AsNoTracking()
                 .Include(s => s.Requirements)
@@ -464,13 +466,33 @@ namespace Nexus.DEB.Infrastructure.Services
                 .ToListAsync(cancellationToken);
         }
 
-        #endregion Scopes
+		public async Task<Scope> CreateScopeAsync(
+			Scope scope,
+			CancellationToken cancellationToken = default)
+		{
+			await _dbContext.Scopes.AddAsync(scope, cancellationToken);
 
-        // --------------------------------------------------------------------------------------------------------------
+			await _dbContext.SaveChangesAsync(cancellationToken);
 
-        #region Statements
+			return scope;
+		}
 
-        public IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters)
+		public async Task<Scope> UpdateScopeAsync(
+			Scope scope,
+			CancellationToken cancellationToken = default)
+		{
+			await _dbContext.SaveChangesAsync(cancellationToken);
+
+			return scope;
+		}
+
+		#endregion Scopes
+
+		// --------------------------------------------------------------------------------------------------------------
+
+		#region Statements
+
+		public IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters)
         {
             var query = _dbContext.Statements
                 .Select(s => new StatementSummary
@@ -676,7 +698,6 @@ namespace Nexus.DEB.Infrastructure.Services
             return statementDetail;
         }
 
-
         public async Task<Statement?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default)
             => await _dbContext.Statements.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
 
@@ -792,7 +813,7 @@ namespace Nexus.DEB.Infrastructure.Services
             return results.OrderBy(x => x.Value).ToList();
         }
 
-		public async Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLookupAsync(Guid standardVersionId, CancellationToken cancellationToken)
+public async Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLookupAsync(Guid standardVersionId, CancellationToken cancellationToken)
 		{
             var returnList = new List<FilterItemEntity>();
             try
@@ -817,8 +838,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			}
 			return returnList;
 		}
-
-		public IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters)
+        public IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters)
         {
             var query = _dbContext.StandardVersionSummaries.AsNoTracking();
 

@@ -51,8 +51,6 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, statement.EntityId, null, null, cancellationToken);
 
-                var statementDetail = await this.DebService.GetStatementDetailByIdAsync(statement.EntityId, cancellationToken);
-
                 return Result<Statement>.Success(statement);
             }
             catch (Exception ex)
@@ -97,8 +95,6 @@ namespace Nexus.DEB.Infrastructure.Services
             try
             {
                 await this.DebService.UpdateStatementAsync(statement, requirementScopeCombinations, cancellationToken);
-
-                var statementDetail = await this.DebService.GetStatementDetailByIdAsync(statement.EntityId, cancellationToken);
 
                 return Result<Statement>.Success(statement);
             }

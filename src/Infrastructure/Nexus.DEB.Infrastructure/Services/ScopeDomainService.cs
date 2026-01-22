@@ -42,7 +42,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			{
 				var scope = new Scope()
 				{
-					EntityTypeTitle = EntityTypes.SoC,
+					EntityTypeTitle = EntityTypes.Scope,
 					OwnedById = ownerId,
 					SerialNumber = await DebService.GenerateSerialNumberAsync(this.ModuleId, this.InstanceId, EntityTypes.Scope),
 					Description = description,
@@ -76,7 +76,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			{
 				return Result<Scope>.Failure(new ValidationError()
 				{
-					Code = "INVALID_Scope_ID",
+					Code = "INVALID_SCOPE_ID",
 					Field = nameof(id),
 					Message = "Scope does not exist"
 				});

@@ -383,17 +383,15 @@ namespace Nexus.DEB.Infrastructure.Services
 
 		public async Task<ScopeDetail?> GetScopeDetailByIdAsync(Guid id, CancellationToken cancellationToken)
 		{
-            var scope = await _dbContext.Scopes.AsNoTracking()
-                .Include(s => s.Requirements)
-                .ThenInclude(r => r.StandardVersions)
-				.FirstOrDefaultAsync(s => s.EntityId == id, cancellationToken);
+            var scope = await _dbContext.ScopeDetails.AsNoTracking()
+                .FirstOrDefaultAsync(s => s.EntityId == id, cancellationToken);
 
 			if (scope == null)
 				return null;
 
 			var scopeDetail = scope.Adapt<ScopeDetail>();
 
-            var scopeRequirements = scope.Requirements;
+            var scopeRequirements = _dbContext.Requirements.Include(r => r.StandardVersions).Where(w => w.Scopes.Any(a => a.EntityId == scope.EntityId));
             var standardVersionIds = scopeRequirements.SelectMany(s => s.StandardVersions).Distinct().Select(s => s.EntityId);
 
 

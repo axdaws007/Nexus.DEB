@@ -5,6 +5,7 @@ using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Nexus.DEB.Domain.Models.Other;
+using Nexus.DEB.Domain.Models.Views;
 using Nexus.DEB.Infrastructure.Services;
 using Task = System.Threading.Tasks.Task;
 
@@ -69,6 +70,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<StandardVersionSummary> StandardVersionSummaries { get; set; }
         public DbSet<StandardVersionExport> StandardVersionExport { get; set; }
 		public DbSet<StandardVersionDetailView> StandardVersionDetails { get; set; }
+        public DbSet<ScopeDetailView> ScopeDetails { get; set; }
 		public DbSet<ScopeSummary> ScopeSummaries { get; set; }
         public DbSet<ScopeExport> ScopeExport { get; set; }
         public DbSet<RequirementExport> RequirementExport { get; set; }

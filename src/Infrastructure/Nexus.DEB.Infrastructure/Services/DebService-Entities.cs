@@ -370,7 +370,8 @@ namespace Nexus.DEB.Infrastructure.Services
                           {
                               Id = sc.EntityId,
                               Value = sc.Title,
-                              IsEnabled = !sc.IsRemoved
+                              IsEnabled = !sc.IsRemoved,
+                              EntityType = EntityTypes.Scope
                           }).ToListAsync(cancellationToken);
         }
 
@@ -806,8 +807,9 @@ namespace Nexus.DEB.Infrastructure.Services
                                   {
                                       Id = sv.EntityId,
                                       Value = sv.Title,
-                                      IsEnabled = !sv.IsRemoved
-                                  }).ToListAsync(cancellationToken);
+                                      IsEnabled = !sv.IsRemoved,
+									  EntityType = EntityTypes.StandardVersion
+								  }).ToListAsync(cancellationToken);
 
             return results.OrderBy(x => x.Value).ToList();
         }
@@ -826,7 +828,7 @@ public async Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLooku
                                         Id = s.Id,
                                         Value = string.Format("{0} {1}", (s.IsReferenceDisplayed ? s.Reference : string.Empty), (s.IsTitleDisplayed ? s.Title : string.Empty)).Trim(),
                                         IsEnabled = true
-                                    })
+									})
                                     .ToListAsync(cancellationToken);
                 returnList.AddRange(results);
             }
@@ -934,7 +936,20 @@ public async Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLooku
 			};
 		}
 
-        public async Task<IReadOnlyDictionary<Guid, bool>> HasOtherDraftStandardVersionsForStandardsAsync(
+        public async Task<int?> GetStandardVersionTotalRequirementsAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var sv = await _dbContext.StandardVersions.Include(i => i.Requirements)
+                .FirstOrDefaultAsync(sv => sv.EntityId == id);
+            if(sv != null)
+            {
+				return sv.Requirements.Count;
+			}
+
+			return null;
+		}
+
+
+		public async Task<IReadOnlyDictionary<Guid, bool>> HasOtherDraftStandardVersionsForStandardsAsync(
             IEnumerable<Guid> entityIds,
             CancellationToken cancellationToken = default)
         {
@@ -1160,6 +1175,6 @@ public async Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLooku
             => await _dbContext.StatementsRequirementsScopes
                     .FirstOrDefaultAsync(x => x.RequirementId == requirementId && x.ScopeId == scopeId, cancellationToken);
 
-        #endregion
-    }
+		#endregion
+	}
 }

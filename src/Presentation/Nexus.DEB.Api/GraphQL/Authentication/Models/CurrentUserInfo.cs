@@ -14,6 +14,7 @@ namespace Nexus.DEB.Api.GraphQL.Authentication.Models
         public string PostTitle { get; set; } = string.Empty;
         public ICollection<CisPost>? Posts { get; set; }
         public ICollection<string> Capabilities { get; set; } = new List<string>();
+        public ICollection<Guid> RoleIds { get; set; } = new List<Guid>();
 
         public bool IsAuthenticated { get; set; }
     }

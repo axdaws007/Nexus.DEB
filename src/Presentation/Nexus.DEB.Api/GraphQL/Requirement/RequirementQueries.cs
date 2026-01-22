@@ -49,6 +49,7 @@ namespace Nexus.DEB.Api.GraphQL
 				StandardVersionId = filters.StandardVersionId,
                 SectionId = filters.SectionId,
 				SearchText = filters.SearchText?.Trim(),
+                ScopeId = filters.ScopeId,
 			};
 
 			return debService.GetStandardVersionRequirementsForGrid(f);

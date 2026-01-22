@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20260122093934_NewScopeDetailView")]
+    partial class NewScopeDetailView
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1710,70 +1713,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.ToTable((string)null);
 
                     b.ToView("XDB_CIS_View_Post", "common");
-                });
-
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.Views.ScopeDetailView", b =>
-                {
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("CreatedByPostTitle");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("CreatedDate");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Description");
-
-                    b.Property<Guid>("EntityId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("EntityId");
-
-                    b.Property<string>("EntityTypeTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("EntityTypeTitle");
-
-                    b.Property<bool>("IsArchived")
-                        .HasColumnType("bit")
-                        .HasColumnName("IsArchived");
-
-                    b.Property<bool>("IsRemoved")
-                        .HasColumnType("bit")
-                        .HasColumnName("IsRemoved");
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("LastModifiedByPostTitle");
-
-                    b.Property<DateTime>("LastModifiedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("LastModifiedDate");
-
-                    b.Property<string>("OwnedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("OwnedByPostTitle");
-
-                    b.Property<string>("SerialNumber")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("SerialNumber");
-
-                    b.Property<DateOnly?>("TargetImplementationDate")
-                        .HasColumnType("date")
-                        .HasColumnName("TargetImplementationDate");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Title");
-
-                    b.ToTable((string)null);
-
-                    b.ToView("vw_ScopeDetail", "deb");
                 });
 
             modelBuilder.Entity("ScopeRequirement", b =>

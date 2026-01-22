@@ -159,8 +159,9 @@ namespace Nexus.DEB.Infrastructure.Services
                             StandardVersion = svr.StandardVersion,
                             SectionId = svr.SectionId,
                             Section = svr.Section,
-                            OtherScopes = r.Scopes.Where(w => filters == null || filters.ScopeId == null || w.EntityId != filters.ScopeId).Count()
-                        };
+                            OtherScopes = r.Scopes.Where(w => filters == null || w.EntityId != filters.ScopeId).Count(),
+							IncludedInScope = filters != null ? r.Scopes.Any(a => a.EntityId == filters.ScopeId) : false
+						};
 
             if(filters != null)
             {
@@ -366,7 +367,8 @@ namespace Nexus.DEB.Infrastructure.Services
                           {
                               Id = sc.EntityId,
                               Value = sc.Title,
-                              IsEnabled = !sc.IsRemoved
+                              IsEnabled = !sc.IsRemoved,
+                              EntityType = sc.EntityTypeTitle
                           }).ToListAsync(cancellationToken);
         }
 
@@ -380,17 +382,15 @@ namespace Nexus.DEB.Infrastructure.Services
 
 		public async Task<ScopeDetail?> GetScopeDetailByIdAsync(Guid id, CancellationToken cancellationToken)
 		{
-            var scope = await _dbContext.Scopes.AsNoTracking()
-                .Include(s => s.Requirements)
-                .ThenInclude(r => r.StandardVersions)
-				.FirstOrDefaultAsync(s => s.EntityId == id, cancellationToken);
+            var scope = await _dbContext.ScopeDetails.AsNoTracking()
+                .FirstOrDefaultAsync(s => s.EntityId == id, cancellationToken);
 
 			if (scope == null)
 				return null;
 
 			var scopeDetail = scope.Adapt<ScopeDetail>();
 
-            var scopeRequirements = scope.Requirements;
+            var scopeRequirements = _dbContext.Requirements.Include(r => r.StandardVersions).Where(w => w.Scopes.Any(a => a.EntityId == scope.EntityId));
             var standardVersionIds = scopeRequirements.SelectMany(s => s.StandardVersions).Distinct().Select(s => s.EntityId);
 
 
@@ -804,13 +804,14 @@ namespace Nexus.DEB.Infrastructure.Services
                                   {
                                       Id = sv.EntityId,
                                       Value = sv.Title,
-                                      IsEnabled = !sv.IsRemoved
-                                  }).ToListAsync(cancellationToken);
+                                      IsEnabled = !sv.IsRemoved,
+									  EntityType = sv.EntityTypeTitle
+								  }).ToListAsync(cancellationToken);
 
             return results.OrderBy(x => x.Value).ToList();
         }
 
-public async Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLookupAsync(Guid standardVersionId, CancellationToken cancellationToken)
+        public async Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLookupAsync(Guid standardVersionId, CancellationToken cancellationToken)
 		{
             var returnList = new List<FilterItemEntity>();
             try
@@ -824,7 +825,7 @@ public async Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLooku
                                         Id = s.Id,
                                         Value = string.Format("{0} {1}", (s.IsReferenceDisplayed ? s.Reference : string.Empty), (s.IsTitleDisplayed ? s.Title : string.Empty)).Trim(),
                                         IsEnabled = true
-                                    })
+									})
                                     .ToListAsync(cancellationToken);
                 returnList.AddRange(results);
             }
@@ -932,7 +933,20 @@ public async Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLooku
 			};
 		}
 
-        public async Task<IReadOnlyDictionary<Guid, bool>> HasOtherDraftStandardVersionsForStandardsAsync(
+        public async Task<int?> GetStandardVersionTotalRequirementsAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var sv = await _dbContext.StandardVersions.Include(i => i.Requirements)
+                .FirstOrDefaultAsync(sv => sv.EntityId == id);
+            if(sv != null)
+            {
+				return sv.Requirements.Count;
+			}
+
+			return null;
+		}
+
+
+		public async Task<IReadOnlyDictionary<Guid, bool>> HasOtherDraftStandardVersionsForStandardsAsync(
             IEnumerable<Guid> entityIds,
             CancellationToken cancellationToken = default)
         {
@@ -1158,6 +1172,6 @@ public async Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLooku
             => await _dbContext.StatementsRequirementsScopes
                     .FirstOrDefaultAsync(x => x.RequirementId == requirementId && x.ScopeId == scopeId, cancellationToken);
 
-        #endregion
-    }
+		#endregion
+	}
 }

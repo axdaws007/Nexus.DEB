@@ -16,5 +16,6 @@ namespace Nexus.DEB.Domain.Models
 		public Guid? SectionId { get; set; }
 		public string Section { get; set; }
 		public int OtherScopes { get; set; } = 0;
+		public bool IncludedInScope { get; set; } = false;
 	}
 }

@@ -162,8 +162,9 @@ namespace Nexus.DEB.Infrastructure.Services
                             StandardVersion = svr.StandardVersion,
                             SectionId = svr.SectionId,
                             Section = svr.Section,
-                            OtherScopes = r.Scopes.Where(w => filters == null || filters.ScopeId == null || w.EntityId != filters.ScopeId).Count()
-                        };
+                            OtherScopes = r.Scopes.Where(w => filters == null || w.EntityId != filters.ScopeId).Count(),
+							IncludedInScope = filters != null ? r.Scopes.Any(a => a.EntityId == filters.ScopeId) : false
+						};
 
             if(filters != null)
             {

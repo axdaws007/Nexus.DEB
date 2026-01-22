@@ -371,7 +371,7 @@ namespace Nexus.DEB.Infrastructure.Services
                               Id = sc.EntityId,
                               Value = sc.Title,
                               IsEnabled = !sc.IsRemoved,
-                              EntityType = EntityTypes.Scope
+                              EntityType = sc.EntityTypeTitle
                           }).ToListAsync(cancellationToken);
         }
 
@@ -808,13 +808,13 @@ namespace Nexus.DEB.Infrastructure.Services
                                       Id = sv.EntityId,
                                       Value = sv.Title,
                                       IsEnabled = !sv.IsRemoved,
-									  EntityType = EntityTypes.StandardVersion
+									  EntityType = sv.EntityTypeTitle
 								  }).ToListAsync(cancellationToken);
 
             return results.OrderBy(x => x.Value).ToList();
         }
 
-public async Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLookupAsync(Guid standardVersionId, CancellationToken cancellationToken)
+        public async Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLookupAsync(Guid standardVersionId, CancellationToken cancellationToken)
 		{
             var returnList = new List<FilterItemEntity>();
             try

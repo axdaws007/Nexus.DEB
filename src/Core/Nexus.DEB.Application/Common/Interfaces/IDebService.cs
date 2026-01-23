@@ -31,6 +31,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 		Task<ICollection<ScopeCondensed>> GetScopesForRequirementAsync(Guid requirementId, Guid? statementId, CancellationToken cancellationToken);
 		Task<Scope> CreateScopeAsync(Scope scope, CancellationToken cancellationToken = default);
 		Task<Scope> UpdateScopeAsync(Scope scope, CancellationToken cancellationToken = default);
+        Task UpdateScopeRequirementsAsync(Guid scopeId, StandardVersion standardVersion, List<Guid> idsToAdd, List<Guid> idsToRemove, bool addAll, bool removeAll, CancellationToken cancellationToken);
 
 		Task<StandardVersion?> GetStandardVersionByIdAsync(Guid id, CancellationToken cancellationToken);
         IQueryable<StandardVersion> GetStandardVersions();

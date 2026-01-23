@@ -106,6 +106,58 @@ namespace Nexus.DEB.Infrastructure.Services
 			}
 		}
 
+		public async Task<Result<Scope>> UpdateScopeRequirementsAsync(
+			Guid scopeId,
+			Guid standardVersionId,
+			List<Guid> idsToAdd,
+			List<Guid> idsToRemove,
+			bool addAll,
+			bool removeAll,
+			CancellationToken cancellationToken)
+		{
+			var scope = await DebService.GetScopeByIdAsync(scopeId, cancellationToken);
+
+			if (scope == null)
+			{
+				return Result<Scope>.Failure(new ValidationError()
+				{
+					Code = "INVALID_SCOPE_ID",
+					Field = nameof(scopeId),
+					Message = "Scope does not exist"
+				});
+			}
+
+			var standardVersion = await DebService.GetStandardVersionByIdAsync(standardVersionId, cancellationToken);
+
+			if (standardVersion == null)
+			{
+				return Result<Scope>.Failure(new ValidationError()
+				{
+					Code = "INVALID_STANDARDVERSION_ID",
+					Field = nameof(standardVersionId),
+					Message = "Standard Version does not exist"
+				});
+			}
+
+			try
+			{
+				await DebService.UpdateScopeRequirementsAsync(
+					scopeId,
+					standardVersion,
+					idsToAdd,
+					idsToRemove,
+					addAll,
+					removeAll,
+					cancellationToken);
+
+				return Result<Scope>.Success(scope);
+			}
+			catch (Exception ex)
+			{
+				return Result<Scope>.Failure($"An error occurred updating the Scope Requirements: {ex.Message}");
+			}
+		}
+
 		private async Task ValidateFieldsAsync(
 			Scope? scope,
 			Guid ownerId,

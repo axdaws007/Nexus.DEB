@@ -84,5 +84,29 @@ namespace Nexus.DEB.Api.GraphQL
 
 			return result.Data;
 		}
+
+		[Authorize(Policy = DebHelper.Policies.CanCreateOrEditScope)]
+		public static async Task<Result> UpdateScopeRequirementsAsync(Guid scopeId, Guid standardVersionid, List<Guid> idsToAdd, List<Guid> idsToRemove, bool addAll, bool removeAll, IScopeDomainService scopeService, IDomainEventPublisher eventPublisher, CancellationToken cancellationToken)
+		{
+			var result = await scopeService.UpdateScopeRequirementsAsync(scopeId, standardVersionid, idsToAdd, idsToRemove, addAll, removeAll, cancellationToken);
+			
+			if (!result.IsSuccess)
+			{
+				throw ExceptionHelper.BuildException(result);
+			}
+			
+			var scope = result.Data!;
+			
+			await eventPublisher.PublishAsync(new EntitySavedEvent
+			{
+				Entity = scope,
+				EntityType = scope.EntityTypeTitle,
+				EntityId = scope.EntityId,
+				SerialNumber = scope.SerialNumber ?? string.Empty,
+				IsNew = false,
+			}, cancellationToken);
+			
+			return result;
+		}
 	}
 }

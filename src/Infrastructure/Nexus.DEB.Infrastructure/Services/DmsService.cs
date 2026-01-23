@@ -304,6 +304,38 @@ namespace Nexus.DEB.Infrastructure.Services
                 operationName: $"GetDocumentListByEntity for entity {entityId} in library {libraryId}");
         }
 
+        public async Task<ICollection<DmsCommonDocumentListItem>?> GetCommonDocumentListAsync(
+            Guid libraryId,
+            DmsCommonDocumentListFilters filters)
+        {
+            // Note: The legacy API uses a GET
+            // The route is not clearly defined in the provided controller (commented out)
+            // Assuming: api/libraries/{libraryId}/documents/{entityId}
+            var requestUri = $"api/libraries/{libraryId}";
+
+            var uploadedFrom = filters.UploadedFrom.HasValue ? filters.UploadedFrom.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null;
+            var uploadedTo = filters.UploadedTo.HasValue ? filters.UploadedTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue) : (DateTime?)null;
+
+            var request = new
+            {
+                filters.StandardVersionIds,
+                filters.SearchText,
+                UploadedFrom = uploadedFrom,
+                UploadedTo = uploadedTo,
+                filters.Author,
+                filters.DocumentTypes
+            };
+
+            // Create JSON content (JsonOptions from base class)
+            var content = JsonContent.Create(request, options: JsonOptions);
+
+            return await SendAuthenticatedRequestAsync<ICollection<DmsCommonDocumentListItem>>(
+                HttpMethod.Post,
+                requestUri,
+                operationName: $"GetCommonDocumentList for library {libraryId}",
+                content: content);
+        }
+
         /// <summary>
         /// Gets document history/version information.
         /// </summary>

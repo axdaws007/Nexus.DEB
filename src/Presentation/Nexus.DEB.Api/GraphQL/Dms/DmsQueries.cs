@@ -69,6 +69,19 @@ namespace Nexus.DEB.Api.GraphQL
             return await dmsService.GetDocumentListByEntityAsync(libraryId, entityId);
         }
 
+        [Authorize]
+        [UseOffsetPaging]
+        [UseSorting]
+        public static async Task<ICollection<DmsCommonDocumentListItem>?> GetCommonDocumentList(
+            DmsCommonDocumentListFilters filters,
+            IApplicationSettingsService applicationSettingsService,
+            IDmsService dmsService)
+        {
+            var libraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.CommonDocuments);
+
+            return await dmsService.GetCommonDocumentListAsync(libraryId, filters);
+        }
+
         /// <summary>
         /// Gets document history/version information.
         /// </summary>

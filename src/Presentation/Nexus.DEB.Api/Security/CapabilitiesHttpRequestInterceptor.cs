@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Nexus.DEB.Application.Common.Interfaces;
+﻿using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Infrastructure.Helpers;
 using System.Security.Claims;

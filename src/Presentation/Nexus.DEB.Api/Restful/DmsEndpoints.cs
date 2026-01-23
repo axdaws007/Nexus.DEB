@@ -65,7 +65,7 @@ namespace Nexus.DEB.Api.Restful
         private static async Task<IResult> AddDocument(
             [FromRoute] string library,
             [FromForm] IFormFile file,
-            [FromForm] string entityId,
+            [FromForm] string? entityId,
             [FromForm] string? title,
             [FromForm] string? description,
             [FromForm] string? author,

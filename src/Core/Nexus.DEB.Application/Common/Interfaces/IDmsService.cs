@@ -79,5 +79,12 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task AddDocumentUpdatedAuditRecordAsync(Guid documentId, Guid entityId);
         Task AddDocumentDeletedAuditRecordAsync(Guid libraryId, Guid documentId);
 
-	}
+        /// <summary>
+        /// Gets a list of documents for an entity.
+        /// </summary>
+        /// <param name="libraryId">The library ID</param>
+        /// <param name="filters">Set of filters</param>
+        /// <returns>list of documents</returns>
+        Task<ICollection<DmsCommonDocumentListItem>?> GetCommonDocumentListAsync(Guid libraryId, DmsCommonDocumentListFilters filters);
+    }
 }

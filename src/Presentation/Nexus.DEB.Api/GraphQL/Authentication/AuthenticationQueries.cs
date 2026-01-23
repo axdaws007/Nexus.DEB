@@ -34,10 +34,16 @@ namespace Nexus.DEB.Api.GraphQL
                 return null;
 
             List<string> capabilities = new List<string>();
+            List<Guid> roleIds = new List<Guid>();
 
             if (userDetails.PostId != Guid.Empty)
             {
                 capabilities = claimsPrincipal.Claims.Where(x => x.Type == DebHelper.ClaimTypes.Capability).OrderBy(x => x.Value).Select(x => x.Value).ToList();
+
+                var roles = await cbacApi.GetRolesForPostAsync(userDetails.PostId);
+
+                if (roles != null) 
+                    roleIds = roles.Select(x => x.RoleID).ToList();
             }
 
             return new CurrentUserInfo
@@ -52,6 +58,7 @@ namespace Nexus.DEB.Api.GraphQL
                 PostTitle = userDetails.PostTitle,
                 Posts = userDetails.Posts?.OrderBy(x => x.Title).ToList(),
                 Capabilities = capabilities,
+                RoleIds = roleIds,
                 IsAuthenticated = currentUserService.IsAuthenticated
             };
         }

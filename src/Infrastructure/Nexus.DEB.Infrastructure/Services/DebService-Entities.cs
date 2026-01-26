@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Application.Common.Models.StandardVersion;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
@@ -253,7 +254,65 @@ namespace Nexus.DEB.Infrastructure.Services
             requirementDetail.RequirementTypeTitle = requirement.RequirementType?.Title;
             requirementDetail.RequirementCategoryTitle = requirement.RequirementCategory?.Title;
 
+			requirementDetail.StandardVersionSections = GetRelatedStandardVersionsAndSections(id);
+			requirementDetail.ScopeStatements = GetRelatedScopesWithStatements(id);
+
 			return requirementDetail;
+		}
+
+		public List<StandardVersionWithSections> GetRelatedStandardVersionsAndSections(Guid requirementId)
+		{
+			var sectionsAndStandardVersions = _dbContext.Sections.AsNoTracking()
+                .Include(r => r.StandardVersion)
+                .Where(w => w.SectionRequirements.Any(a => a.RequirementID == requirementId) && w.StandardVersion.Requirements.Any(a => a.EntityId == requirementId));
+
+            var standardVersions = sectionsAndStandardVersions.Select(s => s.StandardVersion).Distinct();
+
+            var standardVersionSections = new List<StandardVersionWithSections>();
+			foreach (var sv in standardVersions)
+			{
+				standardVersionSections.Add(new StandardVersionWithSections
+                {
+                    EntityId = sv.EntityId,
+					Title = sv.Title,
+					SerialNumber = sv.SerialNumber,
+                    Sections = sectionsAndStandardVersions
+						.Where(w => w.StandardVersion.EntityId == sv.EntityId)
+						.Distinct()
+						.ToList()
+				});
+			}
+
+            return standardVersionSections;
+		}
+
+		public List<ScopeWithStatements> GetRelatedScopesWithStatements(Guid requirementId)
+		{
+			var statementRequirementScopes = _dbContext.StatementsRequirementsScopes
+				.AsNoTracking()
+				.Where(srs => srs.RequirementId == requirementId)
+				.Include(srs => srs.Statement)
+				.Include(srs => srs.Scope);
+
+			var scopes = statementRequirementScopes.Select(srs => srs.Scope).Distinct();
+
+			var scopesWithStatements = new List<ScopeWithStatements>();
+			foreach (var sc in scopes)
+			{
+				scopesWithStatements.Add(new ScopeWithStatements
+				{
+					EntityId = sc.EntityId,
+					Title = sc.Title,
+					SerialNumber = sc.SerialNumber,
+					Statements = statementRequirementScopes
+						.Where(w => w.Scope.EntityId == sc.EntityId)
+						.Select(srs => srs.Statement)
+						.Distinct()
+						.ToList()
+				});
+			}
+
+			return scopesWithStatements;
 		}
 
 		public async Task<RequirementChildCounts> GetChildCountsForRequirementAsync(Guid id, CancellationToken cancellationToken)

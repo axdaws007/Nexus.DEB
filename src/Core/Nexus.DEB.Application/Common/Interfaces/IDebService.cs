@@ -1,5 +1,6 @@
 ﻿using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Application.Common.Models.StandardVersion;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Nexus.DEB.Domain.Models.Other;
@@ -18,6 +19,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
 		IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters);
 		Task<RequirementDetail?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken);
+        List<StandardVersionWithSections> GetRelatedStandardVersionsAndSections(Guid requirementId);
+		List<ScopeWithStatements> GetRelatedScopesWithStatements(Guid requirementId);
 		Task<RequirementChildCounts> GetChildCountsForRequirementAsync(Guid id, CancellationToken cancellationToken);
 		IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId);
         Task<ICollection<RequirementWithScopes>> GetRequirementScopesForStatement(Guid statementId, CancellationToken cancellationToken);

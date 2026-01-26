@@ -10,6 +10,8 @@
         public string PostTitle { get; set; } = string.Empty;
         public bool IsPostDeleted { get; set; }
 
-        public string CombinedTitle { get => $"{PostTitle} ({UserName})"; }
+        public string CombinedTitle { get => $"{FirstName} {LastName} ({PostTitle})"; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
     }
 }

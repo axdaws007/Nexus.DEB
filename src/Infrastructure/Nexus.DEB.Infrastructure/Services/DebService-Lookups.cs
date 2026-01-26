@@ -63,7 +63,19 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public IQueryable<UserAndPost> GetPostsWithUsers(string? searchText, ICollection<Guid> postIds, bool includeDeletedUsers = false, bool includeDeletedPosts = false)
         {
-            var query = _dbContext.UsersAndPosts.AsNoTracking();
+            var query = from up in _dbContext.UsersAndPosts.AsNoTracking()
+                        join gu in _dbContext.GroupUsers.AsNoTracking() on up.UserId equals gu.EntityId
+                        select new UserAndPost
+                        {
+                            UserId = up.UserId,
+                            UserName = up.UserName,
+                            IsUserDeleted = up.IsUserDeleted,
+                            IsPostDeleted = up.IsPostDeleted,
+                            PostId = up.PostId,
+                            PostTitle = up.PostTitle,
+                            FirstName = gu.UserFirstName,
+                            LastName = gu.UserLastName
+                        };
 
             if (!includeDeletedPosts)
                 query = query.Where(x => x.IsPostDeleted == false);
@@ -74,7 +86,11 @@ namespace Nexus.DEB.Infrastructure.Services
             if (!string.IsNullOrEmpty(searchText))
             {
                 var searchTextLower = searchText.ToLower();
-                query = query.Where(x => x.PostTitle.ToLower().Contains(searchTextLower) || x.UserName.ToLower().Contains(searchTextLower));
+                query = query.Where(x => 
+                    x.PostTitle.ToLower().Contains(searchTextLower) || 
+                    x.UserName.ToLower().Contains(searchTextLower) ||
+                    (x.FirstName != null && x.FirstName.ToLower().Contains(searchTextLower)) ||
+                    (x.LastName != null && x.LastName.ToLower().Contains(searchTextLower)));
             }
 
             if (postIds.Count > 0)

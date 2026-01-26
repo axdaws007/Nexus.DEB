@@ -25,7 +25,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 			DateOnly? targetImplementationDate,
 			CancellationToken cancellationToken);
 
-		Task<Result<Scope?>> UpdateScopeRequirementsAsync(
+		Task<Result<ScopeDetail?>> UpdateScopeRequirementsAsync(
 			Guid scopeId,
 			Guid standardVersionId,
 			List<Guid> idsToAdd,

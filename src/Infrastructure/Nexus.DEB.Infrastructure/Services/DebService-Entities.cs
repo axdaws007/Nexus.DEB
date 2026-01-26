@@ -418,12 +418,21 @@ namespace Nexus.DEB.Infrastructure.Services
 
 			var numberOfHistoryEvents = await GetChangeRecordsCountForEntityAsync(id, cancellationToken);
 
+            var scope = await _dbContext.Scopes.Include(s => s.Requirements).FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
+            
+            var requirementsCount = 0;
+            if (scope != null)
+            {
+                requirementsCount = scope.Requirements.Count();
+            }
+
 			// Note: AttachmentsCount populated in the GraphQL query as we're interrogating the DMS Web API.
 
 			return new ScopeChildCounts()
 			{
 				CommentsCount = numberOfComments,
-				HistoryCount = numberOfHistoryEvents
+				HistoryCount = numberOfHistoryEvents,
+				RequirementsCount = requirementsCount
 			};
 		}
 
@@ -481,6 +490,67 @@ namespace Nexus.DEB.Infrastructure.Services
 			await _dbContext.SaveChangesAsync(cancellationToken);
 
 			return scope;
+		}
+
+        public async Task<Scope?> UpdateScopeRequirementsAsync(Guid scopeId, StandardVersion standardVersion, List<Guid> idsToAdd, List<Guid> idsToRemove, bool addAll, bool removeAll, CancellationToken cancellationToken)
+		{
+			var scope = _dbContext.Scopes.Include(s => s.Requirements).FirstOrDefault(f => f.EntityId == scopeId);
+
+			if (addAll || removeAll)
+			{
+                // 1. Get all requirements for the standard version
+				var svReqs = _dbContext.Requirements.Where(w => w.StandardVersions.Any(a => a.EntityId == standardVersion.EntityId)).ToList();
+				// 2. Remove any in idsToRemove or idsToAdd
+				svReqs.RemoveAll(r => addAll ? idsToRemove.Contains(r.EntityId) : idsToAdd.Contains(r.EntityId));
+
+                foreach(var svr in svReqs)
+                {
+                    if (addAll)
+					{
+						// 3. Add finalised list to scope, if not already there
+						if (!scope.Requirements.Any(a => a.EntityId == svr.EntityId))
+						{
+							scope.Requirements.Add(svr);
+						}
+					}
+                    else
+					{
+						// 3. Remove finalised list from scope, if present
+						if (scope.Requirements.Any(a => a.EntityId == svr.EntityId))
+                        {
+                            scope.Requirements.Remove(svr);
+                        }
+                    }
+                }
+            }
+            else
+            {
+				// 1. Get all requirements for idsToAdd and idsToRemove
+                var svReqs = _dbContext.Requirements.Where(w => idsToAdd.Contains(w.EntityId) || idsToRemove.Contains(w.EntityId)).ToList();
+				foreach (var req in svReqs)
+				{
+					if (idsToAdd.Contains(req.EntityId))
+					{
+						// 2. Add idsToAdd to scope requirements
+						if (!scope.Requirements.Any(a => a.EntityId == req.EntityId))
+						{
+							scope.Requirements.Add(req);
+						}
+					}
+					else if (idsToRemove.Contains(req.EntityId))
+                    {
+						// 3. Remove idsToRemove from scope requirements
+						if (scope.Requirements.Any(a => a.EntityId == req.EntityId))
+						{
+							scope.Requirements.Remove(req);
+						}
+					}
+				}
+			}
+
+			await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return scope;
 		}
 
 		#endregion Scopes
@@ -818,12 +888,11 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 var results = await _dbContext.Sections.Where(w => w.StandardVersionId == standardVersionId)
                                     .OrderBy(o => o.Ordinal)
-                                    .ThenBy(t => t.IsReferenceDisplayed ? t.Reference : null)
-									.ThenBy(t => t.IsTitleDisplayed ? t.Title : null)
+                                    .ThenBy(t => t.Reference)
 									.Select(s => new FilterItemEntity()
                                     {
                                         Id = s.Id,
-                                        Value = string.Format("{0} {1}", (s.IsReferenceDisplayed ? s.Reference : string.Empty), (s.IsTitleDisplayed ? s.Title : string.Empty)).Trim(),
+                                        Value = s.Reference,
                                         IsEnabled = true
 									})
                                     .ToListAsync(cancellationToken);

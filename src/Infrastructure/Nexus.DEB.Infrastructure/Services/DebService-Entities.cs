@@ -406,7 +406,9 @@ namespace Nexus.DEB.Infrastructure.Services
                 svR.Status = standardVersionStates.FirstOrDefault(s => s.EntityId == sv.EntityId)?.PseudoStateTitle ?? string.Empty;
                 svR.TotalRequirements = sv.Requirements.Count;
                 svR.TotalRequirementsInScope = scopeRequirements.Where(w => w.StandardVersions.Any(a => a.EntityId == sv.EntityId)).Count();
-                scopeDetail.StandardVersionRequirements.Add(svR);
+                svR.RequirementIdsInScope = scopeRequirements.Where(w => w.StandardVersions.Any(a => a.EntityId == sv.EntityId)).Select(s => s.EntityId).ToList();
+
+				scopeDetail.StandardVersionRequirements.Add(svR);
 			}
 
             return scopeDetail;

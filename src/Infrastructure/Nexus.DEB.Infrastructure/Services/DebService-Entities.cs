@@ -418,12 +418,21 @@ namespace Nexus.DEB.Infrastructure.Services
 
 			var numberOfHistoryEvents = await GetChangeRecordsCountForEntityAsync(id, cancellationToken);
 
+            var scope = await _dbContext.Scopes.Include(s => s.Requirements).FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
+            
+            var requirementsCount = 0;
+            if (scope != null)
+            {
+                requirementsCount = scope.Requirements.Count();
+            }
+
 			// Note: AttachmentsCount populated in the GraphQL query as we're interrogating the DMS Web API.
 
 			return new ScopeChildCounts()
 			{
 				CommentsCount = numberOfComments,
-				HistoryCount = numberOfHistoryEvents
+				HistoryCount = numberOfHistoryEvents,
+				RequirementsCount = requirementsCount
 			};
 		}
 

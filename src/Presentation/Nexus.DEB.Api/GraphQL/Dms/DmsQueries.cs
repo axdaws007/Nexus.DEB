@@ -82,6 +82,27 @@ namespace Nexus.DEB.Api.GraphQL
             return await dmsService.GetCommonDocumentListAsync(libraryId, filters);
         }
 
+        [Authorize]
+        public static async Task<ICollection<DmsDocumentTypeItem>?> GetDefaultDocumentTypesForLibrary(
+            string library,
+            IApplicationSettingsService applicationSettingsService,
+            IDmsService dmsService)
+        {
+            try
+            {
+                DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
+            }
+            catch (Exception ex)
+            {
+                throw ExceptionHelper.BuildException(ex);
+            }
+
+            var libraryId = applicationSettingsService.GetLibraryId(library);
+            var groupId = applicationSettingsService.GetDefaultDocumentTypeGroupId(library);
+
+            return await dmsService.GetDocumentTypesAsync(libraryId, groupId);
+        }
+
         /// <summary>
         /// Gets document history/version information.
         /// </summary>

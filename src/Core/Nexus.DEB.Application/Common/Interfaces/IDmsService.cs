@@ -86,5 +86,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         /// <param name="filters">Set of filters</param>
         /// <returns>list of documents</returns>
         Task<ICollection<DmsCommonDocumentListItem>?> GetCommonDocumentListAsync(Guid libraryId, DmsCommonDocumentListFilters filters);
+
+        Task<ICollection<DmsDocumentTypeItem>?> GetDocumentTypesAsync(Guid libraryId, Guid groupId);
     }
 }

@@ -106,7 +106,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			}
 		}
 
-		public async Task<Result<Scope>> UpdateScopeRequirementsAsync(
+		public async Task<Result<Scope?>> UpdateScopeRequirementsAsync(
 			Guid scopeId,
 			Guid standardVersionId,
 			List<Guid> idsToAdd,
@@ -141,7 +141,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
 			try
 			{
-				await DebService.UpdateScopeRequirementsAsync(
+				scope = await DebService.UpdateScopeRequirementsAsync(
 					scopeId,
 					standardVersion,
 					idsToAdd,

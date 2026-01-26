@@ -86,7 +86,7 @@ namespace Nexus.DEB.Api.GraphQL
 		}
 
 		[Authorize(Policy = DebHelper.Policies.CanCreateOrEditScope)]
-		public static async Task<Result> UpdateScopeRequirementsAsync(Guid scopeId, Guid standardVersionid, List<Guid> idsToAdd, List<Guid> idsToRemove, bool addAll, bool removeAll, IScopeDomainService scopeService, IDomainEventPublisher eventPublisher, CancellationToken cancellationToken)
+		public static async Task<Scope?> UpdateScopeRequirementsAsync(Guid scopeId, Guid standardVersionid, List<Guid> idsToAdd, List<Guid> idsToRemove, bool addAll, bool removeAll, IScopeDomainService scopeService, IDomainEventPublisher eventPublisher, CancellationToken cancellationToken)
 		{
 			var result = await scopeService.UpdateScopeRequirementsAsync(scopeId, standardVersionid, idsToAdd, idsToRemove, addAll, removeAll, cancellationToken);
 			
@@ -106,7 +106,7 @@ namespace Nexus.DEB.Api.GraphQL
 				IsNew = false,
 			}, cancellationToken);
 			
-			return result;
+			return result.Data;
 		}
 	}
 }

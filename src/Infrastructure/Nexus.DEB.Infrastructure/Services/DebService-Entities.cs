@@ -492,7 +492,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			return scope;
 		}
 
-        public async System.Threading.Tasks.Task UpdateScopeRequirementsAsync(Guid scopeId, StandardVersion standardVersion, List<Guid> idsToAdd, List<Guid> idsToRemove, bool addAll, bool removeAll, CancellationToken cancellationToken)
+        public async Task<Scope?> UpdateScopeRequirementsAsync(Guid scopeId, StandardVersion standardVersion, List<Guid> idsToAdd, List<Guid> idsToRemove, bool addAll, bool removeAll, CancellationToken cancellationToken)
 		{
 			var scope = _dbContext.Scopes.Include(s => s.Requirements).FirstOrDefault(f => f.EntityId == scopeId);
 
@@ -549,6 +549,8 @@ namespace Nexus.DEB.Infrastructure.Services
 			}
 
 			await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return scope;
 		}
 
 		#endregion Scopes

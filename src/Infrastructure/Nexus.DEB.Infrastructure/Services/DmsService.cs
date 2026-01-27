@@ -1,17 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Nexus.DEB.Application.Common.Extensions;
 using Nexus.DEB.Application.Common.Interfaces;
-using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Dms;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using System.Runtime.CompilerServices;
-using System.Reflection.Metadata;
-using Nexus.DEB.Application.Common.Extensions;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -448,5 +443,19 @@ namespace Nexus.DEB.Infrastructure.Services
 					libid = documentId
 				}).ToAuditData("document"));
         }
-	}
+
+        public async Task<ICollection<DmsDocumentTypeItem>?> GetDocumentTypesAsync(
+            Guid libraryId,
+            Guid groupId)
+        {
+            var requestUri = $"api/libraries/{libraryId}/groups/{groupId}/documenttypes";
+
+            return await SendAuthenticatedRequestAsync<ICollection<DmsDocumentTypeItem>>(
+                HttpMethod.Get,
+                requestUri,
+                operationName: $"Get Document Types in library {libraryId} for group {groupId}");
+        }
+
+
+    }
 }

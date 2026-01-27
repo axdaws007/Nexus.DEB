@@ -7,6 +7,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Guid GetModuleId(string moduleName);
         Guid GetInstanceId();
         Guid GetLibraryId(string libraryName);
+        Guid GetDefaultDocumentTypeGroupId(string libraryName);
         AuditConfiguration GetAuditConfiguration();
     }
 }

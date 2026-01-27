@@ -450,9 +450,9 @@ namespace Nexus.DEB.Infrastructure.Services
 			var scopeDetail = scope.Adapt<ScopeDetail>();
 
             var scopeRequirements = _dbContext.Requirements.Include(r => r.StandardVersions).Where(w => w.Scopes.Any(a => a.EntityId == scope.EntityId));
+            scopeDetail.RequirementIds = scopeRequirements.Select(s => s.EntityId).ToList();
+
             var standardVersionIds = scopeRequirements.SelectMany(s => s.StandardVersions).Distinct().Select(s => s.EntityId);
-
-
 			var standardVersions = _dbContext.StandardVersions.AsNoTracking().Include(sv => sv.Standard).Include(sv => sv.Requirements).Where(w => standardVersionIds.Contains(w.EntityId));
             var standardVersionStates = _dbContext.PawsEntityDetails.AsNoTracking().Where(w => standardVersionIds.Contains(w.EntityId));
 
@@ -465,7 +465,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 svR.Status = standardVersionStates.FirstOrDefault(s => s.EntityId == sv.EntityId)?.PseudoStateTitle ?? string.Empty;
                 svR.TotalRequirements = sv.Requirements.Count;
                 svR.TotalRequirementsInScope = scopeRequirements.Where(w => w.StandardVersions.Any(a => a.EntityId == sv.EntityId)).Count();
-                scopeDetail.StandardVersionRequirements.Add(svR);
+				scopeDetail.StandardVersionRequirements.Add(svR);
 			}
 
             return scopeDetail;

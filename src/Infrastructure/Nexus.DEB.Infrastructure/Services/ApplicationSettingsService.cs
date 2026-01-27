@@ -32,6 +32,13 @@ namespace Nexus.DEB.Infrastructure.Services
             return _configuration.GetValue<Guid>(libraryIdentifier);
         }
 
+        public Guid GetDefaultDocumentTypeGroupId(string libraryName)
+        {
+            var libraryIdentifier = $"DMS:DefaultDocumentTypeGroup:{libraryName}";
+
+            return _configuration.GetValue<Guid>(libraryIdentifier);
+        }
+
         public AuditConfiguration GetAuditConfiguration()
         {
             return new AuditConfiguration()

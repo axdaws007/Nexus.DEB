@@ -106,7 +106,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			}
 		}
 
-		public async Task<Result<Scope?>> UpdateScopeRequirementsAsync(
+		public async Task<Result<ScopeDetail?>> UpdateScopeRequirementsAsync(
 			Guid scopeId,
 			Guid standardVersionId,
 			List<Guid> idsToAdd,
@@ -119,7 +119,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
 			if (scope == null)
 			{
-				return Result<Scope>.Failure(new ValidationError()
+				return Result<ScopeDetail?>.Failure(new ValidationError()
 				{
 					Code = "INVALID_SCOPE_ID",
 					Field = nameof(scopeId),
@@ -131,7 +131,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
 			if (standardVersion == null)
 			{
-				return Result<Scope>.Failure(new ValidationError()
+				return Result<ScopeDetail?>.Failure(new ValidationError()
 				{
 					Code = "INVALID_STANDARDVERSION_ID",
 					Field = nameof(standardVersionId),
@@ -141,7 +141,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
 			try
 			{
-				scope = await DebService.UpdateScopeRequirementsAsync(
+				var scopeDetail = await DebService.UpdateScopeRequirementsAsync(
 					scopeId,
 					standardVersion,
 					idsToAdd,
@@ -150,11 +150,11 @@ namespace Nexus.DEB.Infrastructure.Services
 					removeAll,
 					cancellationToken);
 
-				return Result<Scope>.Success(scope);
+				return Result<ScopeDetail?>.Success(scopeDetail);
 			}
 			catch (Exception ex)
 			{
-				return Result<Scope>.Failure($"An error occurred updating the Scope Requirements: {ex.Message}");
+				return Result<ScopeDetail?>.Failure($"An error occurred updating the Scope Requirements: {ex.Message}");
 			}
 		}
 

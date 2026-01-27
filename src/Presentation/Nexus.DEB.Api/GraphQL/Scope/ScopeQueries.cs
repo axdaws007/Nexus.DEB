@@ -59,7 +59,9 @@ namespace Nexus.DEB.Api.GraphQL
 			var commonLibraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.CommonDocuments);
 
 			var debDocumentCount = await dmsService.GetEntityDocumentCountAsync(debLibraryId, scopeId);
-			var commonDocumentCount = await dmsService.GetEntityDocumentCountAsync(commonLibraryId, scopeId);
+            //TODO: re-work after linking to common evidence is done.
+            //var commonDocumentCount = await dmsService.GetEntityDocumentCountAsync(commonLibraryId, scopeId);
+            var commonDocumentCount = 0;
 
 			counts.AttachmentsCount = debDocumentCount + commonDocumentCount;
 

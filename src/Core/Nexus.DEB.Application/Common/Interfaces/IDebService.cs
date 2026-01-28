@@ -18,6 +18,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
 		IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters);
 		Task<RequirementDetail?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken);
+        ICollection<StandardVersionWithSections> GetRelatedStandardVersionsAndSections(Guid requirementId);
+		ICollection<ScopeWithStatements> GetRelatedScopesWithStatements(Guid requirementId);
 		Task<RequirementChildCounts> GetChildCountsForRequirementAsync(Guid id, CancellationToken cancellationToken);
 		IQueryable<Requirement> GetRequirementsForStandardVersion(Guid standardVersionId);
         Task<ICollection<RequirementWithScopes>> GetRequirementScopesForStatement(Guid statementId, CancellationToken cancellationToken);

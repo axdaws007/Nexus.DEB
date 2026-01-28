@@ -8,7 +8,7 @@ namespace Nexus.DEB.Application.Common.Models
 		public string Title { get; set; } = string.Empty;
 		public string? SerialNumber { get; set; }
 
-		public List<Statement> Statements { get; set; } = new List<Statement>();
+		public ICollection<Statement> Statements { get; set; } = new List<Statement>();
 
 	}
 }

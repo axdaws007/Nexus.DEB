@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
-using Nexus.DEB.Application.Common.Models.StandardVersion;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
@@ -260,7 +259,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			return requirementDetail;
 		}
 
-		public List<StandardVersionWithSections> GetRelatedStandardVersionsAndSections(Guid requirementId)
+		public ICollection<StandardVersionWithSections> GetRelatedStandardVersionsAndSections(Guid requirementId)
 		{
 			var sectionsAndStandardVersions = _dbContext.Sections.AsNoTracking()
                 .Include(r => r.StandardVersion)
@@ -286,7 +285,7 @@ namespace Nexus.DEB.Infrastructure.Services
             return standardVersionSections;
 		}
 
-		public List<ScopeWithStatements> GetRelatedScopesWithStatements(Guid requirementId)
+		public ICollection<ScopeWithStatements> GetRelatedScopesWithStatements(Guid requirementId)
 		{
 			var statementRequirementScopes = _dbContext.StatementsRequirementsScopes
 				.AsNoTracking()

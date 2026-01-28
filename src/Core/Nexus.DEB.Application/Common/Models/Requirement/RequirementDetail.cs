@@ -1,6 +1,4 @@
-﻿using Nexus.DEB.Application.Common.Models.StandardVersion;
-
-namespace Nexus.DEB.Application.Common.Models
+﻿namespace Nexus.DEB.Application.Common.Models
 {
 	public class RequirementDetail : EntityDetailBase
 	{
@@ -9,7 +7,7 @@ namespace Nexus.DEB.Application.Common.Models
 		public int RequirementCategoryId { get; set; }
 		public string RequirementCategoryTitle { get; set; } = string.Empty;
 
-		public List<ScopeWithStatements> ScopeStatements { get; set; } = new List<ScopeWithStatements>();
-		public List<StandardVersionWithSections> StandardVersionSections { get; set; } = new List<StandardVersionWithSections>();
+		public ICollection<ScopeWithStatements> ScopeStatements { get; set; } = new List<ScopeWithStatements>();
+		public ICollection<StandardVersionWithSections> StandardVersionSections { get; set; } = new List<StandardVersionWithSections>();
 	}
 }

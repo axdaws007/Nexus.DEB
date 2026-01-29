@@ -121,10 +121,10 @@ namespace Nexus.DEB.Api.Restful
                 // Create audit record if entityId was provided and document was created
                 if (result.DocumentId.HasValue && metadataObj.TryGetGuid("entityId", out var entityId))
                 {
-                    await dmsService.AddDocumentAddedAuditRecordAsync(result.DocumentId.Value, entityId);
+                    await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, entityId);
                 }
 
-                return Results.Ok(result);
+				return Results.Ok(result);
             }
             catch (ArgumentException ex)
             {
@@ -197,9 +197,26 @@ namespace Nexus.DEB.Api.Restful
                     return Results.Problem(
                         detail: "Failed to update document. The service returned no data.",
                         statusCode: StatusCodes.Status500InternalServerError);
-                }
+				}
 
-                return Results.Ok(result);
+				if (result.DocumentId.HasValue)
+				{
+                    var dmsDocument = await dmsService.GetDocumentAsync(libraryId, documentId);
+
+                    if (dmsDocument != null && dmsDocument.EntityId.HasValue)
+                    {
+                        if(file != null)
+                        {
+							await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, dmsDocument.EntityId.Value);
+						}
+						else
+						{
+							await dmsService.AddDocumentUpdatedAuditRecordAsync(result.DocumentId.Value, dmsDocument.EntityId.Value);
+						}
+                    }
+				}
+
+				return Results.Ok(result);
             }
             catch (ArgumentException ex)
             {
@@ -239,9 +256,10 @@ namespace Nexus.DEB.Api.Restful
 
                 var libraryId = applicationSettingsService.GetLibraryId(library);
 
-                var document = await dmsService.GetDocumentFileAsync(libraryId, documentId, version);
+                var documentFile = await dmsService.GetDocumentFileAsync(libraryId, documentId, version);
+				var dmsDocument = await dmsService.GetDocumentAsync(libraryId, documentId);
 
-                if (document == null)
+				if (documentFile == null)
                 {
                     return Results.NotFound(new
                     {
@@ -249,11 +267,13 @@ namespace Nexus.DEB.Api.Restful
                     });
                 }
 
+                await dmsService.AddDocumentDownloadedAuditRecordAsync(documentId, dmsDocument.EntityId.Value);
+
                 // Return the file with proper headers
                 return Results.File(
-                    document.FileData,
-                    contentType: document.MimeType,
-                    fileDownloadName: document.FileName,
+                    documentFile.FileData,
+                    contentType: documentFile.MimeType,
+                    fileDownloadName: documentFile.FileName,
                     enableRangeProcessing: true);
             }
             catch (FormatException ex)
@@ -273,7 +293,7 @@ namespace Nexus.DEB.Api.Restful
             if (string.IsNullOrWhiteSpace(metadata))
             {
                 return new DmsDocumentMetadata();
-            }
+    }
 
             try
             {

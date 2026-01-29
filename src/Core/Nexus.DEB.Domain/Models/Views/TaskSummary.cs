@@ -5,7 +5,7 @@ namespace Nexus.DEB.Domain.Models
     public class TaskSummary : IEntityType, IOwnedBy
     {
         public Guid EntityId { get; set; }
-        public string SerialNumber { get; set; } = string.Empty;
+        public string? SerialNumber { get; set; }
         public string Title { get; set; } = string.Empty;
         public Guid OwnedById { get; set; }
         public string? OwnedBy { get; set; }

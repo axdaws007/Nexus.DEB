@@ -402,7 +402,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			return content;
         }
 
-        public async Task AddDocumentAddedAuditRecordAsync(Guid documentId, Guid entityId)
+        public async Task AddDocumentUploadedAuditRecordAsync(Guid documentId, Guid entityId)
         {
 			var userDetails = await _currentUserService.GetUserDetailsAsync();
 			var entityHead = await _debService.GetEntityHeadAsync(entityId, new CancellationToken());
@@ -413,6 +413,19 @@ namespace Nexus.DEB.Infrastructure.Services
                 string.Format("Serial: {0}", entityHead.SerialNumber), 
                 userDetails, 
                 documentId.ToAuditData("Guid"));
+		}
+
+		public async Task AddDocumentDownloadedAuditRecordAsync(Guid documentId, Guid entityId)
+		{
+			var userDetails = await _currentUserService.GetUserDetailsAsync();
+			var entityHead = await _debService.GetEntityHeadAsync(entityId, new CancellationToken());
+
+			await _auditService.DataExported(
+				entityId,
+				null,
+				string.Format("Serial: {0}", entityHead.SerialNumber),
+				userDetails,
+				documentId.ToAuditData("Guid"));
 		}
 
 		public async Task AddDocumentUpdatedAuditRecordAsync(Guid documentId, Guid entityId)

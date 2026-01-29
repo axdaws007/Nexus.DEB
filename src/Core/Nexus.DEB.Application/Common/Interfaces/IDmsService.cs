@@ -75,8 +75,9 @@ namespace Nexus.DEB.Application.Common.Interfaces
         /// <returns>Document count</returns>
         Task<int> GetEntityDocumentCountAsync(Guid libraryId, Guid entityId);
 
-        Task AddDocumentAddedAuditRecordAsync(Guid documentId, Guid entityId);
-        Task AddDocumentUpdatedAuditRecordAsync(Guid documentId, Guid entityId);
+        Task AddDocumentUploadedAuditRecordAsync(Guid documentId, Guid entityId);
+		Task AddDocumentDownloadedAuditRecordAsync(Guid documentId, Guid entityId);
+		Task AddDocumentUpdatedAuditRecordAsync(Guid documentId, Guid entityId);
         Task AddDocumentDeletedAuditRecordAsync(Guid libraryId, Guid documentId);
 
         /// <summary>

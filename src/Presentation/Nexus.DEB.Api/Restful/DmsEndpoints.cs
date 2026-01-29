@@ -140,7 +140,7 @@ namespace Nexus.DEB.Api.Restful
 
                 if (result.DocumentId.HasValue)
                 {
-                    await dmsService.AddDocumentAddedAuditRecordAsync(result.DocumentId.Value, new Guid(entityId));
+                    await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, new Guid(entityId));
                 }
 
 				return Results.Ok(result);
@@ -234,7 +234,14 @@ namespace Nexus.DEB.Api.Restful
 
                     if (dmsDocument != null && dmsDocument.EntityId.HasValue)
                     {
-                        await dmsService.AddDocumentUpdatedAuditRecordAsync(result.DocumentId.Value, dmsDocument.EntityId.Value);
+                        if(file != null)
+                        {
+							await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, dmsDocument.EntityId.Value);
+						}
+						else
+						{
+							await dmsService.AddDocumentUpdatedAuditRecordAsync(result.DocumentId.Value, dmsDocument.EntityId.Value);
+						}
                     }
 				}
 
@@ -282,9 +289,10 @@ namespace Nexus.DEB.Api.Restful
 
                 var libraryId = applicationSettingsService.GetLibraryId(library);
 
-                var document = await dmsService.GetDocumentFileAsync(libraryId, documentId, version);
+                var documentFile = await dmsService.GetDocumentFileAsync(libraryId, documentId, version);
+				var dmsDocument = await dmsService.GetDocumentAsync(libraryId, documentId);
 
-                if (document == null)
+				if (documentFile == null)
                 {
                     return Results.NotFound(new
                     {
@@ -292,11 +300,13 @@ namespace Nexus.DEB.Api.Restful
                     });
                 }
 
+                await dmsService.AddDocumentDownloadedAuditRecordAsync(documentId, dmsDocument.EntityId.Value);
+
                 // Return the file with proper headers
                 return Results.File(
-                    document.FileData,
-                    contentType: document.MimeType,
-                    fileDownloadName: document.FileName,
+                    documentFile.FileData,
+                    contentType: documentFile.MimeType,
+                    fileDownloadName: documentFile.FileName,
                     enableRangeProcessing: true);
             }
             catch (FormatException ex)

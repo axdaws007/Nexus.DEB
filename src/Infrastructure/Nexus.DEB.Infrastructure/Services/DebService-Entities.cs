@@ -1134,14 +1134,12 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Date range filter
                 if (filters.DueDateFrom.HasValue)
                 {
-                    var from = filters.DueDateFrom.Value.ToDateTime(TimeOnly.MinValue);
-                    query = query.Where(r => r.DueDate >= from);
+                    query = query.Where(r => r.DueDate >= filters.DueDateFrom.Value);
                 }
 
                 if (filters.DueDateTo.HasValue)
                 {
-                    var to = filters.DueDateTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
-                    query = query.Where(r => r.DueDate < to);
+                    query = query.Where(r => r.DueDate < filters.DueDateTo.Value.AddDays(1));
                 }
 
                 if (filters.StatusIds != null && filters.StatusIds.Count > 0)
@@ -1195,14 +1193,12 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Date range filter
                 if (filters.DueDateFrom.HasValue)
                 {
-                    var from = filters.DueDateFrom.Value.ToDateTime(TimeOnly.MinValue);
-                    query = query.Where(r => r.DueDate >= from);
+                    query = query.Where(r => r.DueDate >= filters.DueDateFrom.Value);
                 }
 
                 if (filters.DueDateTo.HasValue)
                 {
-                    var to = filters.DueDateTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
-                    query = query.Where(r => r.DueDate < to);
+                    query = query.Where(r => r.DueDate < filters.DueDateTo.Value.AddDays(1));
                 }
 
                 if (filters.StatusIds != null && filters.StatusIds.Count > 0)

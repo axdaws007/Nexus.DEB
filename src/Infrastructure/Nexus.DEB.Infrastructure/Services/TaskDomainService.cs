@@ -37,6 +37,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     Title = title,
                     Description = description,
                     DueDate = dueDate,
+                    OriginalDueDate = dueDate,
                     TaskTypeId = taskTypeId,
                     EntityTypeTitle = EntityTypes.Task,
                     SerialNumber = await DebService.GenerateSerialNumberAsync(this.ModuleId, this.InstanceId, EntityTypes.Task)
@@ -83,6 +84,13 @@ namespace Nexus.DEB.Infrastructure.Services
             task.Title = title;
             task.Description = description;
             task.LastModifiedDate = DateTimeProvider.Now; // This is required for when we are only changing the state.
+
+            // If the original due date hasn't had a value set to it, but the due date does a value,
+            // then set the original due date too.
+            if (!task.OriginalDueDate.HasValue && task.DueDate.HasValue)
+            {
+                task.OriginalDueDate = task.DueDate.Value;
+            }
 
 			try
             {

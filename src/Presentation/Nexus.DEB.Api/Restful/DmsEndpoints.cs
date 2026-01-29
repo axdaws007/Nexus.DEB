@@ -2,17 +2,17 @@
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Domain;
-using Nexus.DEB.Domain.Models;
-using Nexus.DEB.Infrastructure.Services;
-using System.Runtime.CompilerServices;
-using System.Text.Json.Serialization;
 using System.Text.Json;
-using HotChocolate.Execution;
 
 namespace Nexus.DEB.Api.Restful
 {
     public static class DmsEndpoints
     {
+        private static readonly JsonSerializerOptions MetadataJsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
         public static void MapDmsEndpoints(this WebApplication app)
         {
             var dmsGroup = app.MapGroup("/api/dms")
@@ -62,14 +62,21 @@ namespace Nexus.DEB.Api.Restful
             //.WithName("DebugClaims");
         }
 
+        /// <summary>
+        /// Adds a new document to a library.
+        /// Accepts multipart/form-data with a file and JSON metadata string.
+        /// </summary>
+        /// <param name="library">The library name</param>
+        /// <param name="file">The file to upload (from form)</param>
+        /// <param name="metadata">JSON string containing metadata key-value pairs</param>
+        /// <param name="applicationSettingsService">Injected settings service</param>
+        /// <param name="dmsService">Injected DMS service</param>
+        /// <param name="debService">Injected DEB service</param>
+        /// <returns>Document response with metadata</returns>
         private static async Task<IResult> AddDocument(
             [FromRoute] string library,
             [FromForm] IFormFile file,
-            [FromForm] string? entityId,
-            [FromForm] string? title,
-            [FromForm] string? description,
-            [FromForm] string? author,
-            [FromForm] string? documentType,
+            [FromForm] string? metadata,
             [FromServices] IApplicationSettingsService applicationSettingsService,
             [FromServices] IDmsService dmsService,
             [FromServices] IDebService debService)
@@ -78,19 +85,14 @@ namespace Nexus.DEB.Api.Restful
             {
                 DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
 
-                if (string.IsNullOrEmpty(documentType)) 
-                    documentType = DebHelper.Dms.DocumentTypes.Document;
-
-                var libraryId = applicationSettingsService.GetLibraryId(library);
-
                 // Validate file
                 if (file == null || file.Length == 0)
                 {
                     return Results.BadRequest(new { error = "File is required" });
                 }
 
-                // Validate file size (e.g., 50 MB limit)
-                const long maxFileSize = 50 * 1024 * 1024; // 50 MB
+                // Validate file size (50 MB limit)
+                const long maxFileSize = 50 * 1024 * 1024;
                 if (file.Length > maxFileSize)
                 {
                     return Results.BadRequest(new
@@ -99,37 +101,15 @@ namespace Nexus.DEB.Api.Restful
                     });
                 }
 
-                // Validate and parse entityId
-                if (string.IsNullOrWhiteSpace(entityId))
+                // Parse metadata from JSON string
+                var metadataObj = ParseMetadata(metadata);
+                if (metadataObj == null)
                 {
-                    return Results.BadRequest(new { error = "entityId is required" });
+                    return Results.BadRequest(new { error = "metadata must be a valid JSON object with string values" });
                 }
 
-                if (!Guid.TryParse(entityId, out var parsedEntityId))
-                {
-                    return Results.BadRequest(new { error = "entityId must be a valid GUID" });
-                }
-
-                // Validate documentType
-                if (!DebHelper.Dms.DocumentTypes.Validator.IsValid(documentType))
-                {
-                    return Results.BadRequest(new
-                    {
-                        error = $"documentType must be '{DebHelper.Dms.DocumentTypes.Document}' or '{DebHelper.Dms.DocumentTypes.Note}'"
-                    });
-                }
-
-                // Build metadata object matching legacy API expectations
-                var metadata = new DmsDocumentMetadata
-                {
-                    EntityId = parsedEntityId,
-                    Title = title,
-                    Description = description,
-                    Author = author,
-                    DocumentType = documentType
-                };
-
-                var result = await dmsService.AddDocumentAsync(libraryId, file, metadata);
+                var libraryId = applicationSettingsService.GetLibraryId(library);
+                var result = await dmsService.AddDocumentAsync(libraryId, file, metadataObj);
 
                 if (result == null)
                 {
@@ -138,9 +118,10 @@ namespace Nexus.DEB.Api.Restful
                         statusCode: StatusCodes.Status500InternalServerError);
                 }
 
-                if (result.DocumentId.HasValue)
+                // Create audit record if entityId was provided and document was created
+                if (result.DocumentId.HasValue && metadataObj.TryGetGuid("entityId", out var entityId))
                 {
-                    await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, new Guid(entityId));
+                    await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, entityId);
                 }
 
 				return Results.Ok(result);
@@ -165,27 +146,22 @@ namespace Nexus.DEB.Api.Restful
             }
         }
 
-        ///// <summary>
-        ///// Updates an existing document in a library.
-        ///// Accepts multipart/form-data with a file and optional metadata fields.
-        ///// </summary>
-        ///// <param name="libraryId">The library ID</param>
-        ///// <param name="documentId">The document ID to update</param>
-        ///// <param name="file">The new file to upload (from form)</param>
-        ///// <param name="title">Document title (optional)</param>
-        ///// <param name="description">Document description (optional)</param>
-        ///// <param name="author">Document author (optional)</param>
-        ///// <param name="documentType">Document type: "document" or "note"</param>
-        ///// <param name="dmsService">Injected DMS service</param>
-        ///// <returns>Document response with updated metadata</returns>
+        /// <summary>
+        /// Updates an existing document in a library.
+        /// Accepts multipart/form-data with an optional file and JSON metadata string.
+        /// </summary>
+        /// <param name="library">The library name</param>
+        /// <param name="documentId">The document ID to update</param>
+        /// <param name="file">The new file to upload (optional)</param>
+        /// <param name="metadata">JSON string containing metadata key-value pairs</param>
+        /// <param name="applicationSettingsService">Injected settings service</param>
+        /// <param name="dmsService">Injected DMS service</param>
+        /// <returns>Document response with updated metadata</returns>
         private static async Task<IResult> UpdateDocument(
             [FromRoute] string library,
             [FromRoute] Guid documentId,
             [FromForm] IFormFile? file,
-            [FromForm] string? title,
-            [FromForm] string? description,
-            [FromForm] string? author,
-            [FromForm] string? documentType,
+            [FromForm] string? metadata,
             [FromServices] IApplicationSettingsService applicationSettingsService,
             [FromServices] IDmsService dmsService)
         {
@@ -193,33 +169,28 @@ namespace Nexus.DEB.Api.Restful
             {
                 DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
 
-                var libraryId = applicationSettingsService.GetLibraryId(library);
-
-                // Validate documentType if provided
-                if (!string.IsNullOrWhiteSpace(documentType))
+                // Validate file size if provided (50 MB limit)
+                if (file != null)
                 {
-                    var validDocTypes = new[] { "document", "note" };
-                    if (!validDocTypes.Contains(documentType.ToLower()))
+                    const long maxFileSize = 50 * 1024 * 1024;
+                    if (file.Length > maxFileSize)
                     {
                         return Results.BadRequest(new
                         {
-                            error = "documentType must be 'document' or 'note'"
+                            error = $"File size exceeds maximum allowed size of {maxFileSize / 1024 / 1024} MB"
                         });
                     }
                 }
 
-                // Build metadata - for updates, entityId comes from existing document
-                // so it's not required in the update request
-                var metadata = new DmsDocumentMetadata
+                // Parse metadata from JSON string
+                var metadataObj = ParseMetadata(metadata);
+                if (metadataObj == null)
                 {
-                    EntityId = Guid.Empty, // Will be populated from existing document by legacy API
-                    Title = title,
-                    Description = description,
-                    Author = author,
-                    DocumentType = documentType?.ToLower() ?? "document"
-                };
+                    return Results.BadRequest(new { error = "metadata must be a valid JSON object with string values" });
+                }
 
-                var result = await dmsService.UpdateDocumentAsync(libraryId, documentId, file, metadata);
+                var libraryId = applicationSettingsService.GetLibraryId(library);
+                var result = await dmsService.UpdateDocumentAsync(libraryId, documentId, file, metadataObj);
 
                 if (result == null)
                 {
@@ -252,10 +223,6 @@ namespace Nexus.DEB.Api.Restful
                 return Results.BadRequest(new { error = ex.Message });
             }
             catch (FormatException ex)
-            {
-                return Results.BadRequest(new { error = ex.Message });
-            }
-            catch (InvalidOperationException ex)
             {
                 return Results.BadRequest(new { error = ex.Message });
             }
@@ -318,6 +285,31 @@ namespace Nexus.DEB.Api.Restful
                 return Results.Problem(
                     detail: ex.Message,
                     statusCode: StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        private static DmsDocumentMetadata? ParseMetadata(string? metadata)
+        {
+            if (string.IsNullOrWhiteSpace(metadata))
+            {
+                return new DmsDocumentMetadata();
+    }
+
+            try
+            {
+                var fields = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
+                    metadata,
+                    MetadataJsonOptions);
+
+                return new DmsDocumentMetadata
+                {
+                    RawJson = metadata,
+                    Fields = fields ?? new Dictionary<string, JsonElement>()
+                };
+            }
+            catch (JsonException)
+            {
+                return null;
             }
         }
     }

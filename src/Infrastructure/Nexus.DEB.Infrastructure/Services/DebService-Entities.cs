@@ -72,10 +72,6 @@ namespace Nexus.DEB.Infrastructure.Services
                         .Where(ps => ps.EntityId == r.EntityId)
                         .Select(ps => ps.Status)
                         .FirstOrDefault(),
-                    StatementIds = r.StatementsRequirementsScopes
-                        .Select(srs => srs.StatementId)
-                        .Distinct()
-                        .ToList(),
                     StandardVersionTitles = r.StandardVersions.Select(sv => sv.Title).ToList()
                 })
                 .AsNoTracking();
@@ -126,15 +122,16 @@ namespace Nexus.DEB.Infrastructure.Services
                     query = query.Where(r => r.LastModifiedDate < to);
                 }
 
-                if (filters.StatementId.HasValue)
-                {
-                    query = query.Where(r => r.StatementIds.Contains(filters.StatementId.Value));
-                }
-
                 if (filters.OnlyShowAvailableRequirementScopeCombinations)
                 {
                     var requirementIdsWithAvailableCombinations = _dbContext.Set<Requirement>()
                         .Where(r => r.Scopes.Any(s =>
+                            // Alex Dawson : 29/01/26 
+                            // Bug #20954 - The bug has been deferred to the backlog at the moment
+                            // as it's perceived as a usability issue rather than a failure to meet the requirement.
+                            // If this gets revisited I believe all we need to do is uncomment the line below.
+                            //(filters.ScopeIds == null || filters.ScopeIds.Count == 0 || filters.ScopeIds.Contains(s.EntityId)) &&
+
                             // This scope (from the requirement's available scopes) hasn't been allocated yet
                             !r.StatementsRequirementsScopes.Any(srs => srs.ScopeId == s.EntityId)))
                         .Select(r => r.EntityId);
@@ -1137,14 +1134,12 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Date range filter
                 if (filters.DueDateFrom.HasValue)
                 {
-                    var from = filters.DueDateFrom.Value.ToDateTime(TimeOnly.MinValue);
-                    query = query.Where(r => r.DueDate >= from);
+                    query = query.Where(r => r.DueDate >= filters.DueDateFrom.Value);
                 }
 
                 if (filters.DueDateTo.HasValue)
                 {
-                    var to = filters.DueDateTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
-                    query = query.Where(r => r.DueDate < to);
+                    query = query.Where(r => r.DueDate < filters.DueDateTo.Value.AddDays(1));
                 }
 
                 if (filters.StatusIds != null && filters.StatusIds.Count > 0)
@@ -1198,14 +1193,12 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Date range filter
                 if (filters.DueDateFrom.HasValue)
                 {
-                    var from = filters.DueDateFrom.Value.ToDateTime(TimeOnly.MinValue);
-                    query = query.Where(r => r.DueDate >= from);
+                    query = query.Where(r => r.DueDate >= filters.DueDateFrom.Value);
                 }
 
                 if (filters.DueDateTo.HasValue)
                 {
-                    var to = filters.DueDateTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
-                    query = query.Where(r => r.DueDate < to);
+                    query = query.Where(r => r.DueDate < filters.DueDateTo.Value.AddDays(1));
                 }
 
                 if (filters.StatusIds != null && filters.StatusIds.Count > 0)

@@ -9,5 +9,7 @@ namespace Nexus.DEB.Domain.Models
         public DateOnly? DueDate { get; set; }
         public virtual Statement Statement { get; set; }
         public Guid StatementId { get; set; }
+        public DateOnly? OriginalDueDate { get; set; }
+
     }
 }

@@ -3,7 +3,8 @@
 	public class TaskDetailView : EntityDetailViewBase
 	{
 		public DateOnly? DueDate { get; set; }
-		public short TaskTypeId { get; set; }
+        public DateOnly? OriginalDueDate { get; set; }
+        public short TaskTypeId { get; set; }
 		public string TaskType { get; set; } = string.Empty;
 		public int? ActivityId { get; set; }
 		public string Status { get; set; } = string.Empty;

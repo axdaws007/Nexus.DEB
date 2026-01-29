@@ -1,30 +1,38 @@
-﻿namespace Nexus.DEB.Application.Common.Models.Dms
+﻿using System.Text.Json;
+
+namespace Nexus.DEB.Application.Common.Models.Dms
 {
     public class DmsDocumentMetadata
     {
         /// <summary>
-        /// Document title
+        /// The raw JSON string to pass through to the legacy API.
         /// </summary>
-        public string? Title { get; set; }
+        public string? RawJson { get; set; }
 
         /// <summary>
-        /// Document description
+        /// Parsed fields for inspection (values can be any JSON type).
         /// </summary>
-        public string? Description { get; set; }
+        public Dictionary<string, JsonElement> Fields { get; set; } = new();
 
-        /// <summary>
-        /// Document author
-        /// </summary>
-        public string? Author { get; set; }
+        public bool TryGetGuid(string fieldName, out Guid value)
+        {
+            value = Guid.Empty;
+            if (Fields.TryGetValue(fieldName, out var element) &&
+                element.ValueKind == JsonValueKind.String)
+            {
+                return Guid.TryParse(element.GetString(), out value);
+            }
+            return false;
+        }
 
-        /// <summary>
-        /// Entity ID this document is associated with (REQUIRED by legacy API)
-        /// </summary>
-        public Guid EntityId { get; set; }
-
-        /// <summary>
-        /// Document type: "document" or "note" (defaults to "document")
-        /// </summary>
-        public string DocumentType { get; set; } = "document";
+        public string? GetValueOrDefault(string fieldName)
+        {
+            if (Fields.TryGetValue(fieldName, out var element) &&
+                element.ValueKind == JsonValueKind.String)
+            {
+                return element.GetString();
+            }
+            return null;
+        }
     }
 }

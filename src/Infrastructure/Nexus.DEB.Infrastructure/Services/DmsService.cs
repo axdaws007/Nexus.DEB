@@ -33,7 +33,7 @@ namespace Nexus.DEB.Infrastructure.Services
 		}
 
         /// <summary>
-        /// Adds a new document to a library.
+        /// Adds a document to a library.
         /// Sends multipart/form-data to the legacy API.
         /// </summary>
         public async Task<DmsDocumentResponse?> AddDocumentAsync(
@@ -45,23 +45,11 @@ namespace Nexus.DEB.Infrastructure.Services
 
             try
             {
+                // Log with entityId if available
+                var entityId = metadata.GetValueOrDefault("entityId") ?? "not specified";
                 Logger.LogInformation(
                     "Adding document to library {LibraryId}: {FileName} for entity {EntityId}",
-                    libraryId, file.FileName, metadata.EntityId);
-
-                // Validate metadata
-                if (metadata.EntityId == Guid.Empty)
-                {
-                    throw new ArgumentException("EntityId is required", nameof(metadata));
-                }
-
-                var validDocTypes = new[] { "document", "note" };
-                if (!validDocTypes.Contains(metadata.DocumentType.ToLower()))
-                {
-                    throw new ArgumentException(
-                        "DocumentType must be 'document' or 'note'",
-                        nameof(metadata));
-                }
+                    libraryId, file.FileName, entityId);
 
                 // Create multipart/form-data content
                 using var content = CreateMultipartContent(file, metadata);
@@ -105,10 +93,11 @@ namespace Nexus.DEB.Infrastructure.Services
             }
         }
 
-        ///// <summary>
-        ///// Updates an existing document in a library.
-        ///// Sends multipart/form-data to the legacy API.
-        ///// </summary>
+
+        /// <summary>
+        /// Updates an existing document in a library.
+        /// Sends multipart/form-data to the legacy API.
+        /// </summary>
         public async Task<DmsDocumentResponse?> UpdateDocumentAsync(
             Guid libraryId,
             Guid documentId,
@@ -121,7 +110,7 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 Logger.LogInformation(
                     "Updating document {DocumentId} in library {LibraryId}: {FileName} ({FileSize} bytes)",
-                    documentId, libraryId, file?.FileName, file?.Length);
+                    documentId, libraryId, file?.FileName ?? "no file", file?.Length ?? 0);
 
                 // Create multipart/form-data content
                 using var content = CreateMultipartContent(file, metadata);
@@ -363,7 +352,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
         /// <summary>
         /// Creates multipart/form-data content for file uploads.
-        /// Includes the file and optional metadata.
+        /// Includes the file and metadata as a JSON string.
         /// </summary>
         private static MultipartFormDataContent CreateMultipartContent(
             IFormFile? file,
@@ -373,7 +362,6 @@ namespace Nexus.DEB.Infrastructure.Services
 
             if (file != null)
             {
-                // Add the file
                 var fileContent = new StreamContent(file.OpenReadStream());
                 fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(
                     file.ContentType ?? "application/octet-stream");
@@ -381,25 +369,13 @@ namespace Nexus.DEB.Infrastructure.Services
                 content.Add(fileContent, "file", file.FileName);
             }
 
-            // Add individual metadata fields as the legacy API expects them
-            content.Add(new StringContent(metadata.EntityId.ToString(), Encoding.UTF8), "entityId");
-            content.Add(new StringContent(metadata.DocumentType, Encoding.UTF8), "documentType");
-
-            if (!string.IsNullOrWhiteSpace(metadata.Title))
+            // Pass through the raw JSON string to the legacy API
+            if (!string.IsNullOrWhiteSpace(metadata.RawJson))
             {
-                content.Add(new StringContent(metadata.Title, Encoding.UTF8), "title");
+                content.Add(new StringContent(metadata.RawJson, Encoding.UTF8), "metadata");
             }
 
-            if (!string.IsNullOrWhiteSpace(metadata.Description))
-            {
-                content.Add(new StringContent(metadata.Description, Encoding.UTF8), "description");
-            }
-
-            if (!string.IsNullOrWhiteSpace(metadata.Author))
-            {
-                content.Add(new StringContent(metadata.Author, Encoding.UTF8), "author");
-			}
-			return content;
+            return content;
         }
 
         public async Task AddDocumentAddedAuditRecordAsync(Guid documentId, Guid entityId)

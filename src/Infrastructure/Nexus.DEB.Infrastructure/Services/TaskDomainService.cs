@@ -82,8 +82,9 @@ namespace Nexus.DEB.Infrastructure.Services
             task.DueDate = dueDate;
             task.Title = title;
             task.Description = description;
+            task.LastModifiedDate = DateTimeProvider.Now; // This is required for when we are only changing the state.
 
-            try
+			try
             {
                 await this.DebService.UpdateTaskAsync(task, cancellationToken);
 

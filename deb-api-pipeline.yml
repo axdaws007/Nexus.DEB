@@ -4,14 +4,14 @@
 trigger:
 - none
 
-# Queue-time parameter: choose to deploy to etest, defaults to no
+# Queue-time parameter: choose to also deploy to etest, defaults to no
 parameters:
 - name: DeployToTest
   type: boolean
   default: false
 
 variables:
-  BuildConfiguration: 'Release' # What is this for?
+  BuildConfiguration: 'Release'
   DevWebsiteName: 'edev.nexus.local'
   VirtualApp: '/CSAF100059/DEBV2_Pipelines/APIs/DEB'
   TestWebsiteName: 'etest.nexus.local'
@@ -85,7 +85,7 @@ stages:
                 # Change the following to true if you want to clean out the directory each deployment
                 RemoveAdditionalFilesFlag: false
 
-# etest deployment stage, depends on build and deployment to dev success, and if checkbox is checked on pipeline run 
+# etest deployment stage, depends on build and deployment to dev success, and if checkbox is checked on pipeline run. Defaults to false
 - stage: DeployTest
   displayName: 'Optional deploy to test environment on tully'
   dependsOn: 

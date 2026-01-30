@@ -24,7 +24,6 @@ stages:
   - job: Build
     pool:
       vmImage: 'windows-latest'
-     variables:
     steps:
     # To be checked, includs some generic .NET 8 tasks and the usual archiving/publishing tasks
       - task: UseDotNet@2

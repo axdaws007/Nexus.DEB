@@ -13,8 +13,8 @@ parameters:
 variables:
   BuildConfiguration: 'Release' # What is this for?
   DevWebsiteName: 'edev.nexus.local'
-  VirtualApp: '/CSAF100059/DEBV2/APIs/DEB'
-  TestWebsiteName: 'edev.nexus.local'
+  VirtualApp: '/CSAF100059/DEBV2_Pipelines/APIs/DEB'
+  TestWebsiteName: 'etest.nexus.local'
   Project: 'src/Presentation/Nexus.DEB.Api/Nexus.DEB.Api.csproj' # guess?
 
 stages:

@@ -143,12 +143,13 @@ namespace Nexus.DEB.Infrastructure.Services
             var userDetails = _dbContext.UserDetails;
 
             await _dbContext.Database.ExecuteSqlRawAsync(
-                "EXEC dbo.CreateChangeRecordItem @entityId, @fieldName, @friendlyFieldName, @oldValue, @newValue",
+                "EXEC dbo.CreateChangeRecordItem @entityId, @fieldName, @friendlyFieldName, @oldValue, @newValue, @ChangeEventId",
                 new SqlParameter("@entityId", entityId),
                 new SqlParameter("@fieldName", fieldName),
                 new SqlParameter("friendlyFieldName", friendlyFieldName),
                 new SqlParameter("@oldValue", oldValue),
-                new SqlParameter("@newValue", newValue)
+                new SqlParameter("@newValue", newValue),
+                new SqlParameter("@ChangeEventId", eventId)
             );
         }
 

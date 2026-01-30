@@ -1,0 +1,124 @@
+# DEB .NET 8 GraphQL API
+# Build steps need to be added
+# No trigger set
+trigger:
+- none
+
+# Queue-time parameter: choose to deploy to etest, defaults to no
+parameters:
+- name: DeployToTest
+  type: boolean
+  default: false
+
+variables:
+  BuildConfiguration: 'Release' # What is this for?
+  DevWebsiteName: 'edev.nexus.local'
+  VirtualApp: '/CSAF100059/DEBV2/APIs/DEB'
+  TestWebsiteName: 'edev.nexus.local'
+  Project: 'src/Presentation/Nexus.DEB.Api/Nexus.DEB.Api.csproj' # guess?
+
+stages:
+- stage: Build
+  displayName: 'Build stage on Azure worker'
+  jobs:
+  - job: Build
+    pool:
+      vmImage: 'windows-latest'
+     variables:
+    steps:
+    # To be checked, includs some generic .NET 8 tasks and the usual archiving/publishing tasks
+      - task: UseDotNet@2
+        displayName: 'Use .NET SDK 8.x'
+        inputs:
+          packageType: 'sdk'
+          version: '8.x'
+
+      - script: |
+          dotnet restore $(project)
+          dotnet publish $(project) -c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory)/publish
+        displayName: 'dotnet restore & publish'
+
+      - task: ArchiveFiles@2
+        displayName: 'Archive publish output to zip'
+        inputs:
+          rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish'
+          includeRootFolder: false
+          archiveType: zip
+          archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip' # Do we want to use Build.BuildID naming?
+          replaceExistingArchive: true
+
+      - task: PublishPipelineArtifact@1
+        displayName: 'Publish zip artifact'
+        inputs:
+          targetPath: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+          artifact: 'drop'
+
+- stage: DeployDev
+  displayName: 'Deploy to development environment on tully'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: DeploytoIIS
+    displayName: 'Deploy the web app to dev environment'
+    environment:
+      name: 'Development'
+      resourceType: VirtualMachine
+      resourceName: 'TULLY'
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: DownloadPipelineArtifact@2
+              displayName: 'Download pipeline artifact'
+              inputs:
+                buildType: current
+                artifact: 'drop'
+                targetPath: '$(Pipeline.Workspace)/drop'
+
+            - task: IISWebAppDeploymentOnMachineGroup@0
+              displayName: 'Deploy DEB API app to edev'
+              inputs:
+                WebSiteName: '$(DevWebsiteName)'
+                Package: '$(Pipeline.Workspace)\drop\$(Build.BuildId).zip'
+                VirtualApplication: '$(VirtualApp)'
+                TakeAppOfflineFlag: true
+                # Change the following to true if you want to clean out the directory each deployment
+                RemoveAdditionalFilesFlag: false
+
+# etest deployment stage, depends on build and deployment to dev success, and if checkbox is checked on pipeline run 
+- stage: DeployTest
+  displayName: 'Optional deploy to test environment on tully'
+  dependsOn: 
+    - Build
+    - DeployDev
+  condition: and(succeeded(), eq('${{ parameters.DeployToTest }}', true))
+  jobs:
+  - deployment: DeploytoIIS
+    displayName: 'Deploy the web app to test environment'
+    environment:
+      name: 'Development'
+      resourceType: VirtualMachine
+      resourceName: 'TULLY'
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: DownloadPipelineArtifact@2
+              displayName: 'Download pipeline artifact'
+              inputs:
+                buildType: current
+                artifact: 'drop'
+                targetPath: '$(Pipeline.Workspace)/drop'
+
+            - task: IISWebAppDeploymentOnMachineGroup@0
+              displayName: 'Deploy DEB API app to etest'
+              inputs:
+                WebSiteName: '$(TestWebsiteName)'
+                Package: '$(Pipeline.Workspace)\drop\$(Build.BuildId).zip'
+                VirtualApplication: '$(VirtualApp)'
+                TakeAppOfflineFlag: true
+                # Change the following to true if you want to clean out the directory each deployment
+                RemoveAdditionalFilesFlag: false
+                

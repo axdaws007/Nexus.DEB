@@ -9,33 +9,41 @@ namespace Nexus.DEB.Api.GraphQL
     public static class DmsQueries
     {
         /// <summary>
-        /// Gets document metadata (without file data).
+        /// Gets a single document from the DEB Documents library.
         /// </summary>
-        /// <param name="libraryId">The library ID</param>
         /// <param name="documentId">The document ID</param>
         /// <param name="version">Optional version number</param>
-        /// <param name="dmsService">Injected DMS service</param>
-        /// <returns>Document metadata or null if not found</returns>
+        /// <param name="applicationSettingsService">Settings service</param>
+        /// <param name="dmsService">DMS service</param>
+        /// <returns>The document details</returns>
         [Authorize]
-        public static async Task<DmsDocument?> GetDocument(
-            string library,
+        public static async Task<DebDmsDocument?> GetDebLibraryDocument(
             Guid documentId,
             int? version,
-            IApplicationSettingsService applicationSettingsService,
-            IDmsService dmsService)
+            [Service] IApplicationSettingsService applicationSettingsService,
+            [Service] IDmsService dmsService)
         {
-            try
-            {
-                DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
-            }
-            catch(Exception ex)
-            {
-                throw ExceptionHelper.BuildException(ex);
-            }
+            var libraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.DebDocuments);
+            return await dmsService.GetDebLibraryDocumentAsync(libraryId, documentId, version);
+        }
 
-            var libraryId = applicationSettingsService.GetLibraryId(library);
-
-            return await dmsService.GetDocumentAsync(libraryId, documentId, version);
+        /// <summary>
+        /// Gets a single document from the Common Documents library.
+        /// </summary>
+        /// <param name="documentId">The document ID</param>
+        /// <param name="version">Optional version number</param>
+        /// <param name="applicationSettingsService">Settings service</param>
+        /// <param name="dmsService">DMS service</param>
+        /// <returns>The document details</returns>
+        [Authorize]
+        public static async Task<CommonDmsDocument?> GetCommonLibraryDocument(
+            Guid documentId,
+            int? version,
+            [Service] IApplicationSettingsService applicationSettingsService,
+            [Service] IDmsService dmsService)
+        {
+            var libraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.CommonDocuments);
+            return await dmsService.GetCommonLibraryDocumentAsync(libraryId, documentId, version);
         }
 
         /// <summary>

@@ -16,6 +16,8 @@
 
         public DateTime? ExpiryDate { get; set; }
 
+        public DateTime? ReviewDate { get; set; }
+
         public DmsDocumentActionData? ActionData { get; set; }
     }
 }

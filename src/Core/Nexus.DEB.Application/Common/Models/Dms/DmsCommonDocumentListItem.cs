@@ -9,6 +9,7 @@
         public string? Author { get; set; }
 
         public string? DocumentType { get; set; }
+        public string FileType { get; set; } = string.Empty;
 
         public string? UploadedBy { get; set; }
 

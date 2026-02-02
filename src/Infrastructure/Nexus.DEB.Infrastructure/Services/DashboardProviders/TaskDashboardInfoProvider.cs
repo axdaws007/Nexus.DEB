@@ -14,7 +14,13 @@ namespace Nexus.DEB.Infrastructure.Services
         protected override DateOnly? DetermineDueDate(object entity, Guid entityId)
         {
             if (entity is TaskDetail taskDetail)
+            {
                 return taskDetail.DueDate;
+            }
+            else if (entity is Domain.Models.Task task)
+            {
+                return task.DueDate;
+            }
 
             return null;
         }

@@ -19,19 +19,19 @@
         /// <summary>
         /// Comma-delimited list of standard version IDs associated with this document.
         /// </summary>
-        public string? StandardVersionId { get; set; }
+        public string? StandardVersionIds { get; set; }
 
         /// <summary>
         /// Gets the standard version IDs as a list of GUIDs.
         /// </summary>
-        public List<Guid> GetStandardVersionIds()
+        public List<Guid> GetListOfStandardVersionIds()
         {
-            if (string.IsNullOrWhiteSpace(StandardVersionId))
+            if (string.IsNullOrWhiteSpace(StandardVersionIds))
             {
                 return new List<Guid>();
             }
 
-            return StandardVersionId
+            return StandardVersionIds
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(s => Guid.TryParse(s.Trim(), out var guid) ? guid : (Guid?)null)
                 .Where(g => g.HasValue)

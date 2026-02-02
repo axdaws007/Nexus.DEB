@@ -485,7 +485,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Library-specific fields
                 document.ExpiryDate = GetMetadataDateOnly(response.Metadata, "ExpiryDate");
                 document.ReviewDate = GetMetadataDateOnly(response.Metadata, "ReviewDate");
-                document.StandardVersionId = GetMetadataString(response.Metadata, "StandardVersionId");
+                document.StandardVersionIds = GetMetadataString(response.Metadata, "StandardVersionIds");
             }
 
             return document;
@@ -586,16 +586,18 @@ namespace Nexus.DEB.Infrastructure.Services
         {
             var userDetails = await _currentUserService.GetUserDetailsAsync();
 
+            var obj = (new
+            {
+                docid = documentId,
+                libid = libraryId
+            }).ToAuditData("document");
+
             await _auditService.EntitySaved(
                 documentId,
                 "Document",
                 "Document marked as deleted",
                 userDetails,
-                (new
-                {
-                    docid = libraryId,
-                    libid = documentId
-                }).ToAuditData("document"));
+                obj);
         }
 
         #endregion

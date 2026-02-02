@@ -41,6 +41,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<StandardVersionDetail?> GetStandardVersionDetailByIdAsync(Guid id, CancellationToken cancellationToken);
         Task<StandardVersionChildCounts> GetChildCountsForStandardVersionAsync(Guid id, CancellationToken cancellationToken);
         Task<int?> GetStandardVersionTotalRequirementsAsync(Guid id, CancellationToken cancellationToken);
+        Task<StandardVersion> CreateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default);
 
 		IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
         IQueryable<StandardVersionExport> GetStandardVersionsForExport(StandardVersionSummaryFilters? filters);
@@ -65,7 +66,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         IQueryable<CommentType> GetCommentTypes();
         IQueryable<Standard> GetStandards();
-        Task<ICollection<FilterItem>> GetStandardsLookupAsync(CancellationToken cancellationToken);
+        Task<Standard> GetStandardByIdAsync(int standardId, CancellationToken cancellationToken);
+		Task<ICollection<FilterItem>> GetStandardsLookupAsync(CancellationToken cancellationToken);
 		Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(CancellationToken cancellationToken);
 		Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLookupAsync(Guid standardVersionId, CancellationToken cancellationToken);
 		Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(CancellationToken cancellationToken);

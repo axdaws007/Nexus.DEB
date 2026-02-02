@@ -14,8 +14,8 @@ namespace Nexus.DEB.Application.Common.Models
 		public string Delimiter { get; set; } = string.Empty;
 		public int MajorVersion { get; set; }
 		public int MinorVersion { get; set; }
-		public DateTime EffectiveStartDate { get; set; }
-		public DateTime? EffectiveEndDate { get; set; }
+		public DateOnly EffectiveStartDate { get; set; }
+		public DateOnly? EffectiveEndDate { get; set; }
 		public List<Scope> Scopes { get; set; } = new();
 	}
 }

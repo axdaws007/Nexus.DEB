@@ -9,8 +9,8 @@ namespace Nexus.DEB.Domain.Models
         public string StandardTitle { get; set; } = string.Empty;
         public string Version { get; set; } = string.Empty;
         public string? Title { get; set; }
-        public DateTime EffectiveFrom { get; set; }
-        public DateTime? EffectiveTo { get; set; }
+        public DateOnly EffectiveFrom { get; set; }
+        public DateOnly? EffectiveTo { get; set; }
         public DateTime LastModifiedDate { get; set; }
         public int NumberOfLinkedScopes { get; set; }
         public int StatusId { get; set; }

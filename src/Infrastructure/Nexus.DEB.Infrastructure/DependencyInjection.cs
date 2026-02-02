@@ -145,6 +145,7 @@ namespace Nexus.DEB.Infrastructure
 
 			// Register domain services
 			services.AddScoped<IScopeDomainService, ScopeDomainService>();
+			services.AddScoped<IStandardVersionDomainService, StandardVersionDomainService>();
 			services.AddScoped<IStatementDomainService, StatementDomainService>();
             services.AddScoped<ICommentDomainService, CommentDomainService>();
             services.AddScoped<ISavedSearchDomainService, SavedSearchDomainService>();

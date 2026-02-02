@@ -8,8 +8,8 @@
         public string? SerialNumber { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public DateTime EffectiveStartDate { get; set; }
-        public DateTime? EffectiveEndDate { get; set; }
+        public DateOnly EffectiveStartDate { get; set; }
+        public DateOnly? EffectiveEndDate { get; set; }
         public DateTime LastModifiedDate { get; set; }
         public string Delimiter { get; set; } = string.Empty;
         public int? MajorVersion { get; set; }

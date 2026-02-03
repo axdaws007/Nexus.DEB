@@ -91,9 +91,9 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         #region Audit Records
 
-        Task AddDocumentUploadedAuditRecordAsync(Guid documentId, Guid entityId);
-        Task AddDocumentDownloadedAuditRecordAsync(Guid documentId, Guid entityId);
-        Task AddDocumentUpdatedAuditRecordAsync(Guid documentId, Guid entityId);
+        Task AddDocumentUploadedAuditRecordAsync(Guid documentId, Guid? entityId);
+        Task AddDocumentDownloadedAuditRecordAsync(Guid documentId, Guid? entityId);
+        Task AddDocumentUpdatedAuditRecordAsync(Guid documentId, Guid? entityId);
         Task AddDocumentDeletedAuditRecordAsync(Guid libraryId, Guid documentId);
 
         #endregion

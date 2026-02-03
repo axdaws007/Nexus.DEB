@@ -252,12 +252,22 @@ namespace Nexus.DEB.Api.Restful
         {
             try
             {
+                Guid? entityId = null;
                 DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
 
                 var libraryId = applicationSettingsService.GetLibraryId(library);
 
                 var documentFile = await dmsService.GetDocumentFileAsync(libraryId, documentId, version);
-				var dmsDocument = await dmsService.GetDocumentAsync(libraryId, documentId);
+
+                if (library == DebHelper.Dms.Libraries.DebDocuments)
+                {
+                    var debDocument = await dmsService.GetDebLibraryDocumentAsync(libraryId, documentId, version);
+
+                    if (debDocument != null)
+                    {
+                        entityId = debDocument.EntityId;
+                    }
+                }
 
 				if (documentFile == null)
                 {
@@ -267,7 +277,7 @@ namespace Nexus.DEB.Api.Restful
                     });
                 }
 
-                await dmsService.AddDocumentDownloadedAuditRecordAsync(documentId, dmsDocument.EntityId.Value);
+                await dmsService.AddDocumentDownloadedAuditRecordAsync(documentId, entityId);
 
                 // Return the file with proper headers
                 return Results.File(

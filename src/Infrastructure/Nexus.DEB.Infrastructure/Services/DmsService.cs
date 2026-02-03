@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Extensions;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models.Dms;
+using Nexus.DEB.Domain.Models.Common;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
@@ -543,41 +544,38 @@ namespace Nexus.DEB.Infrastructure.Services
 
         #region Audit Records
 
-        public async Task AddDocumentUploadedAuditRecordAsync(Guid documentId, Guid entityId)
+        public async Task AddDocumentUploadedAuditRecordAsync(Guid documentId, Guid? entityId)
         {
             var userDetails = await _currentUserService.GetUserDetailsAsync();
-            var entityHead = await _debService.GetEntityHeadAsync(entityId, new CancellationToken());
 
             await _auditService.DataImported(
                 entityId,
                 null,
-                string.Format("Serial: {0}", entityHead.SerialNumber),
+                "Document uploaded.",
                 userDetails,
                 documentId.ToAuditData("Guid"));
         }
 
-        public async Task AddDocumentDownloadedAuditRecordAsync(Guid documentId, Guid entityId)
+        public async Task AddDocumentDownloadedAuditRecordAsync(Guid documentId, Guid? entityId)
         {
             var userDetails = await _currentUserService.GetUserDetailsAsync();
-            var entityHead = await _debService.GetEntityHeadAsync(entityId, new CancellationToken());
 
             await _auditService.DataExported(
                 entityId,
                 null,
-                string.Format("Serial: {0}", entityHead.SerialNumber),
+                "Document downloaded",
                 userDetails,
                 documentId.ToAuditData("Guid"));
         }
 
-        public async Task AddDocumentUpdatedAuditRecordAsync(Guid documentId, Guid entityId)
+        public async Task AddDocumentUpdatedAuditRecordAsync(Guid documentId, Guid? entityId)
         {
             var userDetails = await _currentUserService.GetUserDetailsAsync();
-            var entityHead = await _debService.GetEntityHeadAsync(entityId, new CancellationToken());
 
             await _auditService.EntitySaved(
                 entityId,
                 null,
-                string.Format("Serial: {0}", entityHead.SerialNumber),
+                "Metadata on document updated",
                 userDetails,
                 documentId.ToAuditData("Guid"));
         }

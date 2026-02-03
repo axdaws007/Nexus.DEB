@@ -1,10 +1,7 @@
 ﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
-using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
-using Nexus.DEB.Infrastructure.Services;
-using System.Threading;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -29,6 +26,7 @@ namespace Nexus.DEB.Api.GraphQL
                     StandardVersionIds = filters.StandardVersionIds,
                     StatusIds = filters.StatusIds,
                     OnlyShowAvailableRequirementScopeCombinations = filters.OnlyShowAvailableRequirementScopeCombinations,
+                    StatementId = filters.StatementId
                 };
 
             return debService.GetRequirementsForGrid(f);

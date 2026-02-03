@@ -12,5 +12,6 @@
         public ICollection<int?>? StatusIds { get; set; }
 
         public bool OnlyShowAvailableRequirementScopeCombinations { get; set; }
+        public Guid? StatementId { get; set; }
     }
 }

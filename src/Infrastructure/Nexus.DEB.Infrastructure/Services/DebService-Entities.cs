@@ -5,7 +5,6 @@ using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
-using System.Threading;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -72,6 +71,10 @@ namespace Nexus.DEB.Infrastructure.Services
                         .Where(ps => ps.EntityId == r.EntityId)
                         .Select(ps => ps.Status)
                         .FirstOrDefault(),
+                    StatementIds = r.StatementsRequirementsScopes
+                        .Select(srs => srs.StatementId)
+                        .Distinct()
+                        .ToList(),
                     StandardVersionTitles = r.StandardVersions.Select(sv => sv.Title).ToList()
                 })
                 .AsNoTracking();
@@ -137,6 +140,11 @@ namespace Nexus.DEB.Infrastructure.Services
                         .Select(r => r.EntityId);
 
                     query = query.Where(r => requirementIdsWithAvailableCombinations.Contains(r.EntityId));
+                }
+
+                if (filters.StatementId.HasValue)
+                {
+                    query = query.Where(r => r.StatementIds.Contains(filters.StatementId.Value));
                 }
             }
 

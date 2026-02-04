@@ -34,6 +34,9 @@ namespace Nexus.DEB.Infrastructure.Configurations
 			builder.Property(e => e.Delimiter)
 				.HasColumnName("Delimiter")
 				.IsRequired();
+			builder.Property(e => e.VersionTitle)
+				.HasColumnName("VersionTitle")
+				.IsRequired();
 			builder.Property(e => e.Title)
 				.HasColumnName("Title")
 				.IsRequired();
@@ -44,6 +47,9 @@ namespace Nexus.DEB.Infrastructure.Configurations
 				.IsRequired();
 			builder.Property(e => e.CreatedBy)
 				.HasColumnName("CreatedByPostTitle")
+				.IsRequired();
+			builder.Property(e => e.OwnedById)
+				.HasColumnName("OwnedById")
 				.IsRequired();
 			builder.Property(e => e.OwnedBy)
 				.HasColumnName("OwnedByPostTitle")

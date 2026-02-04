@@ -1,5 +1,5 @@
 ﻿using Nexus.DEB.Application.Common.Models;
-using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Application.Common.Models.Filters;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -7,6 +7,7 @@ namespace Nexus.DEB.Api.GraphQL
 	{
 		protected override void Configure(IObjectTypeDescriptor<StandardVersionDetail> descriptor)
 		{
+			descriptor.Field(x => x.StandardId).ID(nameof(FilterItem));
 			base.Configure(descriptor);
 		}
 	}

@@ -15,5 +15,17 @@ namespace Nexus.DEB.Application.Common.Interfaces
 			DateOnly effectiveStartDate,
 			DateOnly? effectiveEndDate,
 			CancellationToken cancellationToken);
+
+		Task<Result<StandardVersion>> UpdateStandardVersionAsync(
+			Guid id,
+			Guid ownerId,
+			int standardId,
+			string versionTitle,
+			string delimiter,
+			int? majorVersion,
+			int? minorVersion,
+			DateOnly effectiveStartDate,
+			DateOnly? effectiveEndDate,
+			CancellationToken cancellationToken);
 	}
 }

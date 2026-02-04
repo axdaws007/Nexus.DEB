@@ -42,6 +42,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<StandardVersionChildCounts> GetChildCountsForStandardVersionAsync(Guid id, CancellationToken cancellationToken);
         Task<int?> GetStandardVersionTotalRequirementsAsync(Guid id, CancellationToken cancellationToken);
         Task<StandardVersion> CreateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default);
+        Task<StandardVersion> UpdateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default);
 
 		IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
         IQueryable<StandardVersionExport> GetStandardVersionsForExport(StandardVersionSummaryFilters? filters);

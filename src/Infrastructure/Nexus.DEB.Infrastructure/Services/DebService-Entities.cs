@@ -1104,6 +1104,12 @@ namespace Nexus.DEB.Infrastructure.Services
 			return standardVersion;
 		}
 
+        public async Task<StandardVersion> UpdateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default)
+        {
+			await _dbContext.SaveChangesAsync(cancellationToken);
+			return standardVersion;
+		}
+
 		#endregion StandardVersions
 
 		// --------------------------------------------------------------------------------------------------------------

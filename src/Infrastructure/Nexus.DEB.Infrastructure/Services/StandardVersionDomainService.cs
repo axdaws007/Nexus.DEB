@@ -73,5 +73,61 @@ namespace Nexus.DEB.Infrastructure.Services
 				return Result<StandardVersion>.Failure($"An error occurred creating the Standard Version: {ex.Message}");
 			}
 		}
+
+		public async Task<Result<StandardVersion>> UpdateStandardVersionAsync(
+			Guid id,
+			Guid ownerId,
+			int standardId,
+			string versionTitle,
+			string delimiter,
+			int? majorVersion,
+			int? minorVersion,
+			DateOnly effectiveStartDate,
+			DateOnly? effectiveEndDate,
+			CancellationToken cancellationToken)
+		{
+			var standardVersion = await DebService.GetStandardVersionByIdAsync(id, cancellationToken);
+
+			if (standardVersion == null)
+			{
+				return Result<StandardVersion>.Failure(new ValidationError()
+				{
+					Code = "INVALID_STANDARD_VERSION_ID",
+					Field = nameof(id),
+					Message = "Standard Version does not exist"
+				});
+			}
+
+			//await ValidateFieldsAsync(null, ownerId, title, statementText, reviewDate, requirementScopeCombinations);
+
+			if (ValidationErrors.Count > 0)
+			{
+				return Result<StandardVersion>.Failure(ValidationErrors);
+			}
+
+			var standard = await this.DebService.GetStandardByIdAsync(standardId, cancellationToken);
+
+			standardVersion.OwnedById = ownerId;
+			standardVersion.Title = string.Format("{0}{1}{2}", standard.Title, delimiter, versionTitle);
+			standardVersion.VersionTitle = versionTitle;
+			standardVersion.Delimiter = delimiter;
+			standardVersion.MajorVersion = majorVersion;
+			standardVersion.MinorVersion = minorVersion;
+			standardVersion.EffectiveStartDate = effectiveStartDate;
+			standardVersion.EffectiveEndDate = effectiveEndDate;
+
+			try
+			{
+				await this.DebService.UpdateStandardVersionAsync(standardVersion, cancellationToken);
+
+				var fullStandardVersion = await this.DebService.GetStandardVersionByIdAsync(standardVersion.EntityId, cancellationToken);
+
+				return Result<StandardVersion>.Success(fullStandardVersion);
+			}
+			catch (Exception ex)
+			{
+				return Result<StandardVersion>.Failure($"An error occurred updating the Standard Version: {ex.Message}");
+			}
+		}
 	}
 }

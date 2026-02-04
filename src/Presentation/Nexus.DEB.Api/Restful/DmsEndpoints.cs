@@ -203,16 +203,22 @@ namespace Nexus.DEB.Api.Restful
 				{
                     var dmsDocument = await dmsService.GetDocumentAsync(libraryId, documentId);
 
-                    if (dmsDocument != null && dmsDocument.EntityId.HasValue)
+                    if (dmsDocument != null && dmsDocument.Metadata != null
+                        && dmsDocument.Metadata.ContainsKey("EntityId"))
                     {
-                        if(file != null)
+                        var hasEntityId = Guid.TryParse(dmsDocument.Metadata["EntityId"].GetString(), out var entityId);
+
+                        if (hasEntityId && entityId != Guid.Empty)
                         {
-							await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, dmsDocument.EntityId.Value);
-						}
-						else
-						{
-							await dmsService.AddDocumentUpdatedAuditRecordAsync(result.DocumentId.Value, dmsDocument.EntityId.Value);
-						}
+                            if (file != null)
+                            {
+                                await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, entityId);
+                            }
+                            else
+                            {
+                                await dmsService.AddDocumentUpdatedAuditRecordAsync(result.DocumentId.Value, entityId);
+                            }
+                        }
                     }
 				}
 

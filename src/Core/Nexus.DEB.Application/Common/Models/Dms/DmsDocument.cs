@@ -15,8 +15,5 @@ namespace Nexus.DEB.Application.Common.Models.Dms
         public DateTime UploadedDate { get; set; }
         public string? UploadedBy { get; set; }
         public Dictionary<string, JsonElement>? Metadata { get; set; }
-
-		[Obsolete("EntityId is now in Metadata dictionary")]
-		public Guid? EntityId { get; set; }
 	}
 }

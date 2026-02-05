@@ -1,4 +1,6 @@
-﻿namespace Nexus.DEB.Application.Common.Models.Dms
+﻿using System.Text.Json;
+
+namespace Nexus.DEB.Application.Common.Models.Dms
 {
     public class DmsDocument
     {
@@ -9,9 +11,9 @@
         public string? DocumentOwner { get; set; }
         public string DocumentType { get; set; } = string.Empty;
         public int? FileSize { get; set; }
-        public Guid? EntityId { get; set; }
         public string? Title { get; set; }
         public DateTime UploadedDate { get; set; }
         public string? UploadedBy { get; set; }
-    }
+        public Dictionary<string, JsonElement>? Metadata { get; set; }
+	}
 }

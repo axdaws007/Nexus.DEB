@@ -2,7 +2,7 @@
 
 namespace Nexus.DEB.Domain.Models
 {
-    public class ScopeSummary : IEntity, IOwnedBy
+    public class ScopeSummary : IEntity, IEntityType, IOwnedBy
     {
         public Guid EntityId { get; set; }
         public string Title { get; set; }
@@ -12,6 +12,6 @@ namespace Nexus.DEB.Domain.Models
         public DateTime CreatedDate { get; set; }
         public DateTime LastModifiedDate { get; set; }
         public string? Status { get; set; }
-
-    }
+		public string EntityTypeTitle { get; set; } = string.Empty;
+	}
 }

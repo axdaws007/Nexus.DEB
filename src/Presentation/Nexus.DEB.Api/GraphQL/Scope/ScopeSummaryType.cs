@@ -2,15 +2,15 @@
 
 namespace Nexus.DEB.Api.GraphQL
 {
-    public class ScopeSummaryType : ObjectType<ScopeSummary>
+    public class ScopeSummaryType : EntityType<ScopeSummary>
     {
         public ScopeSummaryType() { }
 
         protected override void Configure(IObjectTypeDescriptor<ScopeSummary> descriptor)
         {
             descriptor.Field(x => x.OwnedById).Ignore();
-
-            base.Configure(descriptor);
+			descriptor.Field(x => x.EntityTypeTitle).Ignore();
+			base.Configure(descriptor);
         }
     }
 }

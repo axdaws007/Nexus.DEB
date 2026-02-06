@@ -38,6 +38,9 @@ namespace Nexus.DEB.Infrastructure.Configurations
 			builder.Property(e => e.CreatedBy)
 				.HasColumnName("CreatedByPostTitle")
 				.IsRequired();
+			builder.Property(e => e.OwnedById)
+				.HasColumnName("OwnedById")
+				.IsRequired();
 			builder.Property(e => e.OwnedBy)
 				.HasColumnName("OwnedByPostTitle")
 				.IsRequired();

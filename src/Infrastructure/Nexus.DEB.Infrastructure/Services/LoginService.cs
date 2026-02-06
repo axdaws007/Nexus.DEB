@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using System.Security.Claims;
@@ -13,15 +14,18 @@ namespace Nexus.DEB.Infrastructure.Services
         private readonly ICisService _cisService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<LoginService> _logger;
 
         public LoginService(
             ICisService userValidationService,
             IHttpContextAccessor httpContextAccessor,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ILogger<LoginService> logger)
         {
             _cisService = userValidationService;
             _httpContextAccessor = httpContextAccessor;
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<Result<LoginResponse>> SignInAsync(string username, string password, bool rememberMe = false)
@@ -181,6 +185,8 @@ namespace Nexus.DEB.Infrastructure.Services
                 PostTitle = postTitle ?? string.Empty
             };
 
+            _logger.LogInformation($"SignIn: User ID '{cisUser.UserId}' successfully logged in with Post ID '{postId}'");
+
             return Result<LoginResponse>.Success(response);
         }
 
@@ -291,6 +297,8 @@ namespace Nexus.DEB.Infrastructure.Services
                 Success = true,
                 ExpiresAt = expiresUtc
             };
+
+            _logger.LogInformation($"SelectPost: User ID '{userId}' successfully logged in with Post ID '{postId}'");
 
             return Result<SelectPostResponse>.Success(response);
         }

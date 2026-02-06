@@ -7,6 +7,7 @@ using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Infrastructure.Authentication;
 using Nexus.DEB.Infrastructure.Events;
+using Nexus.DEB.Infrastructure.Http;
 using Nexus.DEB.Infrastructure.Persistence;
 using Nexus.DEB.Infrastructure.Services;
 using Nexus.DEB.Infrastructure.Services.Registries;
@@ -44,7 +45,8 @@ namespace Nexus.DEB.Infrastructure
 
                 client.BaseAddress = new Uri(baseUrl);
                 client.Timeout = TimeSpan.FromSeconds(cisTimeout);
-            });
+            })
+            .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
             services.AddHttpClient("CbacApi", client =>
             {
@@ -54,7 +56,8 @@ namespace Nexus.DEB.Infrastructure
 
                 client.BaseAddress = new Uri(baseUrl);
                 client.Timeout = TimeSpan.FromSeconds(cbacTimeout);
-            });
+            })
+            .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 
             services.AddHttpClient("WorkflowApi", client =>
@@ -65,7 +68,8 @@ namespace Nexus.DEB.Infrastructure
 
                 client.BaseAddress = new Uri(baseUrl);
                 client.Timeout = TimeSpan.FromSeconds(timeout);
-            });
+            })
+            .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
             services.AddHttpClient("DmsApi", client =>
             {
@@ -75,7 +79,8 @@ namespace Nexus.DEB.Infrastructure
 
                 client.BaseAddress = new Uri(baseUrl);
                 client.Timeout = TimeSpan.FromSeconds(timeout);
-            });
+            })
+            .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
             services.AddHttpClient("AuditApi", client =>
             {
@@ -85,7 +90,8 @@ namespace Nexus.DEB.Infrastructure
 
                 client.BaseAddress = new Uri(baseUrl);
                 client.Timeout = TimeSpan.FromSeconds(timeout);
-            });
+            })
+            .AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
             // Database - Using Pooled DbContext Factory for better performance
             services.AddPooledDbContextFactory<DebContext>((sp, options) =>
@@ -156,6 +162,12 @@ namespace Nexus.DEB.Infrastructure
 
             // Register all validators (auto-discovered)
             services.AddScoped<ITransitionValidator, ValidateReviewDateTransitionValidator>();
+
+            // HTTP request correlationId service
+            services.AddScoped<ICorrelationIdAccessor, CorrelationIdAccessor>();
+
+            // Register the delegating handler
+            services.AddTransient<CorrelationIdDelegatingHandler>();
 
             return services;
         }

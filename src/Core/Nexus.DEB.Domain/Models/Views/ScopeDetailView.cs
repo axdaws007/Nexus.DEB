@@ -15,6 +15,7 @@ namespace Nexus.DEB.Domain.Models.Views
 		public string? Description { get; set; }
 		public DateTime CreatedDate { get; set; }
 		public string CreatedBy { get; set; } = string.Empty;
+		public Guid OwnedById { get; set; }
 		public string OwnedBy { get; set; } = string.Empty;
 		public string LastModifiedBy { get; set; } = string.Empty;
 		public DateTime LastModifiedDate { get; set; }

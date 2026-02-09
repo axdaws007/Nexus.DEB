@@ -45,6 +45,10 @@ namespace Nexus.DEB.Api.GraphQL
         public static async Task<ScopeDetail?> GetScopeById(Guid scopeId, IDebService debService, CancellationToken cancellationToken)
             => await debService.GetScopeDetailByIdAsync(scopeId, cancellationToken);
 
+        [Authorize]
+        public static async Task<List<StandardVersionRequirements>> GetStandardVersionRequirementsForScopeAsync(Guid scopeId, IDebService debService, CancellationToken cancellationToken)
+			=> await debService.GetStandardVersionRequirementsForScopeAsync(scopeId, cancellationToken);
+
 		[Authorize]
 		public static async Task<ScopeChildCounts> GetChildCountsForScope(
 			Guid scopeId,

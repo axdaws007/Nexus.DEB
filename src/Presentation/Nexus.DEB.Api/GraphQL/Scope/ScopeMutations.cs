@@ -15,7 +15,7 @@ namespace Nexus.DEB.Api.GraphQL
 		public static async Task<Scope?> CreateScopeAsync(
 			Guid ownerId,
 			string title,
-			string description,
+			string? description,
 			DateOnly? targetImplementationDate,
 			IScopeDomainService scopeService,
 			IDomainEventPublisher eventPublisher,
@@ -52,7 +52,7 @@ namespace Nexus.DEB.Api.GraphQL
 			Guid id,
 			Guid ownerId,
 			string title,
-			string description,
+			string? description,
 			DateOnly? targetImplementationDate,
 			IScopeDomainService scopeService,
 			IDomainEventPublisher eventPublisher,

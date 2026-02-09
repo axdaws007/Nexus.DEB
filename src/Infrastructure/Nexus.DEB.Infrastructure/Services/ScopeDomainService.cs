@@ -29,7 +29,7 @@ namespace Nexus.DEB.Infrastructure.Services
 		public async Task<Result<Scope>> CreateScopeAsync(
 			Guid ownerId,
 			string title,
-			string description,
+			string? description,
 			DateOnly? targetImplementationDate,
 			CancellationToken cancellationToken)
 		{
@@ -68,7 +68,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			Guid id,
 			Guid ownerId,
 			string title,
-			string description,
+			string? description,
 			DateOnly? targetImplementationDate,
 			CancellationToken cancellationToken)
 		{

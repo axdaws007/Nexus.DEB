@@ -14,7 +14,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<EntityHeadDetail?> GetEntityHeadDetailAsync(Guid id, CancellationToken cancellationToken);
         Task<Dictionary<Guid, EntityHead>> GetEntityHeadsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken);
         IQueryable<RequirementSummary> GetRequirementsForGrid(RequirementSummaryFilters? filters);
-        IQueryable<StandardVersionRequirementDetail> GetStandardVersionRequirementsForGrid(StandardVersionRequirementsFilters? filters);
+        Task<IEnumerable<StandardVersionRequirementDetail>> GetStandardVersionRequirementsForGridAsync(StandardVersionRequirementsFilters? filters, CancellationToken cancellationToken);
 
 		IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters);
 		Task<RequirementDetail?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken);
@@ -29,6 +29,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<ScopeExport> GetScopesForExport();
 		Task<Scope?> GetScopeByIdAsync(Guid id, CancellationToken cancellationToken);
 		Task<ScopeDetail?> GetScopeDetailByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<List<StandardVersionRequirements>> GetStandardVersionRequirementsForScopeAsync(Guid scopeId, CancellationToken cancellationToken);
 		Task<ScopeChildCounts> GetChildCountsForScopeAsync(Guid id, CancellationToken cancellationToken);
 		Task<ICollection<ScopeCondensed>> GetScopesForRequirementAsync(Guid requirementId, Guid? statementId, CancellationToken cancellationToken);
 		Task<Scope> CreateScopeAsync(Scope scope, CancellationToken cancellationToken = default);

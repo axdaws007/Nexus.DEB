@@ -35,9 +35,10 @@ namespace Nexus.DEB.Api.GraphQL
 		[Authorize]
 		[UseOffsetPaging]
 		[UseSorting]
-		public static IQueryable<StandardVersionRequirementDetail> GetStandardVersionRequirementsForGrid(
+		public static async Task<IEnumerable<StandardVersionRequirementDetail>> GetStandardVersionRequirementsForGrid(
 			StandardVersionRequirementsFilters? filters,
-			IDebService debService)
+			IDebService debService, 
+            CancellationToken cancellationToken)
 		{
 			var f = filters is null
 			? new Application.Common.Models.StandardVersionRequirementsFilters()
@@ -49,7 +50,7 @@ namespace Nexus.DEB.Api.GraphQL
                 ScopeId = filters.ScopeId,
 			};
 
-			return debService.GetStandardVersionRequirementsForGrid(f);
+			return await debService.GetStandardVersionRequirementsForGridAsync(f, cancellationToken);
 		}
 
 		[Authorize]

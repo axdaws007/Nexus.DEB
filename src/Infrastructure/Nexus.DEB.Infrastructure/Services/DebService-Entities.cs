@@ -129,11 +129,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     var requirementIdsWithAvailableCombinations = _dbContext.Set<Requirement>()
                         .Where(r => r.Scopes.Any(s =>
-                            // Alex Dawson : 29/01/26 
-                            // Bug #20954 - The bug has been deferred to the backlog at the moment
-                            // as it's perceived as a usability issue rather than a failure to meet the requirement.
-                            // If this gets revisited I believe all we need to do is uncomment the line below.
-                            //(filters.ScopeIds == null || filters.ScopeIds.Count == 0 || filters.ScopeIds.Contains(s.EntityId)) &&
+                            (filters.ScopeIds == null || filters.ScopeIds.Count == 0 || filters.ScopeIds.Contains(s.EntityId)) &&
 
                             // This scope (from the requirement's available scopes) hasn't been allocated yet
                             !r.StatementsRequirementsScopes.Any(srs => srs.ScopeId == s.EntityId)))

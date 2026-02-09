@@ -118,10 +118,19 @@ namespace Nexus.DEB.Api.Restful
                         statusCode: StatusCodes.Status500InternalServerError);
                 }
 
+
                 // Create audit record if entityId was provided and document was created
-                if (result.DocumentId.HasValue && metadataObj.TryGetGuid("entityId", out var entityId))
+
+                if (result.DocumentId.HasValue)
                 {
-                    await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, entityId);
+                    if (metadataObj.TryGetGuid("entityId", out var entityId))
+                    {
+                        await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, entityId);
+                    }
+                    else
+                    {
+                        await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, null);
+                    }
                 }
 
 				return Results.Ok(result);

@@ -183,7 +183,14 @@ namespace Nexus.DEB.Infrastructure.Services
                 }
             }
 
-            var allStandardVersionRequirements = _dbContext.StandardVersionRequirements;
+			/****************************************************************************
+             * This may not be the most performant way of getting the list of Standard  *
+             * Version Ids for each Requirement. Originally wanted to get the list of   *
+             * StandardVersionIds for each requirement in the original query, but this  *
+             * was causing issues with EF Core translating to SQL. This should be       *
+             * revisited at a later date to see if it can be optimised. 09/02/26        *
+             ****************************************************************************/
+			var allStandardVersionRequirements = _dbContext.StandardVersionRequirements;
 
 
 			return query.ToList().Select(s => new StandardVersionRequirementDetail

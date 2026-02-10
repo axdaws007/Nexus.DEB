@@ -154,7 +154,7 @@ namespace Nexus.DEB.Infrastructure.Services
 		{
             var query = from svr in _dbContext.StandardVersionRequirements.AsNoTracking()
                         join r in (_dbContext.Requirements.AsNoTracking().Include(r => r.Scopes).Include(r => r.StandardVersions)) on svr.RequirementId equals r.EntityId
-                        where filters == null || !filters.StandardVersionId.HasValue || (r.StandardVersions.Any(a => a.EntityId == filters.StandardVersionId.Value))
+                        where filters == null || !filters.StandardVersionId.HasValue || (svr.StandardVersionId == filters.StandardVersionId.Value)
                         select new StandardVersionRequirementDetail
                         {
                             RequirementId = svr.RequirementId,
@@ -188,8 +188,7 @@ namespace Nexus.DEB.Infrastructure.Services
              ****************************************************************************/
 			var allStandardVersionRequirements = _dbContext.StandardVersionRequirements;
 
-
-			return query.ToList().Select(s => new StandardVersionRequirementDetail
+            return query.ToList().Select(s => new StandardVersionRequirementDetail
             {
                 RequirementId = s.RequirementId,
                 SerialNumber = s.SerialNumber,
@@ -198,7 +197,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 Section = s.Section,
                 OtherScopes = s.OtherScopes,
                 IncludedInScope = s.IncludedInScope,
-                StandardVersionIds = allStandardVersionRequirements.Where(w => w.RequirementId == s.RequirementId).Select(s => s.StandardVersionId).AsEnumerable()
+                StandardVersionIds = allStandardVersionRequirements.Where(w => w.RequirementId == s.RequirementId).Select(s => s.StandardVersionId).Distinct().AsEnumerable()
             });
 		}
 

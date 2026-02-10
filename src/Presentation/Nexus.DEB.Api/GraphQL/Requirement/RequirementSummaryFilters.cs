@@ -8,7 +8,6 @@
         public DateOnly? ModifiedFrom { get; set; }
         public DateOnly? ModifiedTo { get; set; }
 
-        [ID]
         public ICollection<int?>? StatusIds { get; set; }
 
         public bool OnlyShowAvailableRequirementScopeCombinations { get; set; }

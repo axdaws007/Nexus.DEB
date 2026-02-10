@@ -166,24 +166,23 @@ try
         options.AddPolicy(DebHelper.Policies.CanEditSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoCTask));
     });
 
-    builder
-        .AddGraphQL()
-        .AddAuthorization()
-        .AddTypes()
-        .AddMutationConventions()
-        .AddGlobalObjectIdentification()
-        .ModifyCostOptions(options =>
-        {
-            options.MaxFieldCost = 3000;
-        })
-        .ModifyPagingOptions(x =>
-        {
-            x.MaxPageSize = 200;
-            x.IncludeTotalCount = true;
-        })
-        .AddProjections()
-        .AddSorting()
-        ;
+builder
+    .AddGraphQL()
+    .AddAuthorization()
+    .AddTypes()
+    .AddMutationConventions()
+    .ModifyCostOptions(options =>
+    {
+        options.MaxFieldCost = 3000;
+    })
+    .ModifyPagingOptions(x =>
+    {
+        x.MaxPageSize = 200;
+        x.IncludeTotalCount = true;
+    })
+    .AddProjections()
+    .AddSorting()
+    ;
 
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();

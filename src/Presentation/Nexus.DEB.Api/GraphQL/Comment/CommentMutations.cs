@@ -33,7 +33,7 @@ namespace Nexus.DEB.Api.GraphQL
         [Authorize(Policy = DebHelper.Policies.CanDeleteComments)]
         [UseMutationConvention(Disable = true)]
         public static async Task<bool> DeleteCommentByIdAsync(
-            [ID]long id,
+            long id,
             ICommentDomainService commentDomainService,
             IResolverContext resolverContext,
             CancellationToken cancellationToken)

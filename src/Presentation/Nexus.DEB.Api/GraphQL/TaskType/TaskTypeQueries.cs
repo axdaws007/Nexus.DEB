@@ -15,13 +15,6 @@ namespace Nexus.DEB.Api.GraphQL
             IResolverContext resolverContext)
             => debService.GetTaskTypes(); 
         
-        [NodeResolver]
-        public static async Task<TaskType?> GetTaskTypeByIdAsync(
-            short id,
-            TaskTypeByIdDataLoader taskTypeByIdDataLoader,
-            CancellationToken cancellationToken)
-            => await taskTypeByIdDataLoader.LoadAsync(id, cancellationToken);
-
         [Authorize]
         public async static Task<ICollection<FilterItem>> GetTaskTypesLookupAsync(
             IDebService debService,

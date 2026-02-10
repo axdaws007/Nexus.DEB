@@ -167,5 +167,9 @@ namespace Nexus.DEB.Api.GraphQL
 
             return await dmsService.GetEntityDocumentCountAsync(libraryId, entityId);
         }
+
+        [Authorize]
+        public static async Task<DmsSettings?> GetDmsSettings(IDmsService dmsService)
+            => await dmsService.GetSettingsAsync();
     }
 }

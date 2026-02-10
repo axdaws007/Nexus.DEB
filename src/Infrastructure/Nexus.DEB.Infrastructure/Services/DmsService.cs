@@ -498,6 +498,23 @@ namespace Nexus.DEB.Infrastructure.Services
         #region Shared Operation
 
         /// <summary>
+        /// Gets DMs settings
+        /// </summary>
+        public async Task<DmsSettings> GetSettingsAsync()
+        {
+            var requestUri = $"api/settings";
+
+            var dmsSettings = await SendAuthenticatedRequestAsync<DmsSettings>(
+                HttpMethod.Get,
+                requestUri,
+                operationName: $"GetSettings");
+
+            if (dmsSettings == null) dmsSettings = new DmsSettings();
+
+            return dmsSettings;
+        }
+
+        /// <summary>
         /// Gets document history/version information.
         /// </summary>
         public async Task<ICollection<DmsDocumentHistoryItem>?> GetDocumentHistoryAsync(

@@ -166,6 +166,11 @@ try
         options.AddPolicy(DebHelper.Policies.CanEditSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoCTask));
     });
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100 MB
+});
+
 builder
     .AddGraphQL()
     .AddAuthorization()

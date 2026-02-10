@@ -67,6 +67,11 @@ namespace Nexus.DEB.Application.Common.Interfaces
         #region Shared Operations
 
         /// <summary>
+        /// Gets DMS settings
+        /// </summary>
+        Task<DmsSettings> GetSettingsAsync();
+
+        /// <summary>
         /// Gets document metadata (without file data).
         /// </summary>
         Task<DmsDocument?> GetDocumentAsync(Guid libraryId, Guid documentId, int? version = null);

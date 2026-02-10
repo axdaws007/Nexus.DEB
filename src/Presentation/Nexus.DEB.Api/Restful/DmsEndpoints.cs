@@ -85,22 +85,36 @@ namespace Nexus.DEB.Api.Restful
             {
                 DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
 
+                var dmsSettings = await dmsService.GetSettingsAsync();
+
                 // Validate file
                 if (file == null || file.Length == 0)
                 {
                     return Results.BadRequest(new { error = "File is required" });
                 }
 
-                // Validate file size (50 MB limit)
-                const long maxFileSize = 50 * 1024 * 1024;
-                if (file.Length > maxFileSize)
+                // Validate file size 
+                if (file.Length > dmsSettings.MaximumFileSizeInBytes)
                 {
                     return Results.BadRequest(new
                     {
-                        error = $"File size exceeds maximum allowed size of {maxFileSize / 1024 / 1024} MB"
+                        error = $"File size exceeds maximum allowed size of {dmsSettings.MaximumFileSizeInBytes / 1024 / 1024} MB"
                     });
                 }
 
+                if (dmsSettings.AllowedFileExtensions.Count > 0)
+                {
+                    var fileExtension = System.IO.Path.GetExtension(file.FileName).ToLower();
+
+                    if (!dmsSettings.AllowedFileExtensions.Contains(fileExtension))
+                    {
+                        return Results.BadRequest(new
+                        {
+                            error = $"The file extension '{fileExtension}' is not one of the allowed extensions."
+                        });
+                    }
+                }
+                
                 // Parse metadata from JSON string
                 var metadataObj = ParseMetadata(metadata);
                 if (metadataObj == null)
@@ -178,16 +192,31 @@ namespace Nexus.DEB.Api.Restful
             {
                 DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
 
-                // Validate file size if provided (50 MB limit)
-                if (file != null)
+                var dmsSettings = await dmsService.GetSettingsAsync();
+
+                // Validate file
+                if (file != null && file.Length > 0)
                 {
-                    const long maxFileSize = 50 * 1024 * 1024;
-                    if (file.Length > maxFileSize)
+                    // Validate file size 
+                    if (file.Length > dmsSettings.MaximumFileSizeInBytes)
                     {
                         return Results.BadRequest(new
                         {
-                            error = $"File size exceeds maximum allowed size of {maxFileSize / 1024 / 1024} MB"
+                            error = $"File size exceeds maximum allowed size of {dmsSettings.MaximumFileSizeInBytes / 1024 / 1024} MB"
                         });
+                    }
+
+                    if (dmsSettings.AllowedFileExtensions.Count > 0)
+                    {
+                        var fileExtension = System.IO.Path.GetExtension(file.Name).ToLower();
+
+                        if (!dmsSettings.AllowedFileExtensions.Contains(fileExtension))
+                        {
+                            return Results.BadRequest(new
+                            {
+                                error = $"The file extension '{fileExtension}' is not one of the allowed extensions."
+                            });
+                        }
                     }
                 }
 

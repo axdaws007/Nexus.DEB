@@ -140,11 +140,6 @@ namespace Nexus.DEB.Infrastructure.Services
 
                     query = query.Where(r => requirementIdsWithAvailableCombinations.Contains(r.EntityId));
                 }
-
-                if (filters.StatementId.HasValue)
-                {
-                    query = query.Where(r => r.StatementIds.Contains(filters.StatementId.Value));
-                }
             }
 
             return query;

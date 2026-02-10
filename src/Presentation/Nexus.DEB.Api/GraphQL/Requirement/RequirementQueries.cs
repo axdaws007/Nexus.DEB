@@ -26,7 +26,6 @@ namespace Nexus.DEB.Api.GraphQL
                     StandardVersionIds = filters.StandardVersionIds,
                     StatusIds = filters.StatusIds,
                     OnlyShowAvailableRequirementScopeCombinations = filters.OnlyShowAvailableRequirementScopeCombinations,
-                    StatementId = filters.StatementId
                 };
 
             return debService.GetRequirementsForGrid(f);

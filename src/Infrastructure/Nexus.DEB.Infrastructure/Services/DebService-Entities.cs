@@ -197,7 +197,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 Section = s.Section,
                 OtherScopes = s.OtherScopes,
                 IncludedInScope = s.IncludedInScope,
-                StandardVersionIds = allStandardVersionRequirements.Where(w => w.RequirementId == s.RequirementId).Select(s => s.StandardVersionId).AsEnumerable()
+                StandardVersionIds = allStandardVersionRequirements.Where(w => w.RequirementId == s.RequirementId).Select(s => s.StandardVersionId).Distinct().AsEnumerable()
             });
 		}
 

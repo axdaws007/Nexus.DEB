@@ -92,12 +92,12 @@ namespace Nexus.DEB.Infrastructure.Services
         {
             var cacheKey = $"user_details_{userId}_{postId}";
             _cache.Remove(cacheKey);
-            _logger.LogInformation("Invalidated user details cache for UserId={UserId}, PostId={PostId}",
+            _logger.LogDebug("Invalidated user details cache for UserId={UserId}, PostId={PostId}",
                 userId, postId);
 
             cacheKey = $"cbac_capabilities_{userId}_{postId}";
             _cache.Remove(cacheKey);
-            _logger.LogInformation("Invalidated capabilities cache for UserId={UserId}, PostId={PostId}",
+            _logger.LogDebug("Invalidated capabilities cache for UserId={UserId}, PostId={PostId}",
                 userId, postId);
 
         }

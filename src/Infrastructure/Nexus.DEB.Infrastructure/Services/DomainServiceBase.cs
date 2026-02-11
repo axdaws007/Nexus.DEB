@@ -1,4 +1,5 @@
-﻿using Nexus.DEB.Application.Common.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -13,8 +14,9 @@ namespace Nexus.DEB.Infrastructure.Services
         protected readonly IApplicationSettingsService ApplicationSettingsService;
         protected readonly IPawsService PawsService;
         protected readonly IAuditService AuditService;
+        protected readonly ILogger<DomainServiceBase> Logger;
 
-        protected UserDetails? UserDetails { get; init; }
+		protected UserDetails? UserDetails { get; init; }
 
         protected List<ValidationError> ValidationErrors = new List<ValidationError>();
 
@@ -31,7 +33,8 @@ namespace Nexus.DEB.Infrastructure.Services
             IDebService debService,
             IPawsService pawsService,
             IAuditService auditService,
-            string entityType)
+			ILogger<DomainServiceBase> logger,
+			string entityType)
         {
             this.CisService = cisService;
             this.CbacService = cbacService;
@@ -41,6 +44,7 @@ namespace Nexus.DEB.Infrastructure.Services
             this.ApplicationSettingsService = applicationSettingsService;
             this.PawsService = pawsService;
             this.AuditService = auditService;
+            this.Logger = logger;
 
             this.ModuleId = this.ApplicationSettingsService.GetModuleId("DEB");
             this.InstanceId = this.ApplicationSettingsService.GetInstanceId();

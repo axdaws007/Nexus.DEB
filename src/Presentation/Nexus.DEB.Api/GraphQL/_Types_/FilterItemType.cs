@@ -6,8 +6,6 @@ namespace Nexus.DEB.Api.GraphQL._Types_
     {
         protected override void Configure(IObjectTypeDescriptor<FilterItem> descriptor)
         {
-            descriptor.Field(x => x.Id).ID();
-
             base.Configure(descriptor);
         }
     }

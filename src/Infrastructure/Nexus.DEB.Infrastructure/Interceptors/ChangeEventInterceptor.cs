@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Infrastructure.Services;
 
@@ -12,13 +13,17 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 {
 	private const string SessionContextEventId = "EventId";
 	private const string SessionContextUserDetails = "UserDetails";
+	protected readonly ILogger<ChangeEventInterceptor> logger;
 
-	public ChangeEventInterceptor()
+	public ChangeEventInterceptor(ILogger<ChangeEventInterceptor> _logger)
 	{
+		logger = _logger;
 	}
 
 	private async Task SetSessionContextAsync(DbContext context, string key, object value, CancellationToken cancellationToken)
 	{
+		logger.LogDebug("Setting session context value: {Key} = {Value}", key, value);
+
 		var conn = context.Database.GetDbConnection();
 
 		// Ensure connection is open
@@ -51,6 +56,8 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 
 	private void SetSessionContext(DbContext context, string key, object value)
 	{
+		logger.LogDebug("Setting session context value: {Key} = {Value}", key, value);
+
 		var conn = context.Database.GetDbConnection();
 
 		if (conn.State != ConnectionState.Open)

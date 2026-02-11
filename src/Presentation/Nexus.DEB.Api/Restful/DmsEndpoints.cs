@@ -85,22 +85,36 @@ namespace Nexus.DEB.Api.Restful
             {
                 DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
 
+                var dmsSettings = await dmsService.GetSettingsAsync();
+
                 // Validate file
                 if (file == null || file.Length == 0)
                 {
                     return Results.BadRequest(new { error = "File is required" });
                 }
 
-                // Validate file size (50 MB limit)
-                const long maxFileSize = 50 * 1024 * 1024;
-                if (file.Length > maxFileSize)
+                // Validate file size 
+                if (file.Length > dmsSettings.MaximumFileSizeInBytes)
                 {
                     return Results.BadRequest(new
                     {
-                        error = $"File size exceeds maximum allowed size of {maxFileSize / 1024 / 1024} MB"
+                        error = $"File size exceeds maximum allowed size of {dmsSettings.MaximumFileSizeInBytes / 1024 / 1024} MB"
                     });
                 }
 
+                if (dmsSettings.AllowedFileExtensions.Count > 0)
+                {
+                    var fileExtension = System.IO.Path.GetExtension(file.FileName).ToLower();
+
+                    if (!dmsSettings.AllowedFileExtensions.Contains(fileExtension))
+                    {
+                        return Results.BadRequest(new
+                        {
+                            error = $"The file extension '{fileExtension}' is not one of the allowed extensions."
+                        });
+                    }
+                }
+                
                 // Parse metadata from JSON string
                 var metadataObj = ParseMetadata(metadata);
                 if (metadataObj == null)
@@ -118,10 +132,19 @@ namespace Nexus.DEB.Api.Restful
                         statusCode: StatusCodes.Status500InternalServerError);
                 }
 
+
                 // Create audit record if entityId was provided and document was created
-                if (result.DocumentId.HasValue && metadataObj.TryGetGuid("entityId", out var entityId))
+
+                if (result.DocumentId.HasValue)
                 {
-                    await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, entityId);
+                    if (metadataObj.TryGetGuid("entityId", out var entityId))
+                    {
+                        await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, entityId);
+                    }
+                    else
+                    {
+                        await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, null);
+                    }
                 }
 
 				return Results.Ok(result);
@@ -169,16 +192,31 @@ namespace Nexus.DEB.Api.Restful
             {
                 DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
 
-                // Validate file size if provided (50 MB limit)
-                if (file != null)
+                var dmsSettings = await dmsService.GetSettingsAsync();
+
+                // Validate file
+                if (file != null && file.Length > 0)
                 {
-                    const long maxFileSize = 50 * 1024 * 1024;
-                    if (file.Length > maxFileSize)
+                    // Validate file size 
+                    if (file.Length > dmsSettings.MaximumFileSizeInBytes)
                     {
                         return Results.BadRequest(new
                         {
-                            error = $"File size exceeds maximum allowed size of {maxFileSize / 1024 / 1024} MB"
+                            error = $"File size exceeds maximum allowed size of {dmsSettings.MaximumFileSizeInBytes / 1024 / 1024} MB"
                         });
+                    }
+
+                    if (dmsSettings.AllowedFileExtensions.Count > 0)
+                    {
+                        var fileExtension = System.IO.Path.GetExtension(file.Name).ToLower();
+
+                        if (!dmsSettings.AllowedFileExtensions.Contains(fileExtension))
+                        {
+                            return Results.BadRequest(new
+                            {
+                                error = $"The file extension '{fileExtension}' is not one of the allowed extensions."
+                            });
+                        }
                     }
                 }
 
@@ -203,16 +241,22 @@ namespace Nexus.DEB.Api.Restful
 				{
                     var dmsDocument = await dmsService.GetDocumentAsync(libraryId, documentId);
 
-                    if (dmsDocument != null && dmsDocument.EntityId.HasValue)
+                    if (dmsDocument != null && dmsDocument.Metadata != null
+                        && dmsDocument.Metadata.ContainsKey("EntityId"))
                     {
-                        if(file != null)
+                        var hasEntityId = Guid.TryParse(dmsDocument.Metadata["EntityId"].GetString(), out var entityId);
+
+                        if (hasEntityId && entityId != Guid.Empty)
                         {
-							await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, dmsDocument.EntityId.Value);
-						}
-						else
-						{
-							await dmsService.AddDocumentUpdatedAuditRecordAsync(result.DocumentId.Value, dmsDocument.EntityId.Value);
-						}
+                            if (file != null)
+                            {
+                                await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, entityId);
+                            }
+                            else
+                            {
+                                await dmsService.AddDocumentUpdatedAuditRecordAsync(result.DocumentId.Value, entityId);
+                            }
+                        }
                     }
 				}
 
@@ -252,12 +296,22 @@ namespace Nexus.DEB.Api.Restful
         {
             try
             {
+                Guid? entityId = null;
                 DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
 
                 var libraryId = applicationSettingsService.GetLibraryId(library);
 
                 var documentFile = await dmsService.GetDocumentFileAsync(libraryId, documentId, version);
-				var dmsDocument = await dmsService.GetDocumentAsync(libraryId, documentId);
+
+                if (library == DebHelper.Dms.Libraries.DebDocuments)
+                {
+                    var debDocument = await dmsService.GetDebLibraryDocumentAsync(libraryId, documentId, version);
+
+                    if (debDocument != null)
+                    {
+                        entityId = debDocument.EntityId;
+                    }
+                }
 
 				if (documentFile == null)
                 {
@@ -267,7 +321,7 @@ namespace Nexus.DEB.Api.Restful
                     });
                 }
 
-                await dmsService.AddDocumentDownloadedAuditRecordAsync(documentId, dmsDocument.EntityId.Value);
+                await dmsService.AddDocumentDownloadedAuditRecordAsync(documentId, entityId);
 
                 // Return the file with proper headers
                 return Results.File(

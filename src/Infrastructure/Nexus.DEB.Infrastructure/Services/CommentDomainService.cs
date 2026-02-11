@@ -1,4 +1,5 @@
-﻿using Nexus.DEB.Application.Common.Extensions;
+﻿using Microsoft.Extensions.Logging;
+using Nexus.DEB.Application.Common.Extensions;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain;
@@ -17,7 +18,8 @@ namespace Nexus.DEB.Infrastructure.Services
             IDateTimeProvider dateTimeProvider,
             IDebService debService,
             IPawsService pawsService,
-            IAuditService auditService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, auditService, string.Empty)
+            IAuditService auditService,
+            ILogger<CommentDomainService> logger) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, auditService, logger, string.Empty)
         {
         }
 

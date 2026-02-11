@@ -1,4 +1,6 @@
-﻿using Nexus.DEB.Application.Common.Interfaces;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Logging;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Task = System.Threading.Tasks.Task;
@@ -15,7 +17,8 @@ namespace Nexus.DEB.Infrastructure.Services
             IDateTimeProvider dateTimeProvider,
             IDebService debService,
             IPawsService pawsService,
-            IAuditService auditService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, auditService, EntityTypes.Task)
+			ILogger<TaskDomainService> logger,
+			IAuditService auditService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, auditService, logger, EntityTypes.Task)
         {
         }
 
@@ -26,9 +29,11 @@ namespace Nexus.DEB.Infrastructure.Services
             if (ValidationErrors.Count > 0)
             {
                 return Result<TaskDetail>.Failure(ValidationErrors);
-            }
+			}
 
-            try
+			Logger.LogDebug("Creating new Task: StatementId: {statementId}, Title: {title}, Description: {description}", statementId, title, description);
+
+			try
             {
                 var task = new Domain.Models.Task()
                 {
@@ -76,9 +81,11 @@ namespace Nexus.DEB.Infrastructure.Services
             if (ValidationErrors.Count > 0)
             {
                 return Result<TaskDetail>.Failure(ValidationErrors);
-            }
+			}
 
-            task.OwnedById = taskOwnerId;
+			Logger.LogDebug("Updating Task: StatementId: {statementId}, Title: {title}, Description: {description}", statementId, title, description);
+
+			task.OwnedById = taskOwnerId;
             task.TaskTypeId = taskTypeId;
             task.DueDate = dueDate;
             task.Title = title;

@@ -1,5 +1,6 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using GreenDonut.Data;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -108,6 +109,7 @@ namespace Nexus.DEB.Api.Restful
         }
 
         private static async Task<IResult> ExportScopesAsCsv(
+            [FromBody] ScopeFilters? filters,
             [FromServices] IDebService debService,
             [FromServices] ILogger<Program> logger,
             [FromServices] IAuditService auditService,
@@ -116,10 +118,10 @@ namespace Nexus.DEB.Api.Restful
         {
             return await ExportToCsvAsync(
                 entityName: EntityTypes.Scope,
-                getDataQuery: () => debService.GetScopesForExport(),
+                getDataQuery: () => debService.GetScopesForExport(filters),
                 fileNamePrefix: "scopes",
                 registerClassMap: csv => csv.Context.RegisterClassMap<ScopeExportMap>(),
-                filters: null,
+                filters: filters,
                 logger: logger,
                 auditService: auditService,
                 currentUserService: currentUserService,

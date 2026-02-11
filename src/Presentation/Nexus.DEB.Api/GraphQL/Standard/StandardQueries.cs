@@ -15,13 +15,6 @@ namespace Nexus.DEB.Api.GraphQL
             IResolverContext resolverContext)
             => debService.GetStandards();
 
-        [NodeResolver]
-        public static async Task<Standard?> GetStandardByIdAsync(
-            short standardId,
-            StandardByIdDataLoader standardByIdDataLoader,
-            CancellationToken cancellationToken)
-            => await standardByIdDataLoader.LoadAsync(standardId, cancellationToken);
-
         [Authorize]
         public async static Task<ICollection<FilterItem>> GetStandardsLookupAsync(
             IDebService debService,

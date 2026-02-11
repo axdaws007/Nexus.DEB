@@ -1,5 +1,6 @@
 ﻿using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 
 namespace Nexus.DEB.Infrastructure.Services.DashboardProviders
@@ -16,6 +17,10 @@ namespace Nexus.DEB.Infrastructure.Services.DashboardProviders
             if (entity is StatementDetail statementDetail)
             {
                 return statementDetail.ReviewDate;
+            }
+            else if (entity is Statement statement)
+            {
+                return statement.ReviewDate;
             }
 
             return null;

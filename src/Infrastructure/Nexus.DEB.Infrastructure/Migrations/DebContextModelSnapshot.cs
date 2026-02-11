@@ -886,6 +886,11 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("EntityId");
 
+                    b.Property<string>("EntityTypeTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("EntityTypeTitle");
+
                     b.Property<DateTime>("LastModifiedDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("LastModifiedDate");
@@ -1814,6 +1819,10 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("OwnedByPostTitle");
+
+                    b.Property<Guid>("OwnedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("OwnedById");
 
                     b.Property<string>("SerialNumber")
                         .HasColumnType("nvarchar(max)")

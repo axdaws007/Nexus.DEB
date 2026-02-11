@@ -11,8 +11,7 @@ namespace Nexus.DEB.Domain.Models
 		public Guid RequirementId { get; set; }
 		public string SerialNumber { get; set; } = string.Empty;
 		public string Title { get; set; } = string.Empty;
-		public Guid? StandardVersionId { get; set; }
-		public string StandardVersion { get; set; }
+		public IEnumerable<Guid?> StandardVersionIds { get; set; }
 		public Guid? SectionId { get; set; }
 		public string Section { get; set; }
 		public int OtherScopes { get; set; } = 0;

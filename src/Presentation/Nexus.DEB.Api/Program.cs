@@ -7,154 +7,168 @@ using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Infrastructure;
 using Nexus.DEB.Infrastructure.Authentication;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var environment = builder.Environment;
-var configuration = builder.Configuration;
-var allowedOrigins = configuration["CORS:AllowedOrigins"];
-var useLocalNitro = configuration.GetValue<bool>("UseLocalNitro", false);
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
 
-builder.Services.AddCors(options =>
+try
 {
-    options.AddPolicy("GraphQLPolicy", corsBuilder =>
+    builder.Host.UseSerilog();
+
+    var environment = builder.Environment;
+    var configuration = builder.Configuration;
+    var allowedOrigins = configuration["CORS:AllowedOrigins"];
+    var useLocalNitro = configuration.GetValue<bool>("UseLocalNitro", false);
+
+    builder.Services.AddCors(options =>
     {
-        if (environment.IsDevelopment())
+        options.AddPolicy("GraphQLPolicy", corsBuilder =>
         {
-            // Development: Allow localhost origins for testing
-            // Note: Can't use AllowAnyOrigin() with AllowCredentials()
-            corsBuilder
-                .WithOrigins(
-                    "http://localhost:3000",  // React dev server
-                    "http://localhost:5173",  // Vite dev server
-                    "https://localhost:5001", // GraphQL IDE (Banana Cake Pop)
-                    "https://localhost:7001"  // Alternative HTTPS port
-                )
-                .WithExposedHeaders("Content-Disposition", "Content-Length")
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials(); // Required for Forms Authentication cookies
-        }
-        else
-        {
-            // Production: Must have configured origins
-            if (string.IsNullOrWhiteSpace(allowedOrigins))
+            if (environment.IsDevelopment())
             {
-                throw new InvalidOperationException(
-                    "CORS:AllowedOrigins must be configured for production environments. " +
-                    "Add allowed origins to appsettings.json separated by semicolons.");
+                // Development: Allow localhost origins for testing
+                // Note: Can't use AllowAnyOrigin() with AllowCredentials()
+                corsBuilder
+                    .WithOrigins(
+                        "http://localhost:3000",  // React dev server
+                        "http://localhost:5173",  // Vite dev server
+                        "https://localhost:5001", // GraphQL IDE (Banana Cake Pop)
+                        "https://localhost:7001"  // Alternative HTTPS port
+                    )
+                    .WithExposedHeaders("Content-Disposition", "Content-Length")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials(); // Required for Forms Authentication cookies
             }
-
-            var domains = allowedOrigins
-                .Split(';', StringSplitOptions.RemoveEmptyEntries)
-                .Select(d => d.Trim())
-                .Where(d => !string.IsNullOrWhiteSpace(d))
-                .ToArray();
-
-            if (domains.Length == 0)
+            else
             {
-                throw new InvalidOperationException(
-                    "CORS:AllowedOrigins is configured but contains no valid domains.");
-            }
+                // Production: Must have configured origins
+                if (string.IsNullOrWhiteSpace(allowedOrigins))
+                {
+                    throw new InvalidOperationException(
+                        "CORS:AllowedOrigins must be configured for production environments. " +
+                        "Add allowed origins to appsettings.json separated by semicolons.");
+                }
 
-            corsBuilder
-                .WithOrigins(domains)
-                .WithExposedHeaders("Content-Disposition", "Content-Length")
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials(); // Required for Forms Authentication cookies
-        }
+                var domains = allowedOrigins
+                    .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(d => d.Trim())
+                    .Where(d => !string.IsNullOrWhiteSpace(d))
+                    .ToArray();
+
+                if (domains.Length == 0)
+                {
+                    throw new InvalidOperationException(
+                        "CORS:AllowedOrigins is configured but contains no valid domains.");
+                }
+
+                corsBuilder
+                    .WithOrigins(domains)
+                    .WithExposedHeaders("Content-Disposition", "Content-Length")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials(); // Required for Forms Authentication cookies
+            }
+        });
     });
-});
 
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(configuration);
-builder.Services.AddDomainEvents();
+    builder.Services.AddApplication();
+    builder.Services.AddInfrastructure(configuration);
+    builder.Services.AddDomainEvents();
 
-builder.Services.AddHttpContextAccessor();
+    builder.Services.AddHttpContextAccessor();
 
-var decryptionKey = configuration["Authentication:DecryptionKey"] ?? throw new InvalidOperationException("Authentication:DecryptionKey is required");
-var validationKey = configuration["Authentication:ValidationKey"] ?? throw new InvalidOperationException("Authentication:ValidationKey is required");
+    var decryptionKey = configuration["Authentication:DecryptionKey"] ?? throw new InvalidOperationException("Authentication:DecryptionKey is required");
+    var validationKey = configuration["Authentication:ValidationKey"] ?? throw new InvalidOperationException("Authentication:ValidationKey is required");
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-})
-.AddCookie(options =>
-{
-    var cookieName = configuration["Authentication:CookieName"] ?? ".ASPXAUTH";
-    var cookieDomain = configuration["Authentication:CookieDomain"];
-
-    // Parse RequireHttps (default: true)
-    var requireHttps = true;
-    if (bool.TryParse(configuration["Authentication:RequireHttps"], out var configHttps))
+    builder.Services.AddAuthentication(options =>
     {
-        requireHttps = configHttps;
-    }
-
-    // Parse SlidingExpiration (default: true)
-    var slidingExpiration = true;
-    if (bool.TryParse(configuration["Authentication:SlidingExpiration"], out var configSliding))
+        options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    })
+    .AddCookie(options =>
     {
-        slidingExpiration = configSliding;
-    }
+        var cookieName = configuration["Authentication:CookieName"] ?? ".ASPXAUTH";
+        var cookieDomain = configuration["Authentication:CookieDomain"];
 
-    // Parse CookieExpirationMinutes (default: 480 = 8 hours)
-    var cookieExpirationMinutes = 480;
-    if (int.TryParse(configuration["Authentication:CookieExpirationMinutes"], out var configMinutes))
-    {
-        cookieExpirationMinutes = configMinutes;
-    }
-
-    options.Cookie.Name = cookieName;
-    options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = requireHttps ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
-    options.Cookie.SameSite = SameSiteMode.Lax;
-    options.SlidingExpiration = slidingExpiration;
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(cookieExpirationMinutes);
-
-    if (!string.IsNullOrWhiteSpace(cookieDomain))
-    {
-        options.Cookie.Domain = cookieDomain;
-    }
-
-    // Use the custom AspNetTicketDataFormat for .NET Framework 4.8 compatibility
-    options.TicketDataFormat = new AspNetTicketDataFormat(decryptionKey, validationKey);
-
-    // Configure authentication challenge behavior
-    options.Events = new CookieAuthenticationEvents
-    {
-        OnRedirectToLogin = context =>
+        // Parse RequireHttps (default: true)
+        var requireHttps = true;
+        if (bool.TryParse(configuration["Authentication:RequireHttps"], out var configHttps))
         {
-            // For API calls, return 401 instead of redirecting
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return Task.CompletedTask;
-        },
-        OnRedirectToAccessDenied = context =>
-        {
-            // For API calls, return 403 instead of redirecting
-            context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            return Task.CompletedTask;
+            requireHttps = configHttps;
         }
-    };
-});
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy(DebHelper.Policies.CanAddComments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllCreateCommentCapabilities));
-    options.AddPolicy(DebHelper.Policies.CanDeleteComments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllDeleteCommentCapabilities));
+        // Parse SlidingExpiration (default: true)
+        var slidingExpiration = true;
+        if (bool.TryParse(configuration["Authentication:SlidingExpiration"], out var configSliding))
+        {
+            slidingExpiration = configSliding;
+        }
+
+        // Parse CookieExpirationMinutes (default: 480 = 8 hours)
+        var cookieExpirationMinutes = 480;
+        if (int.TryParse(configuration["Authentication:CookieExpirationMinutes"], out var configMinutes))
+        {
+            cookieExpirationMinutes = configMinutes;
+        }
+
+        options.Cookie.Name = cookieName;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = requireHttps ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.SlidingExpiration = slidingExpiration;
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(cookieExpirationMinutes);
+
+        if (!string.IsNullOrWhiteSpace(cookieDomain))
+        {
+            options.Cookie.Domain = cookieDomain;
+        }
+
+        // Use the custom AspNetTicketDataFormat for .NET Framework 4.8 compatibility
+        options.TicketDataFormat = new AspNetTicketDataFormat(decryptionKey, validationKey);
+
+        // Configure authentication challenge behavior
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnRedirectToLogin = context =>
+            {
+                // For API calls, return 401 instead of redirecting
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return Task.CompletedTask;
+            },
+            OnRedirectToAccessDenied = context =>
+            {
+                // For API calls, return 403 instead of redirecting
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy(DebHelper.Policies.CanAddComments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllCreateCommentCapabilities));
+        options.AddPolicy(DebHelper.Policies.CanDeleteComments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllDeleteCommentCapabilities));
     
-    options.AddPolicy(DebHelper.Policies.CanAddDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllCreateDocCapabilities));
-    options.AddPolicy(DebHelper.Policies.CanDeleteDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllDeleteDocCapabilities));
-    options.AddPolicy(DebHelper.Policies.CanEditDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllEditDocCapabilities));
-    options.AddPolicy(DebHelper.Policies.CanViewDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllViewDocCapabilities));
+        options.AddPolicy(DebHelper.Policies.CanAddDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllCreateDocCapabilities));
+        options.AddPolicy(DebHelper.Policies.CanDeleteDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllDeleteDocCapabilities));
+        options.AddPolicy(DebHelper.Policies.CanEditDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllEditDocCapabilities));
+        options.AddPolicy(DebHelper.Policies.CanViewDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllViewDocCapabilities));
 
-    options.AddPolicy(DebHelper.Policies.CanCreateOrEditSoC, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoC));
-    options.AddPolicy(DebHelper.Policies.CanCreateOrEditScope, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditScope));
-	options.AddPolicy(DebHelper.Policies.CanCreateSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanCreateSoCTask));
-    options.AddPolicy(DebHelper.Policies.CanEditSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoCTask));
+        options.AddPolicy(DebHelper.Policies.CanCreateOrEditSoC, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoC));
+        options.AddPolicy(DebHelper.Policies.CanCreateOrEditScope, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditScope));
+	    options.AddPolicy(DebHelper.Policies.CanCreateSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanCreateSoCTask));
+        options.AddPolicy(DebHelper.Policies.CanEditSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoCTask));
+    });
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100 MB
 });
 
 builder
@@ -162,7 +176,6 @@ builder
     .AddAuthorization()
     .AddTypes()
     .AddMutationConventions()
-    .AddGlobalObjectIdentification()
     .ModifyCostOptions(options =>
     {
         options.MaxFieldCost = 3000;
@@ -176,55 +189,80 @@ builder
     .AddSorting()
     ;
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
 
-var app = builder.Build();
+    var app = builder.Build();
 
-//if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("edev"))
-//{
-    app.UseDeveloperExceptionPage();
-    app.UseSwagger();
-    app.UseSwaggerUI();
-//}
+    app.UseCorrelationId();
 
-app.UseHttpsRedirection();
-
-app.UseCors("GraphQLPolicy");
-app.UseAuthentication();
-app.UseMiddleware<CapabilitiesHttpRequestInterceptor>();
-app.UseAuthorization();
-
-/*
- * This adds custom middleware to the request pipeline.
- * We resolve the IDebContext from the DI container and call SetFormattedUser()
- * then call the next middleware in the pipeline.
- * 
- * This is because SetFormattedUser is async, so cannot be called in the IDebContext constructor.
- * This assumes the IDebContext is registered as SCOPED, so a new instance is created per request.
- */
-app.Use(async (ctx, next) =>
-{
-	var db = ctx.RequestServices.GetRequiredService<IDebContext>();
-	await db.SetFormattedUser();
-	await next();
-});
-
-app.MapGraphQL().WithOptions(new GraphQLServerOptions
-{
-    Tool =
+    app.UseSerilogRequestLogging(options =>
     {
-        ServeMode = (useLocalNitro) ? GraphQLToolServeMode.Embedded : GraphQLToolServeMode.Latest
-    }
-});
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
 
-app.MapExportEndpoints();
-app.MapWorkflowDiagramEndpoints();
-app.MapDmsEndpoints();
+            if (httpContext.Items["CorrelationId"] is string correlationId)
+            {
+                diagnosticContext.Set("CorrelationId", correlationId);
+            }
+        };
+    });
 
-//if (app.Environment.IsDevelopment())
-//{
-    app.MapTestDataEndpoints();
-//}
+    //if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("edev"))
+    //{
+    app.UseDeveloperExceptionPage();
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    //}
 
-app.RunWithGraphQLCommands(args);
+    app.UseHttpsRedirection();
+
+    app.UseCors("GraphQLPolicy");
+    app.UseAuthentication();
+    app.UseMiddleware<CapabilitiesHttpRequestInterceptor>();
+    app.UseAuthorization();
+
+    /*
+     * This adds custom middleware to the request pipeline.
+     * We resolve the IDebContext from the DI container and call SetFormattedUser()
+     * then call the next middleware in the pipeline.
+     * 
+     * This is because SetFormattedUser is async, so cannot be called in the IDebContext constructor.
+     * This assumes the IDebContext is registered as SCOPED, so a new instance is created per request.
+     */
+    app.Use(async (ctx, next) =>
+    {
+	    var db = ctx.RequestServices.GetRequiredService<IDebContext>();
+	    await db.SetFormattedUser();
+	    await next();
+    });
+
+    app.MapGraphQL().WithOptions(new GraphQLServerOptions
+    {
+        Tool =
+        {
+            ServeMode = (useLocalNitro) ? GraphQLToolServeMode.Embedded : GraphQLToolServeMode.Latest
+        }
+    });
+
+    app.MapExportEndpoints();
+    app.MapWorkflowDiagramEndpoints();
+    app.MapDmsEndpoints();
+
+    //if (app.Environment.IsDevelopment())
+    //{
+        app.MapTestDataEndpoints();
+    //}
+
+    app.RunWithGraphQLCommands(args);
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

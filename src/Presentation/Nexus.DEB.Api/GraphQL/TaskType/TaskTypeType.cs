@@ -6,7 +6,6 @@ namespace Nexus.DEB.Api.GraphQL
     {
         protected override void Configure(IObjectTypeDescriptor<TaskType> descriptor)
         {
-            descriptor.Field(x => x.Id).ID();
             descriptor.Field(x => x.IsEnabled).Ignore();
 
             base.Configure(descriptor);

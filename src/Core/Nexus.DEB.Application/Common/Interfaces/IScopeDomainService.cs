@@ -13,7 +13,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 		Task<Result<Scope>> CreateScopeAsync(
 			Guid ownerId,
 			string title,
-			string description,
+			string? description,
 			DateOnly? targetImplementationDate,
 			CancellationToken cancellationToken);
 
@@ -21,7 +21,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 			Guid id,
 			Guid ownerId,
 			string title,
-			string description,
+			string? description,
 			DateOnly? targetImplementationDate,
 			CancellationToken cancellationToken);
 

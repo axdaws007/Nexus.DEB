@@ -1,10 +1,8 @@
 ﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
-using Nexus.DEB.Domain;
+using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
-using Nexus.DEB.Infrastructure.Services;
-using System.Threading;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -17,29 +15,15 @@ namespace Nexus.DEB.Api.GraphQL
         public static IQueryable<RequirementSummary> GetRequirementsForGrid(
             RequirementSummaryFilters? filters,
             IDebService debService)
-        {
-            var f = filters is null
-                ? new Application.Common.Models.Filters.RequirementSummaryFilters()
-                : new Application.Common.Models.Filters.RequirementSummaryFilters
-                {
-                    ModifiedFrom = filters.ModifiedFrom,
-                    ModifiedTo = filters.ModifiedTo,
-                    ScopeIds = filters.ScopeIds,
-                    SearchText = filters.SearchText?.Trim(),
-                    StandardVersionIds = filters.StandardVersionIds,
-                    StatusIds = filters.StatusIds,
-                    OnlyShowAvailableRequirementScopeCombinations = filters.OnlyShowAvailableRequirementScopeCombinations,
-                };
-
-            return debService.GetRequirementsForGrid(f);
-        }
+			=> debService.GetRequirementsForGrid(filters);
 
 		[Authorize]
 		[UseOffsetPaging]
 		[UseSorting]
-		public static IQueryable<StandardVersionRequirementDetail> GetStandardVersionRequirementsForGrid(
+		public static async Task<IEnumerable<StandardVersionRequirementDetail>> GetStandardVersionRequirementsForGrid(
 			StandardVersionRequirementsFilters? filters,
-			IDebService debService)
+			IDebService debService, 
+            CancellationToken cancellationToken)
 		{
 			var f = filters is null
 			? new Application.Common.Models.StandardVersionRequirementsFilters()
@@ -51,7 +35,7 @@ namespace Nexus.DEB.Api.GraphQL
                 ScopeId = filters.ScopeId,
 			};
 
-			return debService.GetStandardVersionRequirementsForGrid(f);
+			return await debService.GetStandardVersionRequirementsForGridAsync(f, cancellationToken);
 		}
 
 		[Authorize]

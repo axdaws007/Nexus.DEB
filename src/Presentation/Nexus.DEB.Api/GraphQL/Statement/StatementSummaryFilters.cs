@@ -8,7 +8,6 @@
         public DateOnly? ModifiedFrom { get; set; }
         public DateOnly? ModifiedTo { get; set; }
         public string? OwnedBy { get; set; }
-        [ID]
         public ICollection<int?>? StatusIds { get; set; }
     }
 }

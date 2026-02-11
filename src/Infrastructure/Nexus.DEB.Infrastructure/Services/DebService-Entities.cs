@@ -1,11 +1,13 @@
 ﻿using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Nexus.DEB.Application.Common.Extensions;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Application.Common.Models.Sorting;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
-using System.Threading;
+using Scope = Nexus.DEB.Domain.Models.Scope;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -72,6 +74,10 @@ namespace Nexus.DEB.Infrastructure.Services
                         .Where(ps => ps.EntityId == r.EntityId)
                         .Select(ps => ps.Status)
                         .FirstOrDefault(),
+                    StatementIds = r.StatementsRequirementsScopes
+                        .Select(srs => srs.StatementId)
+                        .Distinct()
+                        .ToList(),
                     StandardVersionTitles = r.StandardVersions.Select(sv => sv.Title).ToList()
                 })
                 .AsNoTracking();
@@ -126,11 +132,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     var requirementIdsWithAvailableCombinations = _dbContext.Set<Requirement>()
                         .Where(r => r.Scopes.Any(s =>
-                            // Alex Dawson : 29/01/26 
-                            // Bug #20954 - The bug has been deferred to the backlog at the moment
-                            // as it's perceived as a usability issue rather than a failure to meet the requirement.
-                            // If this gets revisited I believe all we need to do is uncomment the line below.
-                            //(filters.ScopeIds == null || filters.ScopeIds.Count == 0 || filters.ScopeIds.Contains(s.EntityId)) &&
+                            (filters.ScopeIds == null || filters.ScopeIds.Count == 0 || filters.ScopeIds.Contains(s.EntityId)) &&
 
                             // This scope (from the requirement's available scopes) hasn't been allocated yet
                             !r.StatementsRequirementsScopes.Any(srs => srs.ScopeId == s.EntityId)))
@@ -143,42 +145,55 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
-        public IQueryable<StandardVersionRequirementDetail> GetStandardVersionRequirementsForGrid(StandardVersionRequirementsFilters? filters)
+        public async Task<IEnumerable<StandardVersionRequirementDetail>> GetStandardVersionRequirementsForGridAsync(StandardVersionRequirementsFilters? filters, CancellationToken cancellationToken)
 		{
-            var query = from svr in _dbContext.StandardVersionRequirements
-                        join r in (_dbContext.Requirements.Include(r => r.Scopes)) on svr.RequirementId equals r.EntityId
+            var query = from svr in _dbContext.StandardVersionRequirements.AsNoTracking()
+                        join r in (_dbContext.Requirements.AsNoTracking().Include(r => r.Scopes).Include(r => r.StandardVersions)) on svr.RequirementId equals r.EntityId
+                        where filters == null || !filters.StandardVersionId.HasValue || (svr.StandardVersionId == filters.StandardVersionId.Value)
                         select new StandardVersionRequirementDetail
                         {
-							RequirementId = svr.RequirementId,
+                            RequirementId = svr.RequirementId,
                             SerialNumber = svr.SerialNumber,
                             Title = svr.Title,
-                            StandardVersionId = svr.StandardVersionId,
-                            StandardVersion = svr.StandardVersion,
                             SectionId = svr.SectionId,
                             Section = svr.Section,
                             OtherScopes = r.Scopes.Where(w => filters == null || w.EntityId != filters.ScopeId).Count(),
-							IncludedInScope = filters != null ? r.Scopes.Any(a => a.EntityId == filters.ScopeId) : false
-						};
+                            IncludedInScope = filters != null ? r.Scopes.Any(a => a.EntityId == filters.ScopeId) : false
+                        };
 
-            if(filters != null)
+			if (filters != null)
             {
-                if(filters.StandardVersionId.HasValue)
-				{
-					query = query.Where(w => w.StandardVersionId == filters.StandardVersionId.Value);
-				}
-
-                if(filters.SectionId.HasValue)
+                if (filters.SectionId.HasValue)
                 {
-					query = query.Where(w => w.SectionId == filters.SectionId.Value);
-				}
+                    query = query.Where(w => w.SectionId == filters.SectionId.Value);
+                }
 
-                if(filters.SearchText != null && !string.IsNullOrWhiteSpace(filters.SearchText))
+                if (filters.SearchText != null && !string.IsNullOrWhiteSpace(filters.SearchText))
                 {
-					query = query.Where(w => w.Title.Contains(filters.SearchText) || w.SerialNumber.Contains(filters.SearchText));
-				}
-			}
+                    query = query.Where(w => w.Title.Contains(filters.SearchText) || w.SerialNumber.Contains(filters.SearchText));
+                }
+            }
 
-			return query;
+			/****************************************************************************
+             * This may not be the most performant way of getting the list of Standard  *
+             * Version Ids for each Requirement. Originally wanted to get the list of   *
+             * StandardVersionIds for each requirement in the original query, but this  *
+             * was causing issues with EF Core translating to SQL. This should be       *
+             * revisited at a later date to see if it can be optimised. 09/02/26        *
+             ****************************************************************************/
+			var allStandardVersionRequirements = _dbContext.StandardVersionRequirements;
+
+            return query.ToList().Select(s => new StandardVersionRequirementDetail
+            {
+                RequirementId = s.RequirementId,
+                SerialNumber = s.SerialNumber,
+                Title = s.Title,
+                SectionId = s.SectionId,
+                Section = s.Section,
+                OtherScopes = s.OtherScopes,
+                IncludedInScope = s.IncludedInScope,
+                StandardVersionIds = allStandardVersionRequirements.Where(w => w.RequirementId == s.RequirementId).Select(s => s.StandardVersionId).Distinct().AsEnumerable()
+            });
 		}
 
         public IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters)
@@ -230,9 +245,20 @@ namespace Nexus.DEB.Infrastructure.Services
                     var to = filters.ModifiedTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
                     query = query.Where(r => r.LastModifiedDate < to);
                 }
+
+                if (filters.SortBy != null)
+                {
+                    query = query.ApplySorting(filters.SortBy, new Dictionary<string, string>
+                    {
+                        ["serialNumber"] = "SerialNumber",
+                        ["title"] = "Title",
+                        ["status"] = "Status",
+                        ["lastModifiedDate"] = "LastModifiedDate"
+                    });
+                }
             }
 
-            return query.OrderBy(x => x.SerialNumber);
+            return query;
         }
 
 		public async Task<RequirementDetail?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -430,7 +456,28 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public IQueryable<ScopeSummary> GetScopesForGrid() => _dbContext.ScopeSummaries.AsNoTracking();
 
-        public IQueryable<ScopeExport> GetScopesForExport() => _dbContext.ScopeExport.AsNoTracking();
+        public IQueryable<ScopeExport> GetScopesForExport(ScopeFilters? filters)
+        {
+            var query = _dbContext.ScopeExport.AsNoTracking();
+
+            if (filters != null)
+            {
+                if (filters.SortBy != null)
+                {
+                    query = query.ApplySorting(filters.SortBy, new Dictionary<string, string>
+                    {
+                        ["title"] = "Title",
+                        ["status"] = "Status",
+                        ["ownedBy"] = "OwnedBy",
+                        ["createdDate"] = "CreatedDate",
+                        ["lastModifiedDate"] = "LastModifiedDate",
+                        ["numberOfLinkedStandardVersions"] = "NumberOfLinkedStandardVersions"
+                    });
+                }
+            }
+
+            return query;
+        }
 
 		public async Task<Scope?> GetScopeByIdAsync(Guid id, CancellationToken cancellationToken)
 			=> await _dbContext.Scopes.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
@@ -447,24 +494,33 @@ namespace Nexus.DEB.Infrastructure.Services
 
             var scopeRequirements = _dbContext.Requirements.Include(r => r.StandardVersions).Where(w => w.Scopes.Any(a => a.EntityId == scope.EntityId));
             scopeDetail.RequirementIds = scopeRequirements.Select(s => s.EntityId).ToList();
+            scopeDetail.StandardVersionRequirements.AddRange(await GetStandardVersionRequirementsForScopeAsync(scope.EntityId, cancellationToken));
 
-            var standardVersionIds = scopeRequirements.SelectMany(s => s.StandardVersions).Distinct().Select(s => s.EntityId);
-			var standardVersions = _dbContext.StandardVersions.AsNoTracking().Include(sv => sv.Standard).Include(sv => sv.Requirements).Where(w => standardVersionIds.Contains(w.EntityId));
-            var standardVersionStates = _dbContext.PawsEntityDetails.AsNoTracking().Where(w => standardVersionIds.Contains(w.EntityId));
+			return scopeDetail;
+		}
 
+        public async Task<List<StandardVersionRequirements>> GetStandardVersionRequirementsForScopeAsync(Guid scopeId, CancellationToken cancellationToken)
+		{
+			var scopeRequirements = _dbContext.Requirements.Include(r => r.StandardVersions).Where(w => w.Scopes.Any(a => a.EntityId == scopeId));
+			var standardVersionIds = scopeRequirements.SelectMany(s => s.StandardVersions).Distinct().Select(s => s.EntityId);
+			var standardVersions = _dbContext.StandardVersions.AsNoTracking().Include(sv => sv.Standard).Include(sv => sv.Requirements)
+                /*.Where(w => standardVersionIds.Contains(w.EntityId))*/;
+			var standardVersionStates = _dbContext.PawsEntityDetails.AsNoTracking().Where(w => standardVersionIds.Contains(w.EntityId));
 
+            var standardVersionRequirementsList = new List<StandardVersionRequirements>();
 			foreach (var sv in standardVersions)
-            {
-                var svR = new StandardVersionRequirements();
-                svR.StandardVersionId = sv.EntityId;
+			{
+				var svR = new StandardVersionRequirements();
+				svR.StandardVersionId = sv.EntityId;
 				svR.StandardVersionTitle = sv.Title;
-                svR.Status = standardVersionStates.FirstOrDefault(s => s.EntityId == sv.EntityId)?.PseudoStateTitle ?? string.Empty;
-                svR.TotalRequirements = sv.Requirements.Count;
-                svR.TotalRequirementsInScope = scopeRequirements.Where(w => w.StandardVersions.Any(a => a.EntityId == sv.EntityId)).Count();
-				scopeDetail.StandardVersionRequirements.Add(svR);
+				svR.Status = standardVersionStates.FirstOrDefault(s => s.EntityId == sv.EntityId)?.PseudoStateTitle ?? string.Empty;
+				svR.TotalRequirements = sv.Requirements.Count;
+				svR.TotalRequirementsInScope = scopeRequirements.Where(w => w.StandardVersions.Any(a => a.EntityId == sv.EntityId)).Count();
+
+				standardVersionRequirementsList.Add(svR);
 			}
 
-            return scopeDetail;
+			return standardVersionRequirementsList;
 		}
 
 		public async Task<ScopeChildCounts> GetChildCountsForScopeAsync(Guid id, CancellationToken cancellationToken)
@@ -767,9 +823,21 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     query = query.Where(x => filters.OwnedByIds.Contains(x.OwnedById));
                 }
+
+                if (filters.SortBy != null)
+                {
+                    query = query.ApplySorting(filters.SortBy, new Dictionary<string, string>
+                    {
+                        ["serialNumber"] = "SerialNumber",
+                        ["title"] = "Title",
+                        ["status"] = "Status",
+                        ["lastModifiedDate"] = "LastModifiedDate",
+                        ["ownedBy"] = "OwnedBy",
+                    });
+                }
             }
 
-            return query.OrderBy(x => x.SerialNumber);
+            return query;
         }
 
         public async Task<StatementDetail?> GetStatementDetailByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -944,10 +1012,11 @@ namespace Nexus.DEB.Infrastructure.Services
                 var results = await _dbContext.Sections.Where(w => w.StandardVersionId == standardVersionId)
                                     .OrderBy(o => o.Ordinal)
                                     .ThenBy(t => t.Reference)
-									.Select(s => new FilterItemEntity()
+                                    .ThenBy(t => t.Title)
+                                    .Select(s => new FilterItemEntity()
                                     {
                                         Id = s.Id,
-                                        Value = s.Reference,
+                                        Value = s.Reference + s.Title,
                                         IsEnabled = true
 									})
                                     .ToListAsync(cancellationToken);
@@ -1015,6 +1084,20 @@ namespace Nexus.DEB.Infrastructure.Services
                 if (filters.EffectiveToDate.HasValue)
                 {
                     query = query.Where(r => r.EffectiveEndDate < filters.EffectiveToDate.Value.AddDays(1));
+                }
+
+                if (filters.SortBy != null)
+                {
+                    query = query.ApplySorting(filters.SortBy, new Dictionary<string, string>
+                    {
+                        ["standardTitle"] = "StandardTitle",
+                        ["version"] = "VersionTitle",
+                        ["status"] = "Status",
+                        ["effectiveFrom"] = "EffectiveStartDate",
+                        ["effectiveTo"] = "EffectiveEndDate",
+                        ["lastModifiedDate"] = "LastModifiedDate",
+                        ["numberOfLinkedScopes"] = "NumberOfLinkedScopes"
+                    });
                 }
             }
 
@@ -1229,9 +1312,22 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     query = query.Where(x => filters.TaskTypeIds.Contains(x.TaskTypeId));
                 }
+
+                if (filters.SortBy != null)
+                {
+                    query = query.ApplySorting(filters.SortBy, new Dictionary<string, string>
+                    {
+                        ["serialNumber"] = "SerialNumber",
+                        ["title"] = "Title",
+                        ["ownedBy"] = "OwnedBy",
+                        ["dueDate"] = "DueDate",
+                        ["taskTypeTitle"] = "TaskTypeTitle",
+                        ["status"] = "Status"
+                    });
+                }
             }
 
-            return query.OrderBy(x => x.SerialNumber);
+            return query;
         }
 
 		public async Task<TaskDetail?> GetTaskDetailByIdAsync(Guid id, CancellationToken cancellationToken = default)

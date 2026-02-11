@@ -9,12 +9,15 @@
         public string? Author { get; set; }
 
         public string? DocumentType { get; set; }
+        public string FileType { get; set; } = string.Empty;
 
         public string? UploadedBy { get; set; }
 
         public DateTime UploadedDate { get; set; }
 
         public DateTime? ExpiryDate { get; set; }
+
+        public DateTime? ReviewDate { get; set; }
 
         public DmsDocumentActionData? ActionData { get; set; }
     }

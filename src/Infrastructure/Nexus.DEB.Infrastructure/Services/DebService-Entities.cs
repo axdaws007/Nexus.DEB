@@ -1,12 +1,12 @@
 ﻿using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Nexus.DEB.Application.Common.Extensions;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Application.Common.Models.Sorting;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
-using System.Collections.Generic;
-using static System.Formats.Asn1.AsnWriter;
 using Scope = Nexus.DEB.Domain.Models.Scope;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -245,9 +245,20 @@ namespace Nexus.DEB.Infrastructure.Services
                     var to = filters.ModifiedTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
                     query = query.Where(r => r.LastModifiedDate < to);
                 }
+
+                if (filters.SortBy != null)
+                {
+                    query = query.ApplySorting(filters.SortBy, new Dictionary<string, string>
+                    {
+                        ["serialNumber"] = "SerialNumber",
+                        ["title"] = "Title",
+                        ["status"] = "Status",
+                        ["lastModifiedDate"] = "LastModifiedDate"
+                    });
+                }
             }
 
-            return query.OrderBy(x => x.SerialNumber);
+            return query;
         }
 
 		public async Task<RequirementDetail?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -445,7 +456,28 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public IQueryable<ScopeSummary> GetScopesForGrid() => _dbContext.ScopeSummaries.AsNoTracking();
 
-        public IQueryable<ScopeExport> GetScopesForExport() => _dbContext.ScopeExport.AsNoTracking();
+        public IQueryable<ScopeExport> GetScopesForExport(ScopeFilters? filters)
+        {
+            var query = _dbContext.ScopeExport.AsNoTracking();
+
+            if (filters != null)
+            {
+                if (filters.SortBy != null)
+                {
+                    query = query.ApplySorting(filters.SortBy, new Dictionary<string, string>
+                    {
+                        ["title"] = "Title",
+                        ["status"] = "Status",
+                        ["ownedBy"] = "OwnedBy",
+                        ["createdDate"] = "CreatedDate",
+                        ["lastModifiedDate"] = "LastModifiedDate",
+                        ["numberOfLinkedStandardVersions"] = "NumberOfLinkedStandardVersions"
+                    });
+                }
+            }
+
+            return query;
+        }
 
 		public async Task<Scope?> GetScopeByIdAsync(Guid id, CancellationToken cancellationToken)
 			=> await _dbContext.Scopes.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
@@ -791,9 +823,21 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     query = query.Where(x => filters.OwnedByIds.Contains(x.OwnedById));
                 }
+
+                if (filters.SortBy != null)
+                {
+                    query = query.ApplySorting(filters.SortBy, new Dictionary<string, string>
+                    {
+                        ["serialNumber"] = "SerialNumber",
+                        ["title"] = "Title",
+                        ["status"] = "Status",
+                        ["lastModifiedDate"] = "LastModifiedDate",
+                        ["ownedBy"] = "OwnedBy",
+                    });
+                }
             }
 
-            return query.OrderBy(x => x.SerialNumber);
+            return query;
         }
 
         public async Task<StatementDetail?> GetStatementDetailByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -968,10 +1012,11 @@ namespace Nexus.DEB.Infrastructure.Services
                 var results = await _dbContext.Sections.Where(w => w.StandardVersionId == standardVersionId)
                                     .OrderBy(o => o.Ordinal)
                                     .ThenBy(t => t.Reference)
-									.Select(s => new FilterItemEntity()
+                                    .ThenBy(t => t.Title)
+                                    .Select(s => new FilterItemEntity()
                                     {
                                         Id = s.Id,
-                                        Value = s.Reference,
+                                        Value = s.Reference + s.Title,
                                         IsEnabled = true
 									})
                                     .ToListAsync(cancellationToken);
@@ -1042,6 +1087,20 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     var to = filters.EffectiveToDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
                     query = query.Where(r => r.EffectiveEndDate < to);
+                }
+
+                if (filters.SortBy != null)
+                {
+                    query = query.ApplySorting(filters.SortBy, new Dictionary<string, string>
+                    {
+                        ["standardTitle"] = "StandardTitle",
+                        ["version"] = "VersionTitle",
+                        ["status"] = "Status",
+                        ["effectiveFrom"] = "EffectiveStartDate",
+                        ["effectiveTo"] = "EffectiveEndDate",
+                        ["lastModifiedDate"] = "LastModifiedDate",
+                        ["numberOfLinkedScopes"] = "NumberOfLinkedScopes"
+                    });
                 }
             }
 
@@ -1244,9 +1303,22 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     query = query.Where(x => filters.TaskTypeIds.Contains(x.TaskTypeId));
                 }
+
+                if (filters.SortBy != null)
+                {
+                    query = query.ApplySorting(filters.SortBy, new Dictionary<string, string>
+                    {
+                        ["serialNumber"] = "SerialNumber",
+                        ["title"] = "Title",
+                        ["ownedBy"] = "OwnedBy",
+                        ["dueDate"] = "DueDate",
+                        ["taskTypeTitle"] = "TaskTypeTitle",
+                        ["status"] = "Status"
+                    });
+                }
             }
 
-            return query.OrderBy(x => x.SerialNumber);
+            return query;
         }
 
 		public async Task<TaskDetail?> GetTaskDetailByIdAsync(Guid id, CancellationToken cancellationToken = default)

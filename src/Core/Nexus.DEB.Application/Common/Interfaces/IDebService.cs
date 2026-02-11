@@ -26,7 +26,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<List<StatementRequirementScope>> GetRequirementScopeCombinations(IEnumerable<(Guid RequirementId, Guid ScopeId)> combinations, CancellationToken cancellationToken);
         IQueryable<Scope> GetScopes();
         IQueryable<ScopeSummary> GetScopesForGrid();
-        IQueryable<ScopeExport> GetScopesForExport();
+        IQueryable<ScopeExport> GetScopesForExport(ScopeFilters? filters);
 		Task<Scope?> GetScopeByIdAsync(Guid id, CancellationToken cancellationToken);
 		Task<ScopeDetail?> GetScopeDetailByIdAsync(Guid id, CancellationToken cancellationToken);
         Task<List<StandardVersionRequirements>> GetStandardVersionRequirementsForScopeAsync(Guid scopeId, CancellationToken cancellationToken);

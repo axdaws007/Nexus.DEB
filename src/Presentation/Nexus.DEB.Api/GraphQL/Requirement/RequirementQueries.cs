@@ -1,6 +1,7 @@
 ﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL
@@ -14,22 +15,7 @@ namespace Nexus.DEB.Api.GraphQL
         public static IQueryable<RequirementSummary> GetRequirementsForGrid(
             RequirementSummaryFilters? filters,
             IDebService debService)
-        {
-            var f = filters is null
-                ? new Application.Common.Models.Filters.RequirementSummaryFilters()
-                : new Application.Common.Models.Filters.RequirementSummaryFilters
-                {
-                    ModifiedFrom = filters.ModifiedFrom,
-                    ModifiedTo = filters.ModifiedTo,
-                    ScopeIds = filters.ScopeIds,
-                    SearchText = filters.SearchText?.Trim(),
-                    StandardVersionIds = filters.StandardVersionIds,
-                    StatusIds = filters.StatusIds,
-                    OnlyShowAvailableRequirementScopeCombinations = filters.OnlyShowAvailableRequirementScopeCombinations,
-                };
-
-            return debService.GetRequirementsForGrid(f);
-        }
+			=> debService.GetRequirementsForGrid(filters);
 
 		[Authorize]
 		[UseOffsetPaging]

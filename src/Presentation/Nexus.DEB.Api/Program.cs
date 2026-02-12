@@ -180,8 +180,9 @@ builder
     .AddMutationConventions()
     .ModifyCostOptions(options =>
     {
-        options.MaxFieldCost = 3000;
-    })
+        options.MaxFieldCost = 5000;
+		options.MaxTypeCost = 500;
+	})
     .ModifyPagingOptions(x =>
     {
         x.MaxPageSize = 200;

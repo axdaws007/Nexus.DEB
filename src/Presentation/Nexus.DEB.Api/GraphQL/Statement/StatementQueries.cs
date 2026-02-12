@@ -62,14 +62,9 @@ namespace Nexus.DEB.Api.GraphQL
             var counts = await debService.GetChildCountsForStatementAsync(statementId, cancellationToken);
 
             var debLibraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.DebDocuments);
-            var commonLibraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.CommonDocuments);
 
-            var debDocumentCount = await dmsService.GetEntityDocumentCountAsync(debLibraryId, statementId);
-			//TODO: re-work after linking to common evidence is done.
-			//var commonDocumentCount = await dmsService.GetEntityDocumentCountAsync(commonLibraryId, scopeId);
-			var commonDocumentCount = 0;
-
-			counts.EvidencesCount = debDocumentCount + commonDocumentCount;
+            counts.EvidencesCount = await dmsService.GetEntityDocumentCountAsync(debLibraryId, statementId);
+            counts.LinkedEvidencesCount = await debService.GetCountOfLinkedDocumentsAsync(statementId, Domain.Models.EntityDocumentLinkingContexts.CommonEvidence, cancellationToken);
 
             return counts;
         }

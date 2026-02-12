@@ -461,6 +461,29 @@ namespace Nexus.DEB.Infrastructure.Services
             }
         }
 
+        /// <summary>
+        /// Gets a list of  documents by their document IDs.
+        /// Returns document details and metadata without file content.
+        /// </summary>
+        public async Task<ICollection<DmsDocumentListItem>?> GetDocumentListByDocumentIdsAsync(
+            Guid libraryId, ICollection<Guid> documentIds)
+        {
+            var requestUri = $"api/libraries/{libraryId}/documents";
+
+            var request = new
+            {
+                DocumentIds = documentIds
+            };
+
+            var content = JsonContent.Create(request, options: JsonOptions);
+
+            return await SendAuthenticatedRequestAsync<ICollection<DmsDocumentListItem>>(
+                HttpMethod.Post,
+                requestUri,
+                operationName: $"GetCommonDocumentListByDocumentIds for {documentIds.Count} documents in library {libraryId}",
+                content: content);
+        }
+
         private static CommonDmsDocument MapToCommonDocument(DmsApiDocumentResponse response)
         {
             var document = new CommonDmsDocument

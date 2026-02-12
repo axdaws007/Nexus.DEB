@@ -45,6 +45,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         // Linking
         public DbSet<SectionRequirement> SectionRequirements { get; set; }
         public DbSet<StatementRequirementScope> StatementsRequirementsScopes { get; set; }
+        public DbSet<EntityDocumentLinking> EntityDocumentLinking { get; set; }
 
         // Other
         public DbSet<ModuleSetting> ModuleSettings { get; set; }

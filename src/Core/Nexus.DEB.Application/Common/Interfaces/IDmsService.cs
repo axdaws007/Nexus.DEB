@@ -61,6 +61,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
         /// <returns>list of documents</returns>
         Task<ICollection<DmsCommonDocumentListItem>?> GetCommonDocumentListAsync(Guid libraryId, DmsCommonDocumentListFilters filters);
 
+        Task<ICollection<DmsDocumentListItem>?> GetDocumentListByDocumentIdsAsync(Guid libraryId, ICollection<Guid> documentIds);
+
         #endregion
 
 

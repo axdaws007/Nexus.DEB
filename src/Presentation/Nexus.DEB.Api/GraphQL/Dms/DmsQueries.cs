@@ -2,6 +2,8 @@
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Domain;
+using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Infrastructure.Services;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -171,5 +173,24 @@ namespace Nexus.DEB.Api.GraphQL
         [Authorize]
         public static async Task<DmsSettings?> GetDmsSettings(IDmsService dmsService)
             => await dmsService.GetSettingsAsync();
+
+        [Authorize]
+        [UseOffsetPaging]
+        [UseSorting]
+        public static async Task<ICollection<DmsDocumentListItem>?> GetLinkedCommonDocuments(
+            Guid entityId,
+            IDebService debService,
+            IDmsService dmsService,
+            IApplicationSettingsService applicationSettingsService,
+            CancellationToken cancellationToken)
+        {
+            var libraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.CommonDocuments);
+
+            var listOfDocuments = debService.GetLinkedDocumentsForEntityAndContext(entityId, EntityDocumentLinkingContexts.CommonEvidence);
+
+            var commonDocumentIds = listOfDocuments.Where(x => x.LibraryId == libraryId).Select(x => x.DocumentId).ToList();
+
+            return await dmsService.GetDocumentListByDocumentIdsAsync(libraryId, commonDocumentIds);
+        }
     }
 }

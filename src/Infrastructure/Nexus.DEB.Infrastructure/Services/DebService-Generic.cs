@@ -1,12 +1,13 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
-using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Other;
 using System.Data;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -536,6 +537,84 @@ namespace Nexus.DEB.Infrastructure.Services
             return current;
         }
 
-		#endregion SerialNumber
-	}
+        #endregion SerialNumber
+
+        #region EntityDocumentLinking
+
+        public IEnumerable<DmsDocumentIdentifier> GetLinkedDocumentsForEntityAndContext(Guid entityId, EntityDocumentLinkingContexts entityDocumentLinkingContexts)
+            => (from l in _dbContext.EntityDocumentLinking.AsNoTracking()
+                where l.EntityId == entityId && l.Context == entityDocumentLinkingContexts
+                select new DmsDocumentIdentifier
+                {
+                    LibraryId = l.LibraryId,
+                    DocumentId = l.DocumentId
+                }).AsEnumerable();
+
+        public async Task UpdateLinkedCommonDocumentsAsync(
+            Guid entityId,
+            Guid libraryId,
+            ICollection<Guid> availableDocumentIds,
+            ICollection<Guid> idsToAdd,
+            ICollection<Guid> idsToRemove,
+            bool addAll,
+            bool removeAll)
+        {
+            // Get current state
+            var existingIds = new HashSet<Guid>(
+                GetLinkedDocumentsForEntityAndContext(entityId, EntityDocumentLinkingContexts.CommonEvidence)
+                    .Select(x => x.DocumentId));
+
+            // Calculate desired state
+            HashSet<Guid> desiredIds;
+
+            if (addAll)
+            {
+                desiredIds = new HashSet<Guid>(availableDocumentIds);
+                desiredIds.ExceptWith(idsToRemove);
+            }
+            else if (removeAll)
+            {
+                desiredIds = new HashSet<Guid>(idsToAdd);
+            }
+            else
+            {
+                desiredIds = new HashSet<Guid>(existingIds);
+                desiredIds.ExceptWith(idsToRemove);
+                desiredIds.UnionWith(idsToAdd);
+            }
+
+            // Diff: what actually needs to change
+            var toDelete = existingIds.Except(desiredIds).ToList();
+            var toInsert = desiredIds.Except(existingIds).ToList();
+
+            if (toDelete.Count > 0)
+            {
+                await _dbContext.EntityDocumentLinking
+                    .Where(x => x.EntityId == entityId
+                             && x.Context == EntityDocumentLinkingContexts.CommonEvidence
+                             && toDelete.Contains(x.DocumentId))
+                    .ExecuteDeleteAsync();
+            }
+
+            if (toInsert.Count > 0)
+            {
+                var newRecords = toInsert.Select(id => new EntityDocumentLinking
+                {
+                    EntityId = entityId,
+                    LibraryId = libraryId,
+                    DocumentId = id,
+                    Context = EntityDocumentLinkingContexts.CommonEvidence
+                });
+
+                _dbContext.EntityDocumentLinking.AddRange(newRecords);
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
+        
+        public async Task<int> GetCountOfLinkedDocumentsAsync(Guid entityId, EntityDocumentLinkingContexts context, CancellationToken cancellationToken)
+            => await _dbContext.EntityDocumentLinking.AsNoTracking().Where(x => x.EntityId == entityId && x.Context == context).CountAsync(cancellationToken);
+
+        #endregion
+    }
 }

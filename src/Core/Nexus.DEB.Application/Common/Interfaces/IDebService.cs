@@ -1,4 +1,5 @@
 ﻿using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
@@ -103,11 +104,17 @@ namespace Nexus.DEB.Application.Common.Interfaces
 		Task<SavedSearch?> GetSavedSearchAsync(string context, string name, CancellationToken cancellationToken);
 		Task<SavedSearch> SaveSavedSearchAsync(SavedSearch savedSearch, bool isNew, CancellationToken cancellationToken);
 
-		#endregion Generic (eventual Framework)
+        IEnumerable<DmsDocumentIdentifier> GetLinkedDocumentsForEntityAndContext(Guid entityId, EntityDocumentLinkingContexts entityDocumentLinkingContexts);
 
-		#region Other
+        Task UpdateLinkedCommonDocumentsAsync(Guid entityId, Guid libraryId, ICollection<Guid> availableDocumentIds, ICollection<Guid> idsToAdd, ICollection<Guid> idsToRemove, bool addAll, bool removeAll);
 
-		Task SaveStatementsAndTasks(
+        Task<int> GetCountOfLinkedDocumentsAsync(Guid entityId, EntityDocumentLinkingContexts context, CancellationToken cancellationToken);
+
+        #endregion Generic (eventual Framework)
+
+        #region Other
+
+        Task SaveStatementsAndTasks(
             ICollection<Statement> statements,
             ICollection<StatementRequirementScope> statementRequirementScopes,
             ICollection<Domain.Models.Task> tasks, 

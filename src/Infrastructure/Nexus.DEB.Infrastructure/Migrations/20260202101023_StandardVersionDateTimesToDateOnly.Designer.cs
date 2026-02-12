@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20260202101023_StandardVersionDateTimesToDateOnly")]
+    partial class StandardVersionDateTimesToDateOnly
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -291,35 +294,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b
                         .UseTptMappingStrategy()
                         .HasAnnotation("SqlServer:UseSqlOutputClause", false);
-                });
-
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.EntityDocumentLinking", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<int>("Context")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("DocumentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("EntityId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("LibraryId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EntityId", "Context");
-
-                    b.HasIndex("LibraryId", "DocumentId");
-
-                    b.ToTable("EntityDocumentLinking", "common");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.EntityHeadDetail", b =>
@@ -915,11 +889,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("EntityId");
 
-                    b.Property<string>("EntityTypeTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("EntityTypeTitle");
-
                     b.Property<DateTime>("LastModifiedDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("LastModifiedDate");
@@ -1146,10 +1115,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("OwnedByPostTitle");
 
-                    b.Property<Guid>("OwnedById")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("OwnedById");
-
                     b.Property<string>("SerialNumber")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("SerialNumber");
@@ -1168,11 +1133,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("Title");
 
-                    b.Property<string>("VersionTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("VersionTitle");
-
                     b.ToTable((string)null);
 
                     b.ToView("vw_StandardVersionDetail", "deb");
@@ -1189,12 +1149,12 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("Description");
 
-                    b.Property<DateOnly?>("EffectiveEndDate")
-                        .HasColumnType("date")
+                    b.Property<DateTime?>("EffectiveEndDate")
+                        .HasColumnType("datetime2")
                         .HasColumnName("EffectiveEndDate");
 
-                    b.Property<DateOnly>("EffectiveStartDate")
-                        .HasColumnType("date")
+                    b.Property<DateTime>("EffectiveStartDate")
+                        .HasColumnType("datetime2")
                         .HasColumnName("EffectiveStartDate");
 
                     b.Property<Guid>("EntityId")
@@ -1303,10 +1263,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.Property<Guid>("EntityId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("EntityId");
-
-                    b.Property<string>("EntityTypeTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("LastModifiedDate")
                         .HasColumnType("datetime2")
@@ -1861,10 +1817,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("OwnedByPostTitle");
-
-                    b.Property<Guid>("OwnedById")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("OwnedById");
 
                     b.Property<string>("SerialNumber")
                         .HasColumnType("nvarchar(max)")

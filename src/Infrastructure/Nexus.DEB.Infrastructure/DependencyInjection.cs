@@ -113,8 +113,9 @@ namespace Nexus.DEB.Infrastructure
             // Other infrastructure services will be registered here
             services.AddScoped<ILoginService, LoginService>();
             services.AddScoped<IDebService, DebService>();
+			services.AddScoped<IDataLoaderService, DataLoaderService>();
 
-            services.AddScoped<CbacService>();
+			services.AddScoped<CbacService>();
             services.AddScoped<ICbacService>(provider =>
             {
                 var innerService = provider.GetRequiredService<CbacService>();
@@ -143,14 +144,15 @@ namespace Nexus.DEB.Infrastructure
             services.AddTransient<IDmsService, DmsService>();
             services.AddTransient<IAuditService, AuditService>();
             services.AddTransient<IDateTimeProvider, DateTimeProvider>();
-            services.AddTransient<IApplicationSettingsService, ApplicationSettingsService>();
+            services.AddTransient<IApplicationSettingsService, ApplicationSettingsService>(); 
 
 
-            services.AddScoped<IWorkflowValidationService, WorkflowValidationService>();
+			services.AddScoped<IWorkflowValidationService, WorkflowValidationService>();
             services.AddScoped<IWorkflowSideEffectService, WorkflowSideEffectService>();
 
 			// Register domain services
 			services.AddScoped<IScopeDomainService, ScopeDomainService>();
+			services.AddScoped<IStandardVersionDomainService, StandardVersionDomainService>();
 			services.AddScoped<IStatementDomainService, StatementDomainService>();
             services.AddScoped<ICommentDomainService, CommentDomainService>();
             services.AddScoped<ISavedSearchDomainService, SavedSearchDomainService>();

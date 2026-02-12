@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
+using System.Threading;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -26,7 +27,10 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
-        public async Task<ICollection<FilterItem>> GetStandardsLookupAsync(CancellationToken cancellationToken)
+		public async Task<Standard> GetStandardByIdAsync(int standardId, CancellationToken cancellationToken)
+		=> await _dbContext.Standards.FirstOrDefaultAsync(x => x.Id == standardId, cancellationToken);
+
+		public async Task<ICollection<FilterItem>> GetStandardsLookupAsync(CancellationToken cancellationToken)
         {
             return await (from s in _dbContext.Standards.AsNoTracking()
                           orderby s.Ordinal

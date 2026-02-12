@@ -1042,6 +1042,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			}
 			return returnList;
 		}
+        
         public IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters)
         {
             var query = _dbContext.StandardVersionSummaries.AsNoTracking();
@@ -1060,14 +1061,12 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 if (filters.EffectiveFromDate.HasValue)
                 {
-                    var from = filters.EffectiveFromDate.Value.ToDateTime(TimeOnly.MinValue);
-                    query = query.Where(r => r.EffectiveFrom >= from);
+                    query = query.Where(r => r.EffectiveFrom >= filters.EffectiveFromDate.Value);
                 }
 
                 if (filters.EffectiveToDate.HasValue)
                 {
-                    var to = filters.EffectiveToDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
-                    query = query.Where(r => r.EffectiveTo < to);
+                    query = query.Where(r => r.EffectiveTo < filters.EffectiveToDate.Value.AddDays(1));
                 }
             }
 
@@ -1092,14 +1091,12 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 if (filters.EffectiveFromDate.HasValue)
                 {
-                    var from = filters.EffectiveFromDate.Value.ToDateTime(TimeOnly.MinValue);
-                    query = query.Where(r => r.EffectiveStartDate >= from);
+                    query = query.Where(r => r.EffectiveStartDate >= filters.EffectiveFromDate.Value);
                 }
 
                 if (filters.EffectiveToDate.HasValue)
                 {
-                    var to = filters.EffectiveToDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
-                    query = query.Where(r => r.EffectiveEndDate < to);
+                    query = query.Where(r => r.EffectiveEndDate < filters.EffectiveToDate.Value.AddDays(1));
                 }
 
                 if (filters.SortBy != null)
@@ -1165,45 +1162,26 @@ namespace Nexus.DEB.Infrastructure.Services
 			return null;
 		}
 
+        public async Task<StandardVersion> CreateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default)
+		{
+			await _dbContext.StandardVersions.AddAsync(standardVersion, cancellationToken);
+			await _dbContext.SaveChangesAsync(cancellationToken);
+			return standardVersion;
+		}
 
-		public async Task<IReadOnlyDictionary<Guid, bool>> HasOtherDraftStandardVersionsForStandardsAsync(
-            IEnumerable<Guid> entityIds,
-            CancellationToken cancellationToken = default)
+        public async Task<StandardVersion> UpdateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default)
         {
-            var entityIdList = entityIds.ToList();
+			await _dbContext.SaveChangesAsync(cancellationToken);
+			return standardVersion;
+		}
 
-            if (entityIdList.Count == 0)
-                return new Dictionary<Guid, bool>();
+		#endregion StandardVersions
 
-            var query = from current in _dbContext.StandardVersions
-                        where entityIdList.Contains(current.EntityId)
-                        select new
-                        {
-                            current.EntityId,
-                            HasOtherActive = (
-                                from other in _dbContext.StandardVersions
-                                where other.StandardId == current.StandardId
-                                   && other.EntityId != current.EntityId
-                                   && !other.IsRemoved
-                                join ped in _dbContext.PawsEntityDetails on other.EntityId equals ped.EntityId
-                                where ped.PseudoStateTitle == DebHelper.Paws.States.Draft
-                                select other
-                            ).Any()
-                        };
+		// --------------------------------------------------------------------------------------------------------------
 
-            return await query.ToDictionaryAsync(
-                x => x.EntityId,
-                x => x.HasOtherActive,
-                cancellationToken);
-        }
+		#region Tasks
 
-        #endregion StandardVersions
-
-        // --------------------------------------------------------------------------------------------------------------
-
-        #region Tasks
-
-        public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
+		public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
         {
             var query = _dbContext.TaskSummaries.AsQueryable();
 

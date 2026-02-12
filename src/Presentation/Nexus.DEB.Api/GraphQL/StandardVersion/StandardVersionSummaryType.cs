@@ -3,7 +3,7 @@ using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL
 {
-    public class StandardVersionSummaryType : ObjectType<StandardVersionSummary>
+    public class StandardVersionSummaryType : EntityType<StandardVersionSummary>
     {
         public StandardVersionSummaryType(IPawsService pawsService)
         {
@@ -13,9 +13,12 @@ namespace Nexus.DEB.Api.GraphQL
         {
             descriptor.Field(x => x.StandardId).Ignore();
             descriptor.Field(x => x.StatusId).Ignore();
+            descriptor.Field(x => x.EntityTypeTitle).Ignore();
 
-            descriptor.Field("canUpVersion")
-                .ResolveWith<CanUpVersionStandardVersionResolver>(i => i.GetCanUpVersionAsync(default, default, default, default, default, default));           
-        }
+			descriptor.Field("canUpVersion")
+                .ResolveWith<CanUpVersionStandardVersionResolver>(i => i.GetCanUpVersionAsync(default, default, default, default, default, default));
+
+			base.Configure(descriptor);
+		}
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Nexus.DEB.Application.Common.Models;
-using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Application.Common.Models.Filters;
 
 namespace Nexus.DEB.Api.GraphQL
 {

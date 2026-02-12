@@ -190,7 +190,14 @@ namespace Nexus.DEB.Api.GraphQL
 
             var commonDocumentIds = listOfDocuments.Where(x => x.LibraryId == libraryId).Select(x => x.DocumentId).ToList();
 
-            return await dmsService.GetDocumentListByDocumentIdsAsync(libraryId, commonDocumentIds);
+            if (commonDocumentIds.Any())
+            {
+                return await dmsService.GetDocumentListByDocumentIdsAsync(libraryId, commonDocumentIds);
+            }
+            else
+            {
+                return [];
+            }
         }
     }
 }

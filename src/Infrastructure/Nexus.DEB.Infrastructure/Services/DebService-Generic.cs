@@ -609,6 +609,10 @@ namespace Nexus.DEB.Infrastructure.Services
                 _dbContext.EntityDocumentLinking.AddRange(newRecords);
             }
 
+            var statement = await _dbContext.Statements.FirstOrDefaultAsync(x => x.EntityId == entityId);
+
+            statement.LastModifiedDate = DateTime.Now;
+
             await _dbContext.SaveChangesAsync();
         }
         

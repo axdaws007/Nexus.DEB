@@ -885,8 +885,21 @@ namespace Nexus.DEB.Infrastructure.Services
                 })
                 .ToList();
 
+            statementDetail.LinkedCommonEvidences = _dbContext.EntityDocumentLinking.AsNoTracking()
+                                                        .Where(x => x.EntityId == id && x.Context == EntityDocumentLinkingContexts.CommonEvidence)
+                                                        .Select(x => x.DocumentId)
+                                                        .ToList();
+
             return statementDetail;
         }
+
+        public async Task<ICollection<Guid>> GetStandardVersionIdsForStatementAsync(Guid statementId, CancellationToken cancellationToken)
+            => await _dbContext.Set<StatementRequirementScope>()
+                        .Where(srs => srs.StatementId == statementId)
+                        .SelectMany(srs => srs.Requirement.StandardVersions)
+                        .Select(sv => sv.EntityId)
+                        .Distinct()
+                        .ToListAsync(cancellationToken);
 
         public async Task<Statement?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default)
             => await _dbContext.Statements.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);

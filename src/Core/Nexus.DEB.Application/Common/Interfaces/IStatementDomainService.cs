@@ -1,11 +1,10 @@
 ﻿using Nexus.DEB.Application.Common.Models;
-using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Application.Common.Interfaces
 {
     public interface IStatementDomainService
     {
-        Task<Result<Statement>> CreateStatementAsync(
+        Task<Result<StatementDetail>> CreateStatementAsync(
             Guid ownerId,
             string title,
             string statementText,
@@ -13,7 +12,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
             ICollection<RequirementScopes>? RequirementScopeCombinations,
             CancellationToken cancellationToken);
 
-        Task<Result<Statement>> UpdateStatementAsync(
+        Task<Result<StatementDetail>> UpdateStatementAsync(
             Guid id,
             Guid ownerId,
             string title,

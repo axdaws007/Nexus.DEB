@@ -22,7 +22,7 @@ namespace Nexus.DEB.Infrastructure.Services
         {
         }
 
-        public async Task<Result<Statement>> CreateStatementAsync(
+        public async Task<Result<StatementDetail>> CreateStatementAsync(
             Guid ownerId,
             string title,
             string statementText,
@@ -34,7 +34,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             if (ValidationErrors.Count > 0)
             {
-                return Result<Statement>.Failure(ValidationErrors);
+                return Result<StatementDetail>.Failure(ValidationErrors);
             }
 
             try
@@ -53,15 +53,17 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, statement.EntityId, null, null, cancellationToken);
 
-                return Result<Statement>.Success(statement);
+                var statementDetail = await this.DebService.GetStatementDetailByIdAsync(statement.EntityId, cancellationToken);
+
+                return Result<StatementDetail>.Success(statementDetail);
             }
             catch (Exception ex)
             {
-                return Result<Statement>.Failure($"An error occurred creating the Statement: {ex.Message}");
+                return Result<StatementDetail>.Failure($"An error occurred creating the Statement: {ex.Message}");
             }
         }
 
-        public async Task<Result<Statement>> UpdateStatementAsync(
+        public async Task<Result<StatementDetail>> UpdateStatementAsync(
             Guid id,
             Guid ownerId,
             string title,
@@ -74,7 +76,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             if (statement == null)
             {
-                return Result<Statement>.Failure(new ValidationError()
+                return Result<StatementDetail>.Failure(new ValidationError()
                 {
                     Code = "INVALID_STATEMENT_ID",
                     Field = nameof(id),
@@ -86,7 +88,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             if (ValidationErrors.Count > 0)
             {
-                return Result<Statement>.Failure(ValidationErrors);
+                return Result<StatementDetail>.Failure(ValidationErrors);
             }
 
             statement.OwnedById = ownerId;
@@ -98,11 +100,13 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 await this.DebService.UpdateStatementAsync(statement, requirementScopeCombinations, cancellationToken);
 
-                return Result<Statement>.Success(statement);
+                var statementDetail = await this.DebService.GetStatementDetailByIdAsync(id, cancellationToken);
+
+                return Result<StatementDetail>.Success(statementDetail);
             }
             catch(Exception ex)
             {
-                return Result<Statement>.Failure($"An error occurred updating the Statement: {ex.Message}");
+                return Result<StatementDetail>.Failure($"An error occurred updating the Statement: {ex.Message}");
             }
         }
 

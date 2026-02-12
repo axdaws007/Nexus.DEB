@@ -52,6 +52,13 @@ namespace Nexus.DEB.Api.GraphQL
             => await debService.GetStatementDetailByIdAsync(statementId, cancellationToken);
 
         [Authorize]
+        public static async Task<ICollection<Guid>> GetStandardVersionIdsForStatementAsync(
+            Guid statementId,
+            IDebService debService,
+            CancellationToken cancellationToken)
+            => await debService.GetStandardVersionIdsForStatementAsync(statementId, cancellationToken);
+
+        [Authorize]
         public static async Task<StatementChildCounts> GetChildCountsForStatement(
             Guid statementId,
             IDebService debService,

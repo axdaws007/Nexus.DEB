@@ -12,7 +12,7 @@ namespace Nexus.DEB.Api.GraphQL
     public static class StatementMutations
     {
         [Authorize(Policy = DebHelper.Policies.CanCreateOrEditSoC)]
-        public static async Task<Statement?> CreateStatementAsync(
+        public static async Task<StatementDetail?> CreateStatementAsync(
             Guid ownerId,
             string title,
             string statementText,
@@ -50,7 +50,7 @@ namespace Nexus.DEB.Api.GraphQL
         }
 
         [Authorize(Policy = DebHelper.Policies.CanCreateOrEditSoC)]
-        public static async Task<Statement?> UpdateStatementAsync(
+        public static async Task<StatementDetail?> UpdateStatementAsync(
             Guid id,
             Guid ownerId,
             string title,

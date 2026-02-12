@@ -73,7 +73,6 @@ namespace Nexus.DEB.Api.GraphQL
 			var result = await standardVersionService.UpdateStandardVersionAsync(
 				id,
 				ownerId,
-				standardId,
 				versionTitle,
 				delimiter,
 				majorVersion,

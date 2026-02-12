@@ -2,7 +2,7 @@
 
 namespace Nexus.DEB.Domain.Models
 {
-    public class StandardVersionSummary : IEntity
+    public class StandardVersionSummary : IEntity, IEntityType
     {
         public Guid EntityId { get; set; }
         public short StandardId { get; set; }
@@ -15,6 +15,7 @@ namespace Nexus.DEB.Domain.Models
         public int NumberOfLinkedScopes { get; set; }
         public int StatusId { get; set; }
         public string? Status { get; set; }
+        public string EntityTypeTitle { get; set; }
 
     }
 }

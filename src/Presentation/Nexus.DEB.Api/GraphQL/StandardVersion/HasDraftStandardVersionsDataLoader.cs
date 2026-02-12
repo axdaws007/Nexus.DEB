@@ -4,16 +4,16 @@ namespace Nexus.DEB.Api.GraphQL
 {
     public class HasDraftStandardVersionsDataLoader : BatchDataLoader<Guid, bool>
     {
-        private readonly IDebService _debService;
+        private readonly IDataLoaderService _dataLoaderService;
         private readonly ILogger<HasDraftStandardVersionsDataLoader> _logger;
 
-        public HasDraftStandardVersionsDataLoader(IDebService debService,
+        public HasDraftStandardVersionsDataLoader(IDataLoaderService dataLoaderService,
             ILogger<HasDraftStandardVersionsDataLoader> logger,
             IBatchScheduler batchScheduler,
             DataLoaderOptions? options = null)
             : base(batchScheduler, options)
         {
-            _debService = debService;
+			_dataLoaderService = dataLoaderService;
             _logger = logger;
         }
 
@@ -29,7 +29,7 @@ namespace Nexus.DEB.Api.GraphQL
                     string.Join(", ", keys.Take(5)) + (keys.Count > 5 ? "..." : ""));
 
                 // Call the service with all entity IDs at once
-                var statuses = await _debService.HasOtherDraftStandardVersionsForStandardsAsync(
+                var statuses = await _dataLoaderService.HasOtherDraftStandardVersionsForStandardsAsync(
                     keys.ToList(),
                     cancellationToken);
 

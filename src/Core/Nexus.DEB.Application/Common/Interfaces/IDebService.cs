@@ -47,7 +47,6 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
 		IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
         IQueryable<StandardVersionExport> GetStandardVersionsForExport(StandardVersionSummaryFilters? filters);
-        Task<IReadOnlyDictionary<Guid, bool>> HasOtherDraftStandardVersionsForStandardsAsync(IEnumerable<Guid> entityIds, CancellationToken cancellationToken = default);
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);
         Task<StatementDetail?> GetStatementDetailByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<Statement?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default);
@@ -95,8 +94,6 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task AddChangeRecordItem(Guid entityID, string fieldName, string friendlyFieldName, string oldValue, string newValue, CancellationToken cancellationToken);
 
 		Task<PawsEntityDetail?> GetCurrentWorkflowStatusForEntityAsync(Guid entityId, CancellationToken cancellationToken);
-
-        Task<IReadOnlyDictionary<Guid, string?>> GetWorkflowPseudoStateTitleForEntitiesAsync(List<Guid> entityIds, CancellationToken cancellationToken = default);
 
         Task<ICollection<SavedSearch>> GetSavedSearchesByContextAsync(string context, CancellationToken cancellationToken);
 		IQueryable<SavedSearch> GetSavedSearchesForGridAsync(SavedSearchesGridFilters filters, CancellationToken cancellationToken);

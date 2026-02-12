@@ -19,7 +19,6 @@ namespace Nexus.DEB.Application.Common.Interfaces
 		Task<Result<StandardVersion>> UpdateStandardVersionAsync(
 			Guid id,
 			Guid ownerId,
-			int standardId,
 			string versionTitle,
 			string delimiter,
 			int? majorVersion,

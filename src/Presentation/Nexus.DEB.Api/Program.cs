@@ -1,5 +1,6 @@
 using HotChocolate.AspNetCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Nexus.DEB.Api.GraphQL._Helpers_;
 using Nexus.DEB.Api.Restful;
 using Nexus.DEB.Api.Security;
 using Nexus.DEB.Application;
@@ -162,7 +163,8 @@ try
 
         options.AddPolicy(DebHelper.Policies.CanCreateOrEditSoC, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoC));
         options.AddPolicy(DebHelper.Policies.CanCreateOrEditScope, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditScope));
-	    options.AddPolicy(DebHelper.Policies.CanCreateSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanCreateSoCTask));
+        options.AddPolicy(DebHelper.Policies.CanEditStdVersion, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditStdVersion));
+		options.AddPolicy(DebHelper.Policies.CanCreateSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanCreateSoCTask));
         options.AddPolicy(DebHelper.Policies.CanEditSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoCTask));
     });
 
@@ -187,7 +189,8 @@ builder
     })
     .AddProjections()
     .AddSorting()
-    ;
+	.AddDiagnosticEventListener<GraphQLCostDiagnostics>()
+	;
 
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();

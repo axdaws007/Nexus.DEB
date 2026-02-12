@@ -1149,37 +1149,6 @@ namespace Nexus.DEB.Infrastructure.Services
 			return null;
 		}
 
-		public async Task<IReadOnlyDictionary<Guid, bool>> HasOtherDraftStandardVersionsForStandardsAsync(
-            IEnumerable<Guid> entityIds,
-            CancellationToken cancellationToken = default)
-        {
-            var entityIdList = entityIds.ToList();
-
-            if (entityIdList.Count == 0)
-                return new Dictionary<Guid, bool>();
-
-            var query = from current in _dbContext.StandardVersions
-                        where entityIdList.Contains(current.EntityId)
-                        select new
-                        {
-                            current.EntityId,
-                            HasOtherActive = (
-                                from other in _dbContext.StandardVersions
-                                where other.StandardId == current.StandardId
-                                   && other.EntityId != current.EntityId
-                                   && !other.IsRemoved
-                                join ped in _dbContext.PawsEntityDetails on other.EntityId equals ped.EntityId
-                                where ped.PseudoStateTitle == DebHelper.Paws.States.Draft
-                                select other
-                            ).Any()
-                        };
-
-            return await query.ToDictionaryAsync(
-                x => x.EntityId,
-                x => x.HasOtherActive,
-                cancellationToken);
-        }
-
         public async Task<StandardVersion> CreateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default)
 		{
 			await _dbContext.StandardVersions.AddAsync(standardVersion, cancellationToken);

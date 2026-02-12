@@ -78,9 +78,6 @@ namespace Nexus.DEB.Infrastructure.Services
             Guid entityId,
             CancellationToken cancellationToken)
             => await _dbContext.PawsEntityDetails.AsNoTracking().FirstOrDefaultAsync(x => x.EntityId == entityId, cancellationToken);
-
-        public async Task<IReadOnlyDictionary<Guid, string?>> GetWorkflowPseudoStateTitleForEntitiesAsync(List<Guid> entityIds, CancellationToken cancellationToken = default)
-            => await _dbContext.PawsEntityDetails.AsNoTracking().Where(x => entityIds.Contains(x.EntityId)).ToDictionaryAsync(x => x.EntityId, x => x.PseudoStateTitle, cancellationToken);
 		#endregion Workflow
 
 		#region Comments
@@ -447,7 +444,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             if (config == null)
             {
-                throw new Exception("damn it");
+                throw new Exception("No Serial Number config found for " + entityType);
             }
 
             var serialNumbers = new List<string>();

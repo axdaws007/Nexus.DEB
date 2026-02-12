@@ -61,11 +61,9 @@ namespace Nexus.DEB.Infrastructure.Configurations
 				.HasColumnName("LastModifiedDate")
 				.IsRequired();
 			builder.Property(e => e.MajorVersion)
-				.HasColumnName("MajorVersion")
-				.IsRequired();
+				.HasColumnName("MajorVersion");
 			builder.Property(e => e.MinorVersion)
-				.HasColumnName("MinorVersion")
-				.IsRequired();
+				.HasColumnName("MinorVersion");
 			builder.Property(e => e.EffectiveStartDate)
 				.HasColumnName("EffectiveStartDate")
 				.IsRequired();

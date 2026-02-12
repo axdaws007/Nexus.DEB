@@ -7,7 +7,6 @@ namespace Nexus.DEB.Api.GraphQL
 	{
 		protected override void Configure(IObjectTypeDescriptor<StandardVersionDetail> descriptor)
 		{
-			descriptor.Field(x => x.StandardId).ID(nameof(FilterItem));
 			base.Configure(descriptor);
 		}
 	}

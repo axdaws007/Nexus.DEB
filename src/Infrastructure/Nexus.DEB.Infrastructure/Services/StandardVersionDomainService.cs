@@ -1,12 +1,9 @@
-﻿using Nexus.DEB.Application.Common.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -20,7 +17,8 @@ namespace Nexus.DEB.Infrastructure.Services
 			IDateTimeProvider dateTimeProvider,
 			IApplicationSettingsService applicationSettingsService,
 			IPawsService pawsService,
-			IAuditService auditService) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, auditService, EntityTypes.StandardVersion)
+			IAuditService auditService,
+			ILogger<StandardVersionDomainService> logger) : base(cisService, cbacService, applicationSettingsService, currentUserService, dateTimeProvider, debService, pawsService, auditService, logger, EntityTypes.StandardVersion)
 		{
 		}
 
@@ -35,7 +33,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			DateOnly? effectiveEndDate,
 			CancellationToken cancellationToken)
 		{
-			//await ValidateFieldsAsync(null, ownerId, title, statementText, reviewDate, requirementScopeCombinations);
+			await ValidateFieldsAsync(null, ownerId, versionTitle, effectiveStartDate, effectiveEndDate);
 
 			if (ValidationErrors.Count > 0)
 			{
@@ -58,6 +56,8 @@ namespace Nexus.DEB.Infrastructure.Services
 					MinorVersion = minorVersion,
 					EffectiveStartDate = effectiveStartDate,
 					EffectiveEndDate = effectiveEndDate,
+					Standard = standard,
+					StandardId = standard.Id
 				};
 
 				standardVersion = await this.DebService.CreateStandardVersionAsync(standardVersion, cancellationToken);
@@ -77,7 +77,6 @@ namespace Nexus.DEB.Infrastructure.Services
 		public async Task<Result<StandardVersion>> UpdateStandardVersionAsync(
 			Guid id,
 			Guid ownerId,
-			int standardId,
 			string versionTitle,
 			string delimiter,
 			int? majorVersion,
@@ -98,14 +97,14 @@ namespace Nexus.DEB.Infrastructure.Services
 				});
 			}
 
-			//await ValidateFieldsAsync(null, ownerId, title, statementText, reviewDate, requirementScopeCombinations);
+			await ValidateFieldsAsync(standardVersion, ownerId, versionTitle, effectiveStartDate, effectiveEndDate);
 
 			if (ValidationErrors.Count > 0)
 			{
 				return Result<StandardVersion>.Failure(ValidationErrors);
 			}
 
-			var standard = await this.DebService.GetStandardByIdAsync(standardId, cancellationToken);
+			var standard = await this.DebService.GetStandardByIdAsync(standardVersion.StandardId, cancellationToken);
 
 			standardVersion.OwnedById = ownerId;
 			standardVersion.Title = string.Format("{0}{1}{2}", standard.Title, delimiter, versionTitle);
@@ -127,6 +126,75 @@ namespace Nexus.DEB.Infrastructure.Services
 			catch (Exception ex)
 			{
 				return Result<StandardVersion>.Failure($"An error occurred updating the Standard Version: {ex.Message}");
+			}
+		}
+
+		private async Task ValidateFieldsAsync(
+			StandardVersion? standardVersion,
+			Guid ownerId,
+			string versionTitle,
+			DateOnly effectiveStartDate,
+			DateOnly? effectiveEndDate)
+		{
+			await ValidateOwnerAsync(ownerId);
+
+			ValidateStandard(standardVersion);
+
+			ValidateVersionTitle(versionTitle);
+
+			ValidateEffectiveDates(effectiveStartDate, effectiveEndDate);
+		}
+
+		protected void ValidateStandard(StandardVersion? standardVersion)
+		{
+			if (standardVersion != null && standardVersion.StandardId < 1)
+			{
+				ValidationErrors.Add(
+					new ValidationError()
+					{
+						Code = "INVALID_STANDARD",
+						Field = nameof(standardVersion.StandardId),
+						Message = "The specified 'standard' was not found."
+					});
+			}
+		}
+
+		protected void ValidateVersionTitle(string versionTitle)
+		{
+			if (string.IsNullOrWhiteSpace(versionTitle))
+			{
+				ValidationErrors.Add(
+					new ValidationError()
+					{
+						Code = "INVALID_VERSIONTITLE",
+						Field = nameof(versionTitle),
+						Message = "The 'version title' is empty."
+					});
+			}
+		}
+
+		protected void ValidateEffectiveDates(DateOnly effectiveStartDate, DateOnly? effectiveEndDate)
+		{
+			if(effectiveStartDate == DateOnly.MinValue)
+			{
+				ValidationErrors.Add(
+					new ValidationError()
+					{
+						Code = "INVALID_EFFECTIVESTARTDATE",
+						Field = nameof(effectiveStartDate),
+						Message = "The 'effective start date' must be provided."
+					});
+			}
+
+			if (effectiveEndDate.HasValue && effectiveEndDate.Value <= effectiveStartDate)
+			{
+				ValidationErrors.Add(
+					new ValidationError()
+					{
+						Code = "INVALID_EFFECTIVEENDDATE",
+						Field = $"{nameof(effectiveStartDate)}, {nameof(effectiveEndDate)}",
+						Message = "The 'effective end date' must be later than the 'effective start date'."
+					});
 			}
 		}
 	}

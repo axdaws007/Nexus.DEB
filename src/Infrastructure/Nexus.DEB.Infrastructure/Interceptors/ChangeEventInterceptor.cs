@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
@@ -13,16 +14,18 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 {
 	private const string SessionContextEventId = "EventId";
 	private const string SessionContextUserDetails = "UserDetails";
-	protected readonly ILogger<ChangeEventInterceptor> logger;
+	protected readonly ILogger<ChangeEventInterceptor> _logger;
+	protected readonly IHttpContextAccessor _httpContextAccessor;
 
-	public ChangeEventInterceptor(ILogger<ChangeEventInterceptor> _logger)
+	public ChangeEventInterceptor(ILogger<ChangeEventInterceptor> logger, IHttpContextAccessor httpContextAccessor)
 	{
-		logger = _logger;
+		_logger = logger;
+		_httpContextAccessor = httpContextAccessor;
 	}
 
 	private async Task SetSessionContextAsync(DbContext context, string key, object value, CancellationToken cancellationToken)
 	{
-		logger.LogDebug("Setting session context value: {Key} = {Value}", key, value);
+		_logger.LogDebug("***   Setting session context value (async): {Key} = {Value}   ***", key, value);
 
 		var conn = context.Database.GetDbConnection();
 
@@ -56,7 +59,7 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 
 	private void SetSessionContext(DbContext context, string key, object value)
 	{
-		logger.LogDebug("Setting session context value: {Key} = {Value}", key, value);
+		_logger.LogDebug("*** Setting session context value: {Key} = {Value}   ***", key, value);
 
 		var conn = context.Database.GetDbConnection();
 
@@ -93,7 +96,16 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 		if (eventData.Context != null)
 		{
 			var _context = (IDebContext)eventData.Context!;
-			await SetSessionContextAsync(eventData.Context, SessionContextEventId, _context.EventId, cancellationToken);
+			var eventId = _context.EventId;
+			var httpContext = _httpContextAccessor.HttpContext;
+			if (httpContext != null)
+			{
+				if (httpContext.Items["CorrelationId"] != null)
+				{
+					eventId = Guid.Parse(httpContext.Items["CorrelationId"].ToString()!);
+				}
+			}
+			await SetSessionContextAsync(eventData.Context, SessionContextEventId, eventId, cancellationToken);
 			await SetSessionContextAsync(eventData.Context, SessionContextUserDetails, _context.UserDetails, cancellationToken);
 		}
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
@@ -12,27 +13,30 @@ using Task = System.Threading.Tasks.Task;
 namespace Nexus.DEB.Infrastructure.Persistence
 {
     public class DebContext : DbContext, IDebContext
-    {
-        public Guid EventId { get; } = Guid.NewGuid();
+	{
+		protected readonly ILogger<DebContext> _logger;
+
+		public Guid EventId { get; } = Guid.NewGuid();
 		public string? UserDetails { get; protected set; }
-		public DebContext(DbContextOptions<DebContext> options)
+		public DebContext(DbContextOptions<DebContext> options, ILogger<DebContext> logger)
         : base(options)
         {
-            
+            _logger = logger;
 		}
 
 		public async Task SetFormattedUser()
 		{
-            if (!string.IsNullOrEmpty(UserDetails))
-                return;
-
-            var currentUserService = this.GetService<ICurrentUserService>();
-			var userdetails = await currentUserService.GetUserDetailsAsync();
-            if (userdetails != null)
+            if (string.IsNullOrEmpty(UserDetails))
             {
-                UserDetails = string.Format("{0} ({1} {2})", userdetails.PostTitle, userdetails.FirstName, userdetails.LastName);
+                var currentUserService = this.GetService<ICurrentUserService>();
+                var userdetails = await currentUserService.GetUserDetailsAsync();
+                if (userdetails != null)
+                {
+                    UserDetails = string.Format("{0} ({1} {2})", userdetails.PostTitle, userdetails.FirstName, userdetails.LastName);
+                }
             }
-            return;
+            _logger.LogDebug("|------- SetFormattedUser: {UserDetails} -------|", UserDetails);
+			_logger.LogDebug("|------- SetEventId: {EventId} -------|", EventId);
 		}
 
 		// Lookups

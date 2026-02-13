@@ -454,7 +454,31 @@ namespace Nexus.DEB.Infrastructure.Services
         }
 
 
-        public IQueryable<ScopeSummary> GetScopesForGrid() => _dbContext.ScopeSummaries.AsNoTracking();
+        public IQueryable<ScopeSummary> GetScopesForGrid(ScopeFilters? filters)
+        {
+            var query = _dbContext.ScopeSummaries.AsNoTracking();
+
+            if (filters != null)
+            {
+                if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
+                {
+                    var scopeIds = _dbContext.Set<Scope>()
+                        .Where(s => s.Requirements
+                            .Any(svr => svr.StandardVersions
+                                .Any(sv => filters.StandardVersionIds.Contains(sv.EntityId))))
+                        .Select(s => s.EntityId);
+
+                    query = query.Where(s => scopeIds.Contains(s.EntityId));
+                }
+
+                if (filters.StatusIds != null && filters.StatusIds.Count > 0)
+                {
+                    query = query.Where(x => filters.StatusIds.Contains(x.StatusId));
+                }
+            }
+
+            return query;
+        }
 
         public IQueryable<ScopeExport> GetScopesForExport(ScopeFilters? filters)
         {
@@ -462,6 +486,22 @@ namespace Nexus.DEB.Infrastructure.Services
 
             if (filters != null)
             {
+                if (filters.StandardVersionIds != null && filters.StandardVersionIds.Count > 0)
+                {
+                    var scopeIds = _dbContext.Set<Scope>()
+                        .Where(s => s.Requirements
+                            .Any(svr => svr.StandardVersions
+                                .Any(sv => filters.StandardVersionIds.Contains(sv.EntityId))))
+                        .Select(s => s.EntityId);
+
+                    query = query.Where(s => scopeIds.Contains(s.EntityId));
+                }
+
+                if (filters.StatusIds != null && filters.StatusIds.Count > 0)
+                {
+                    query = query.Where(x => filters.StatusIds.Contains(x.StatusId));
+                }
+
                 if (filters.SortBy != null)
                 {
                     query = query.ApplySorting(filters.SortBy, new Dictionary<string, string>

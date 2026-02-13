@@ -42,6 +42,9 @@ namespace Nexus.DEB.Infrastructure.Configurations
             builder.Property(e => e.NumberOfLinkedStandardVersions)
                 .HasColumnName("StandardVersionCount");
 
+            builder.Property(e => e.StatusId)
+                .HasColumnName("StatusId");
+
             builder.Property(e => e.Status)
                 .HasColumnName("Status");
 

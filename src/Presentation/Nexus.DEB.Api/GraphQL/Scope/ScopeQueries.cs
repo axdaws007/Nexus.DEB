@@ -15,9 +15,10 @@ namespace Nexus.DEB.Api.GraphQL
         [UseOffsetPaging]
         [UseSorting]
         public static IQueryable<ScopeSummary> GetScopesForGrid(
+            ScopeFilters? filters,
             IDebService debService,
             IResolverContext resolverContext)
-            => debService.GetScopesForGrid();
+            => debService.GetScopesForGrid(filters);
 
         [Authorize]
         [UseSorting]

@@ -11,6 +11,7 @@
         public int NumberOfLinkedStandardVersions { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime LastModifiedDate { get; set; }
+        public int? StatusId { get; set; }
         public string? Status { get; set; }
         public DateTime? TargetImplementationDate { get; set; }
     }

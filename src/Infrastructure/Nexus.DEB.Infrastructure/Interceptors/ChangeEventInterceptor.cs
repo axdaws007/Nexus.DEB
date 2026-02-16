@@ -96,7 +96,7 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 		if (eventData.Context != null)
 		{
 			var _context = (IDebContext)eventData.Context!;
-			var eventId = _context.EventId;
+			var eventId = Guid.NewGuid();
 			var httpContext = _httpContextAccessor.HttpContext;
 			if (httpContext != null)
 			{

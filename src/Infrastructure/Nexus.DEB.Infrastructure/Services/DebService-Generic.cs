@@ -562,53 +562,24 @@ namespace Nexus.DEB.Infrastructure.Services
                     DocumentId = l.DocumentId
                 }).AsEnumerable();
 
-        public async Task UpdateLinkedCommonDocumentsAsync(
+        public async Task<bool> UpdateLinkedCommonDocumentsAsync(
             Guid entityId,
             Guid libraryId,
-            ICollection<Guid> availableDocumentIds,
-            ICollection<Guid> idsToAdd,
-            ICollection<Guid> idsToRemove,
-            bool addAll,
-            bool removeAll)
+            List<Guid>? toDelete,
+            List<Guid>? toInsert)
         {
-            // Get current state
-            var existingIds = new HashSet<Guid>(
-                GetLinkedDocumentsForEntityAndContext(entityId, EntityDocumentLinkingContexts.CommonEvidence)
-                    .Select(x => x.DocumentId));
+            var isSuccessful = false;
 
-            // Calculate desired state
-            HashSet<Guid> desiredIds;
-
-            if (addAll)
-            {
-                desiredIds = new HashSet<Guid>(availableDocumentIds);
-                desiredIds.ExceptWith(idsToRemove);
-            }
-            else if (removeAll)
-            {
-                desiredIds = new HashSet<Guid>(idsToAdd);
-            }
-            else
-            {
-                desiredIds = new HashSet<Guid>(existingIds);
-                desiredIds.ExceptWith(idsToRemove);
-                desiredIds.UnionWith(idsToAdd);
-            }
-
-            // Diff: what actually needs to change
-            var toDelete = existingIds.Except(desiredIds).ToList();
-            var toInsert = desiredIds.Except(existingIds).ToList();
-
-            if (toDelete.Count > 0)
+            if (toDelete != null && toDelete.Count > 0)
             {
                 await _dbContext.EntityDocumentLinking
                     .Where(x => x.EntityId == entityId
-                             && x.Context == EntityDocumentLinkingContexts.CommonEvidence
-                             && toDelete.Contains(x.DocumentId))
+                                && x.Context == EntityDocumentLinkingContexts.CommonEvidence
+                                && toDelete.Contains(x.DocumentId))
                     .ExecuteDeleteAsync();
             }
 
-            if (toInsert.Count > 0)
+            if (toInsert != null && toInsert.Count > 0)
             {
                 var newRecords = toInsert.Select(id => new EntityDocumentLinking
                 {
@@ -626,6 +597,10 @@ namespace Nexus.DEB.Infrastructure.Services
             statement.LastModifiedDate = DateTime.Now;
 
             await _dbContext.SaveChangesAsync();
+
+            isSuccessful = true;
+
+            return isSuccessful;
         }
         
         public async Task<int> GetCountOfLinkedDocumentsAsync(Guid entityId, EntityDocumentLinkingContexts context, CancellationToken cancellationToken)

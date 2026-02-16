@@ -16,27 +16,10 @@ namespace Nexus.DEB.Infrastructure.Persistence
 	{
 		protected readonly ILogger<DebContext> _logger;
 
-		public Guid EventId { get; } = Guid.NewGuid();
-		public string? UserDetails { get; protected set; }
 		public DebContext(DbContextOptions<DebContext> options, ILogger<DebContext> logger)
         : base(options)
         {
             _logger = logger;
-		}
-
-		public async Task SetFormattedUser()
-		{
-            if (string.IsNullOrEmpty(UserDetails))
-            {
-                var currentUserService = this.GetService<ICurrentUserService>();
-                var userdetails = await currentUserService.GetUserDetailsAsync();
-                if (userdetails != null)
-                {
-                    UserDetails = string.Format("{0} ({1} {2})", userdetails.PostTitle, userdetails.FirstName, userdetails.LastName);
-                }
-            }
-            _logger.LogDebug("|------- SetFormattedUser: {UserDetails} -------|", UserDetails);
-			_logger.LogDebug("|------- SetEventId: {EventId} -------|", EventId);
 		}
 
 		// Lookups

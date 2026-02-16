@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Infrastructure.Helpers;
 using Nexus.DEB.Infrastructure.Services;
 
 public class ChangeEventInterceptor : SaveChangesInterceptor
@@ -95,8 +96,8 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 	{
 		if (eventData.Context != null)
 		{
-			var _context = (IDebContext)eventData.Context!;
 			var eventId = Guid.NewGuid();
+			var userDetails = "";
 			var httpContext = _httpContextAccessor.HttpContext;
 			if (httpContext != null)
 			{
@@ -104,9 +105,16 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 				{
 					eventId = Guid.Parse(httpContext.Items["CorrelationId"].ToString()!);
 				}
+
+				if(httpContext.User != null)
+				{
+					var user = new DebUser(httpContext.User);
+					userDetails = user.UserDetails;
+				}
 			}
 			await SetSessionContextAsync(eventData.Context, SessionContextEventId, eventId, cancellationToken);
-			await SetSessionContextAsync(eventData.Context, SessionContextUserDetails, _context.UserDetails, cancellationToken);
+			await SetSessionContextAsync(eventData.Context, SessionContextUserDetails, userDetails, cancellationToken);
+
 		}
 
 		return result;
@@ -119,9 +127,24 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 	{
 		if (eventData.Context != null)
 		{
-			var _context = (IDebContext)eventData.Context!;
-			SetSessionContext(eventData.Context, SessionContextEventId, _context.EventId);
-			SetSessionContext(eventData.Context, SessionContextUserDetails, _context.UserDetails);
+			var eventId = Guid.NewGuid();
+			var userDetails = "";
+			var httpContext = _httpContextAccessor.HttpContext;
+			if (httpContext != null)
+			{
+				if (httpContext.Items["CorrelationId"] != null)
+				{
+					eventId = Guid.Parse(httpContext.Items["CorrelationId"].ToString()!);
+				}
+
+				if (httpContext.User != null)
+				{
+					var user = new DebUser(httpContext.User);
+					userDetails = user.UserDetails;
+				}
+			}
+			SetSessionContext(eventData.Context, SessionContextEventId, eventId);
+			SetSessionContext(eventData.Context, SessionContextUserDetails, userDetails);
 		}
 
 		return result;

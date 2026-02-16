@@ -53,27 +53,24 @@ namespace Nexus.DEB.Api.GraphQL
 
             var linkDiff = GetDocumentLinksDiff(entityId, idsToAdd, idsToRemove, addAll, removeAll, availableDocumentIds, debService);
 
-            var toDelete = linkDiff.Item1;
-            var toInsert = linkDiff.Item2;
-
-			var isSuccessful = await debService.UpdateLinkedCommonDocumentsAsync(entityId, libraryId, toDelete, toInsert);
+			var isSuccessful = await debService.UpdateLinkedCommonDocumentsAsync(entityId, libraryId, linkDiff.toDelete, linkDiff.toInsert);
 
             if (isSuccessful)
             {
-                if (toDelete != null && toDelete.Count > 0) 
+                if (linkDiff.toDelete != null && linkDiff.toDelete.Count > 0) 
                 {
-                    await LogLinkedCommonDocUpdateInChangeHistory(entityId, libraryId, false, toDelete, debService, dmsService, cancellationToken);
+                    await LogLinkedCommonDocUpdateInChangeHistory(entityId, libraryId, false, linkDiff.toDelete, debService, dmsService, cancellationToken);
                 }
-				if (toInsert != null && toInsert.Count > 0)
+				if (linkDiff.toInsert != null && linkDiff.toInsert.Count > 0)
 				{
-					await LogLinkedCommonDocUpdateInChangeHistory(entityId, libraryId, true, toInsert, debService, dmsService, cancellationToken);
+					await LogLinkedCommonDocUpdateInChangeHistory(entityId, libraryId, true, linkDiff.toInsert, debService, dmsService, cancellationToken);
 				}
 			}
 
             return await debService.GetStatementDetailByIdAsync(entityId, cancellationToken);
         }
 
-        private static Tuple<List<Guid>?, List<Guid>?> GetDocumentLinksDiff(
+        private static (List<Guid>? toDelete, List<Guid>? toInsert) GetDocumentLinksDiff(
             Guid entityId,
 			ICollection<Guid> idsToAdd,
 			ICollection<Guid> idsToRemove,
@@ -110,7 +107,7 @@ namespace Nexus.DEB.Api.GraphQL
 			var toDelete = existingIds.Except(desiredIds).ToList();
 			var toInsert = desiredIds.Except(existingIds).ToList();
 
-            return Tuple.Create(toDelete, toInsert);
+            return (toDelete, toInsert);
 		}
 
 		private static async System.Threading.Tasks.Task LogLinkedCommonDocUpdateInChangeHistory(

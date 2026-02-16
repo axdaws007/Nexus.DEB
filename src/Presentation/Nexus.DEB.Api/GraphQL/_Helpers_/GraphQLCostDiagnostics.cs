@@ -1,6 +1,7 @@
 ﻿using HotChocolate.CostAnalysis;
 using HotChocolate.Execution.Instrumentation;
 using HotChocolate.Execution;
+using System.Text.RegularExpressions;
 
 namespace Nexus.DEB.Api.GraphQL._Helpers_
 {
@@ -31,14 +32,13 @@ namespace Nexus.DEB.Api.GraphQL._Helpers_
 
 			public void Dispose()
 			{
-				// This runs at request end
-				if (_context.ContextData.TryGetValue("HotChocolate.CostAnalysis.CostMetricsKey", out var costObj) &&
-					costObj is CostMetrics cost)
-				{
-					_logger.LogInformation("🔍 GraphQL Cost Metrics");
-					_logger.LogInformation("   FieldCost: {FieldCost}", cost.FieldCost);
-					_logger.LogInformation("   TypeCost:  {TypeCost}", cost.TypeCost);
-				}
+				var cost = _context.GetCostMetrics();
+				string query = _context.Document.ToString();
+				query = Regex.Replace(query, @"\s+", " ").Trim();
+				_logger.LogDebug("🔍 GraphQL Cost Metrics");
+				_logger.LogDebug("	 Query: {query}", query);
+				_logger.LogDebug("   FieldCost: {FieldCost}", cost.FieldCost);
+				_logger.LogDebug("   TypeCost:  {TypeCost}", cost.TypeCost);
 			}
 		}
 	}

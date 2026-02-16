@@ -1,9 +1,9 @@
 ﻿using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain;
-using Nexus.DEB.Infrastructure.Helpers;
 using System.Security.Claims;
 
-namespace Nexus.DEB.Api.Security
+namespace Nexus.DEB.Infrastructure.Helpers
 {
     public class DebUser : IDebUser
     {
@@ -18,12 +18,13 @@ namespace Nexus.DEB.Api.Security
         public ICollection<string> Capabilities { get; init; } = [];
 
         public string FirstNameInitialAndLastName => $"{(FirstName.Length > 0 ? FirstName[0] : string.Empty)} {LastName}".Trim();
+        public string UserDetails => $"{PostTitle} ({FirstName} {LastName})";
 
-        public DebUser(ClaimsPrincipal? claimsPrincipal)
-        {
-            if (claimsPrincipal?.Identity?.IsAuthenticated == true)
-            {
-                IsAuthenticated = true;
+		public DebUser(ClaimsPrincipal? claimsPrincipal)
+		{
+			if (claimsPrincipal?.Identity?.IsAuthenticated == true)
+			{
+				IsAuthenticated = true;
 
                 var result = TokenParser.ParseCookieToken(claimsPrincipal?.Identity?.Name);
 

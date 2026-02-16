@@ -6,6 +6,7 @@ using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Other;
+using Nexus.DEB.Infrastructure.Helpers;
 using System.Data;
 using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
@@ -137,10 +138,24 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public async Task AddChangeRecordItem(Guid entityId, string fieldName, string friendlyFieldName, string oldValue, string newValue, CancellationToken cancellationToken)
         {
-            var eventId = _dbContext.EventId;
-            var userDetails = _dbContext.UserDetails;
+			var eventId = Guid.NewGuid();
+			var userDetails = "";
+			var httpContext = _httpContextAccessor.HttpContext;
+			if (httpContext != null)
+			{
+				if (httpContext.Items["CorrelationId"] != null)
+				{
+					eventId = Guid.Parse(httpContext.Items["CorrelationId"].ToString()!);
+				}
 
-            await _dbContext.Database.ExecuteSqlRawAsync(
+				if (httpContext.User != null)
+				{
+					var user = new DebUser(httpContext.User);
+					userDetails = user.UserDetails;
+				}
+			}
+
+			await _dbContext.Database.ExecuteSqlRawAsync(
                 "EXEC dbo.CreateChangeRecordItem @entityId, @fieldName, @friendlyFieldName, @oldValue, @newValue, @ChangeEventId",
                 new SqlParameter("@entityId", entityId),
                 new SqlParameter("@fieldName", fieldName),

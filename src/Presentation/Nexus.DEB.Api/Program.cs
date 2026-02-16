@@ -228,21 +228,6 @@ builder
     app.UseMiddleware<CapabilitiesHttpRequestInterceptor>();
     app.UseAuthorization();
 
-    /*
-     * This adds custom middleware to the request pipeline.
-     * We resolve the IDebContext from the DI container and call SetFormattedUser()
-     * then call the next middleware in the pipeline.
-     * 
-     * This is because SetFormattedUser is async, so cannot be called in the IDebContext constructor.
-     * This assumes the IDebContext is registered as SCOPED, so a new instance is created per request.
-     */
-    app.Use(async (ctx, next) =>
-    {
-	    var db = ctx.RequestServices.GetRequiredService<IDebContext>();
-	    await db.SetFormattedUser();
-	    await next();
-    });
-
     app.MapGraphQL().WithOptions(new GraphQLServerOptions
     {
         Tool =

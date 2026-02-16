@@ -3,9 +3,9 @@ using HotChocolate.Resolvers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Nexus.DEB.Api.GraphQL.Authentication.Models;
-using Nexus.DEB.Api.Security;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Infrastructure.Helpers;
 
 namespace Nexus.DEB.Api.GraphQL
 {

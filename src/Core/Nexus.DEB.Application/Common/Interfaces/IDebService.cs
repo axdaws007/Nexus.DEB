@@ -107,7 +107,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         IEnumerable<DmsDocumentIdentifier> GetLinkedDocumentsForEntityAndContext(Guid entityId, EntityDocumentLinkingContexts entityDocumentLinkingContexts);
 
-        Task UpdateLinkedCommonDocumentsAsync(Guid entityId, Guid libraryId, ICollection<Guid> availableDocumentIds, ICollection<Guid> idsToAdd, ICollection<Guid> idsToRemove, bool addAll, bool removeAll);
+        Task<bool> UpdateLinkedCommonDocumentsAsync(Guid entityId, Guid libraryId, List<Guid>? toDelete, List<Guid>? toInsert);
 
         Task<int> GetCountOfLinkedDocumentsAsync(Guid entityId, EntityDocumentLinkingContexts context, CancellationToken cancellationToken);
 

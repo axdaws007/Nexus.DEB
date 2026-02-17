@@ -10,12 +10,12 @@ namespace Nexus.DEB.Application.Common.Interfaces
         /// <summary>
         /// Adds a new document to a library.
         /// </summary>
-        Task<DmsDocumentResponse?> AddDocumentAsync(Guid libraryId, IFormFile file, DmsDocumentMetadata metadata);
+        Task<DmsDocumentResponse?> AddDocumentAsync(Guid libraryId, IFormFile file, List<DmsMetadataLookupItem> metadataLookups, DmsDocumentMetadata metadata);
 
         /// <summary>
         /// Updates an existing document in a library.
         /// </summary>
-        Task<DmsDocumentResponse?> UpdateDocumentAsync(Guid libraryId, Guid documentId, IFormFile? file, DmsDocumentMetadata? metadata = null);
+        Task<DmsDocumentResponse?> UpdateDocumentAsync(Guid libraryId, Guid documentId, IFormFile? file, List<DmsMetadataLookupItem> metadataLookups, DmsDocumentMetadata? metadata = null);
 
         /// <summary>
         /// Deletes a document from a library.

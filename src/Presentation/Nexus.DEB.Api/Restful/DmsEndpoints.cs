@@ -79,7 +79,8 @@ namespace Nexus.DEB.Api.Restful
             [FromForm] string? metadata,
             [FromServices] IApplicationSettingsService applicationSettingsService,
             [FromServices] IDmsService dmsService,
-            [FromServices] IDebService debService)
+            [FromServices] IDebService debService,
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -123,7 +124,12 @@ namespace Nexus.DEB.Api.Restful
                 }
 
                 var libraryId = applicationSettingsService.GetLibraryId(library);
-                var result = await dmsService.AddDocumentAsync(libraryId, file, metadataObj);
+
+                var metadataLookups = await GetLookupsForMetadataAsync(
+                    debService, dmsService, metadataObj,
+                    library, libraryId, null, cancellationToken);
+
+                var result = await dmsService.AddDocumentAsync(libraryId, file, metadataLookups, metadataObj);
 
                 if (result == null)
                 {
@@ -186,7 +192,9 @@ namespace Nexus.DEB.Api.Restful
             [FromForm] IFormFile? file,
             [FromForm] string? metadata,
             [FromServices] IApplicationSettingsService applicationSettingsService,
-            [FromServices] IDmsService dmsService)
+            [FromServices] IDebService debService,
+            [FromServices] IDmsService dmsService,
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -208,7 +216,7 @@ namespace Nexus.DEB.Api.Restful
 
                     if (dmsSettings.AllowedFileExtensions.Count > 0)
                     {
-                        var fileExtension = System.IO.Path.GetExtension(file.Name).ToLower();
+                        var fileExtension = System.IO.Path.GetExtension(file.FileName).ToLower();
 
                         if (!dmsSettings.AllowedFileExtensions.Contains(fileExtension))
                         {
@@ -228,7 +236,12 @@ namespace Nexus.DEB.Api.Restful
                 }
 
                 var libraryId = applicationSettingsService.GetLibraryId(library);
-                var result = await dmsService.UpdateDocumentAsync(libraryId, documentId, file, metadataObj);
+
+                var metadataLookups = await GetLookupsForMetadataAsync(
+                    debService, dmsService, metadataObj,
+                    library, libraryId, documentId, cancellationToken);
+
+                var result = await dmsService.UpdateDocumentAsync(libraryId, documentId, file, metadataLookups, metadataObj);
 
                 if (result == null)
                 {
@@ -276,6 +289,88 @@ namespace Nexus.DEB.Api.Restful
                     detail: ex.Message,
                     statusCode: StatusCodes.Status500InternalServerError);
             }
+        }
+
+        private static async Task<List<DmsMetadataLookupItem>> GetLookupsForMetadataAsync(
+            IDebService debService,
+            IDmsService dmsService,
+            DmsDocumentMetadata metadataObj,
+            string library,
+            Guid libraryId,
+            Guid? documentId,
+            CancellationToken cancellationToken)
+        {
+            var lookupRequests = new List<(string Type, Guid Id)>();
+
+            // Collect new IDs from the incoming metadata
+            if (metadataObj.TryGetGuid("entityId", out var entityId))
+            {
+                lookupRequests.Add(("entityId", entityId));
+            }
+
+            var standardVersionIds = metadataObj.GetArrayOrDefault<Guid>(
+                    "standardVersionIds",
+                    e => Guid.TryParse(e.GetString(), out var g) ? g : (Guid?)null);
+
+            foreach (var svId in standardVersionIds)
+            {
+                lookupRequests.Add(("standardVersionId", svId));
+            }
+
+            // For updates, fetch the current document to get the old IDs
+            if (documentId.HasValue)
+            {
+                if (library == DebHelper.Dms.Libraries.DebDocuments)
+                {
+                    var currentDoc = await dmsService.GetDebLibraryDocumentAsync(libraryId, documentId.Value);
+                    if (currentDoc?.EntityId.HasValue == true && currentDoc.EntityId.Value != Guid.Empty)
+                    {
+                        lookupRequests.Add(("entityId", currentDoc.EntityId.Value));
+                    }
+                }
+                else if (library == DebHelper.Dms.Libraries.CommonDocuments)
+                {
+                    var currentDoc = await dmsService.GetCommonLibraryDocumentAsync(libraryId, documentId.Value);
+                    if (!string.IsNullOrWhiteSpace(currentDoc?.StandardVersionIds))
+                    {
+                        var currentSvIds = currentDoc.StandardVersionIds
+                            .Split(',')
+                            .Select(s => s.Trim())
+                            .Where(s => Guid.TryParse(s, out _))
+                            .Select(Guid.Parse);
+
+                        foreach (var svId in currentSvIds)
+                        {
+                            lookupRequests.Add(("standardVersionId", svId));
+                        }
+                    }
+                }
+            }
+
+            if (lookupRequests.Count == 0)
+            {
+                return new List<DmsMetadataLookupItem>();
+            }
+
+            // Deduplicate before resolving
+            var distinctIds = lookupRequests.Select(r => r.Id).Distinct().ToList();
+            var items = await debService.GetEntityHeadsAsync(distinctIds, cancellationToken);
+
+            var lookups = lookupRequests
+                .Where(r => items.ContainsKey(r.Id))
+                .Select(r => new DmsMetadataLookupItem
+                {
+                    Type = r.Type,
+                    Id = r.Id,
+                    Title = string.IsNullOrEmpty(items[r.Id].SerialNumber)
+                        ? items[r.Id].Title
+                        : items[r.Id].SerialNumber
+                })
+                .GroupBy(r => new { r.Type, r.Id })
+                .Select(g => g.First())
+                .ToList();
+
+            return lookups;
         }
 
         /// <summary>

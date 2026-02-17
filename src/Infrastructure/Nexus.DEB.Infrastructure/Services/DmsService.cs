@@ -8,6 +8,7 @@ using Nexus.DEB.Domain.Models.Common;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -42,6 +43,7 @@ namespace Nexus.DEB.Infrastructure.Services
         public async Task<DmsDocumentResponse?> AddDocumentAsync(
             Guid libraryId,
             IFormFile file,
+            List<DmsMetadataLookupItem> metadataLookups,
             DmsDocumentMetadata metadata)
         {
             var requestUri = $"api/libraries/{libraryId}/document";
@@ -55,7 +57,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     libraryId, file.FileName, entityId);
 
                 // Create multipart/form-data content
-                using var content = CreateMultipartContent(file, metadata);
+                using var content = CreateMultipartContent(file, metadata, metadataLookups);
 
                 // Create authenticated request with the Forms Auth cookie
                 var request = CreateAuthenticatedRequest(HttpMethod.Post, requestUri);
@@ -105,6 +107,7 @@ namespace Nexus.DEB.Infrastructure.Services
             Guid libraryId,
             Guid documentId,
             IFormFile? file,
+            List<DmsMetadataLookupItem> metadataLookups,
             DmsDocumentMetadata metadata)
         {
             var requestUri = $"api/libraries/{libraryId}/document/{documentId}";
@@ -116,7 +119,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     documentId, libraryId, file?.FileName ?? "no file", file?.Length ?? 0);
 
                 // Create multipart/form-data content
-                using var content = CreateMultipartContent(file, metadata);
+                using var content = CreateMultipartContent(file, metadata, metadataLookups);
 
                 // Create authenticated request with the Forms Auth cookie
                 var request = CreateAuthenticatedRequest(HttpMethod.Post, requestUri);
@@ -277,9 +280,10 @@ namespace Nexus.DEB.Infrastructure.Services
         /// Creates multipart/form-data content for file uploads.
         /// Includes the file and metadata as a JSON string.
         /// </summary>
-        private static MultipartFormDataContent CreateMultipartContent(
+        private MultipartFormDataContent CreateMultipartContent(
             IFormFile? file,
-            DmsDocumentMetadata metadata)
+            DmsDocumentMetadata metadata,
+            List<DmsMetadataLookupItem> metadataLookups)
         {
             var content = new MultipartFormDataContent();
 
@@ -296,6 +300,12 @@ namespace Nexus.DEB.Infrastructure.Services
             if (!string.IsNullOrWhiteSpace(metadata.RawJson))
             {
                 content.Add(new StringContent(metadata.RawJson, Encoding.UTF8), "metadata");
+            }
+
+            if (metadataLookups.Count > 0)
+            {
+                var lookupsJson = JsonSerializer.Serialize(metadataLookups, options: JsonOptions);
+                content.Add(new StringContent(lookupsJson, Encoding.UTF8), "metadataLookups");
             }
 
             return content;

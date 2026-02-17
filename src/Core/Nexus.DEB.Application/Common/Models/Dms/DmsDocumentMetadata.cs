@@ -34,5 +34,20 @@ namespace Nexus.DEB.Application.Common.Models.Dms
             }
             return null;
         }
+
+        public List<T> GetArrayOrDefault<T>(string fieldName, Func<JsonElement, T?> parser) where T : struct
+        {
+            if (Fields.TryGetValue(fieldName, out var element) &&
+                element.ValueKind == JsonValueKind.Array)
+            {
+                return element.EnumerateArray()
+                    .Select(parser)
+                    .Where(v => v.HasValue)
+                    .Select(v => v!.Value)
+                    .ToList();
+            }
+
+            return new List<T>();
+        }
     }
 }

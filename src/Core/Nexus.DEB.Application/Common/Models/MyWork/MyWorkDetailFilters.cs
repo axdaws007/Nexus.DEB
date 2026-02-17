@@ -10,9 +10,9 @@
         public string EntityTypeTitle { get; set; } = string.Empty;
         public Guid? SelectedPostId { get; set; }
         public ICollection<int> ActivityIds { get; set; } = [];
-        public DateTime? CreatedDateFrom { get; set; }
-        public DateTime? CreatedDateTo { get; set; }
-        public DateTime? AssignedDateFrom { get; set; }
-        public DateTime? AssignedDateTo { get; set; }
+        public DateOnly? CreatedDateFrom { get; set; }
+        public DateOnly? CreatedDateTo { get; set; }
+        public DateOnly? AssignedDateFrom { get; set; }
+        public DateOnly? AssignedDateTo { get; set; }
     }
 }

@@ -607,5 +607,46 @@ namespace Nexus.DEB.Infrastructure.Services
             => await _dbContext.EntityDocumentLinking.AsNoTracking().Where(x => x.EntityId == entityId && x.Context == context).CountAsync(cancellationToken);
 
         #endregion
+
+        #region Sections
+
+        public async Task<IReadOnlyList<Section>> GetSectionsForStandardVersionAsync(
+            Guid standardVersionId,
+            CancellationToken cancellationToken = default)
+        {
+            var sections = await _dbContext.Sections
+                .Include(x => x.SectionRequirements)
+                .ThenInclude(x => x.Requirement)
+                .Where(s => s.StandardVersionId == standardVersionId)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+            return OrderSectionsHierarchically(sections).ToList();
+        }
+
+        private static IEnumerable<Section> OrderSectionsHierarchically(
+            IEnumerable<Section> allSections)
+        {
+            var lookup = allSections.ToLookup(s => s.ParentSectionId);
+
+            return TraverseDepthFirst(lookup, parentId: null);
+        }
+
+        private static IEnumerable<Section> TraverseDepthFirst(
+            ILookup<Guid?, Section> lookup,
+            Guid? parentId)
+        {
+            foreach (var section in lookup[parentId].OrderBy(s => s.Ordinal))
+            {
+                yield return section;
+
+                foreach (var child in TraverseDepthFirst(lookup, section.Id))
+                {
+                    yield return child;
+                }
+            }
+        }
+
+        #endregion
     }
 }

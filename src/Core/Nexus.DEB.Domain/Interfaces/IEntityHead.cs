@@ -1,6 +1,6 @@
 ﻿namespace Nexus.DEB.Domain.Interfaces
 {
-    public interface IEntityHead : IEntity, IOwnedBy
+    public interface IEntityHead : IEntity, IOwnedBy, IEntityType
     {
         public Guid CreatedById { get; set; }
         public Guid LastModifiedById { get; set; }

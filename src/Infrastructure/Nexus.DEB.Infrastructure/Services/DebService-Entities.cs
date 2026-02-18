@@ -5,6 +5,7 @@ using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Application.Common.Models.Sorting;
 using Nexus.DEB.Domain;
+using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Scope = Nexus.DEB.Domain.Models.Scope;
@@ -35,6 +36,22 @@ namespace Nexus.DEB.Infrastructure.Services
                 .AsNoTracking()
                 .Where(e => idList.Contains(e.EntityId))
                 .ToDictionaryAsync(e => e.EntityId, cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<IEntityHead>> GetEntityHeadsAsync(CancellationToken cancellationToken)
+        {
+            var requirements = await _dbContext.Requirements.AsNoTracking().Cast<IEntityHead>().ToListAsync(cancellationToken);
+            var statements = await _dbContext.Statements.AsNoTracking().Cast<IEntityHead>().ToListAsync(cancellationToken);
+            var tasks = await _dbContext.Tasks.AsNoTracking().Cast<IEntityHead>().ToListAsync(cancellationToken);
+            var scopes = await _dbContext.Scopes.AsNoTracking().Cast<IEntityHead>().ToListAsync(cancellationToken);
+            var standardVersions = await _dbContext.StandardVersions.AsNoTracking().Cast<IEntityHead>().ToListAsync(cancellationToken);
+
+            return requirements
+                .Concat(statements)
+                .Concat(tasks)
+                .Concat(scopes)
+                .Concat(standardVersions)
+                .ToList();
         }
 
         #endregion
@@ -192,7 +209,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 Section = s.Section,
                 OtherScopes = s.OtherScopes,
                 IncludedInScope = s.IncludedInScope,
-                StandardVersionIds = allStandardVersionRequirements.Where(w => w.RequirementId == s.RequirementId).Select(s => s.StandardVersionId).Distinct().AsEnumerable()
+                StandardVersionIds = allStandardVersionRequirements.Where(w => w.RequirementId == s.RequirementId).Select(s => s.StandardVersionId).Distinct().ToList()
             });
 		}
 

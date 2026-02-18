@@ -1,6 +1,7 @@
 ﻿using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Nexus.DEB.Domain.Models.Other;
@@ -11,6 +12,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
     public interface IDebService
     {
         #region Entity methods 
+        Task<IReadOnlyList<IEntityHead>> GetEntityHeadsAsync(CancellationToken cancellationToken);
         Task<EntityHead?> GetEntityHeadAsync(Guid id, CancellationToken cancellationToken);
         Task<EntityHeadDetail?> GetEntityHeadDetailAsync(Guid id, CancellationToken cancellationToken);
         Task<Dictionary<Guid, EntityHead>> GetEntityHeadsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken);

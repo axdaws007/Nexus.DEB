@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Api.Restful.Models;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models.Events;
+using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Task = System.Threading.Tasks.Task;
@@ -30,6 +32,47 @@ namespace Nexus.DEB.Api.Restful
                 .WithSummary("Generate initial PAWS records for requirements")
                 .Produces(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status401Unauthorized);
+
+            testGroup.MapPost("/dashboardinfo", GenerateDashboardInfo)
+                .RequireAuthorization()
+                .WithName("GenerateDashboardInfo")
+                .WithSummary("Generate or update DashboardInfo records for all entities")
+                .Produces(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status401Unauthorized);
+        }
+
+        private static async Task<IResult> GenerateDashboardInfo(
+            [FromServices] IDebService debService,
+            [FromServices] ILogger<Program> logger,
+            [FromServices] IDomainEventPublisher eventPublisher,
+
+            CancellationToken cancellationToken)
+        {
+            var count = 0;
+            var startTime = DateTime.Now;
+
+            var entities = await debService.GetEntityHeadsAsync(cancellationToken);
+
+            foreach (var entity in entities)
+            {
+                await eventPublisher.PublishAsync(new EntitySavedEvent
+                {
+                    Entity = entity,
+                    EntityType = entity.EntityTypeTitle,
+                    EntityId = entity.EntityId,
+                    SerialNumber = (entity as EntityHead).SerialNumber ?? string.Empty,
+                    IsNew = false,
+                }, cancellationToken);
+
+                count++;
+            }
+
+            
+            return Results.Ok(new
+            {
+                Count = count,
+                durationInSeconds = (DateTime.Now - startTime).TotalSeconds
+            });
         }
 
 

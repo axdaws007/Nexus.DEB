@@ -1,4 +1,5 @@
-﻿using Nexus.DEB.Application.Common.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models.Common;
 
@@ -6,8 +7,8 @@ namespace Nexus.DEB.Infrastructure.Services
 {
     public class TaskDashboardInfoProvider : DashboardInfoProviderBase
     {
-        public TaskDashboardInfoProvider(IPawsService pawsService, IDebService debService, IApplicationSettingsService applicationSettingsService) 
-            : base(pawsService, debService, applicationSettingsService, EntityTypes.Task)
+        public TaskDashboardInfoProvider(IPawsService pawsService, IDebService debService, IApplicationSettingsService applicationSettingsService, ILogger<TaskDashboardInfoProvider> logger) 
+            : base(pawsService, debService, applicationSettingsService, logger, EntityTypes.Task)
         {
         }
 

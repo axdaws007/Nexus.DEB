@@ -1,4 +1,5 @@
-﻿using Nexus.DEB.Application.Common.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
@@ -7,8 +8,8 @@ namespace Nexus.DEB.Infrastructure.Services.DashboardProviders
 {
     internal class StatementDashboardInfoProvider : DashboardInfoProviderBase
     {
-        public StatementDashboardInfoProvider(IPawsService pawsService, IDebService debService, IApplicationSettingsService applicationSettingsService) 
-            : base(pawsService, debService, applicationSettingsService, EntityTypes.SoC)
+        public StatementDashboardInfoProvider(IPawsService pawsService, IDebService debService, IApplicationSettingsService applicationSettingsService, ILogger<StatementDashboardInfoProvider> logger) 
+            : base(pawsService, debService, applicationSettingsService, logger, EntityTypes.SoC)
         {
         }
 

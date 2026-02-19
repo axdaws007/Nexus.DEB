@@ -20,7 +20,10 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<IEnumerable<StandardVersionRequirementDetail>> GetStandardVersionRequirementsForGridAsync(StandardVersionRequirementsFilters? filters, CancellationToken cancellationToken);
 
 		IQueryable<RequirementExport> GetRequirementsForExport(RequirementSummaryFilters? filters);
-		Task<RequirementDetail?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<RequirementDetail?> GetRequirementDetailByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<Requirement?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<Requirement> CreateRequirementAsync(Requirement requirement, CancellationToken cancellationToken = default);
+        Task<Requirement> UpdateRequirementAsync(Requirement requirement, CancellationToken cancellationToken = default);
         ICollection<StandardVersionWithSections> GetRelatedStandardVersionsAndSections(Guid requirementId);
 		ICollection<ScopeWithStatements> GetRelatedScopesWithStatements(Guid requirementId);
 		Task<RequirementChildCounts> GetChildCountsForRequirementAsync(Guid id, CancellationToken cancellationToken);

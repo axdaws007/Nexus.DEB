@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -69,6 +71,20 @@ namespace Nexus.DEB.Infrastructure.Services
             }
         }
 
+        protected virtual void ValidateString(string stringToValidate, string fieldName)
+        {
+            if (string.IsNullOrWhiteSpace(stringToValidate))
+            {
+                ValidationErrors.Add(
+                    new ValidationError()
+                    {
+                        Code = $"INVALID_{fieldName.ToUpper()}",
+                        Field = nameof(fieldName),
+                        Message = $"The '{ToTitleFromCamel(fieldName)}' is empty."
+                    });
+            }
+        }
+
         protected virtual async Task ValidateOwnerAsync(Guid ownerId)
         {
             var posts = await CisService.GetAllPosts();
@@ -83,6 +99,18 @@ namespace Nexus.DEB.Infrastructure.Services
                         Message = "The 'Owner ID' provided does not exist as a valid Post."
                     });
             }
+        }
+
+        private static string ToTitleFromCamel(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+
+            // Insert space before capital letters
+            var withSpaces = Regex.Replace(input, "([a-z])([A-Z])", "$1 $2");
+
+            // Capitalize first letter of each word
+            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(withSpaces);
         }
 
     }

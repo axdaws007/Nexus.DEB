@@ -278,7 +278,10 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
-		public async Task<RequirementDetail?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Requirement?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken)
+            => await _dbContext.Requirements.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
+
+        public async Task<RequirementDetail?> GetRequirementDetailByIdAsync(Guid id, CancellationToken cancellationToken)
 		{
 			var requirement = await _dbContext.Requirements.AsNoTracking()
 				.Include(r => r.RequirementType)
@@ -292,11 +295,16 @@ namespace Nexus.DEB.Infrastructure.Services
 
             requirementDetail.RequirementTypeTitle = requirement.RequirementType?.Title;
             requirementDetail.RequirementCategoryTitle = requirement.RequirementCategory?.Title;
+            requirementDetail.ComplianceWeighting = requirement.ComplianceWeighting;
+            requirementDetail.EffectiveStartDate = requirement.EffectiveStartDate;
+            requirementDetail.EffectiveEndDate = requirement.EffectiveEndDate;
 
-			requirementDetail.StandardVersionSections = GetRelatedStandardVersionsAndSections(id);
+            requirementDetail.StandardVersionSections = GetRelatedStandardVersionsAndSections(id);
 			requirementDetail.ScopeStatements = GetRelatedScopesWithStatements(id);
+            
 
-			return requirementDetail;
+
+            return requirementDetail;
 		}
 
 		public ICollection<StandardVersionWithSections> GetRelatedStandardVersionsAndSections(Guid requirementId)
@@ -440,6 +448,26 @@ namespace Nexus.DEB.Infrastructure.Services
             return candidates
                 .Where(srs => combinationSet.Contains((srs.RequirementId, srs.ScopeId)))
                 .ToList();
+        }
+
+        public async Task<Requirement> CreateRequirementAsync(
+            Requirement requirement,
+            CancellationToken cancellationToken = default)
+        {
+            await _dbContext.Requirements.AddAsync(requirement, cancellationToken);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return requirement;
+        }
+
+        public async Task<Requirement> UpdateRequirementAsync(
+            Requirement requirement,
+            CancellationToken cancellationToken = default)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return requirement;
         }
 
         #endregion Requirements

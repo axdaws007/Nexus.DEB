@@ -631,6 +631,68 @@ namespace Nexus.DEB.Infrastructure.Services
             return OrderSectionsHierarchically(sections).ToList();
         }
 
+        public async Task<List<Section>> GetSiblingSectionsAsync(
+            Guid standardVersionId,
+            Guid? parentSectionId,
+            Guid? excludeSectionId,
+            CancellationToken cancellationToken)
+        {
+            return await _dbContext.Sections
+                .Where(s => s.StandardVersionId == standardVersionId
+                         && s.ParentSectionId == parentSectionId
+                         && s.Id != excludeSectionId)
+                .OrderBy(s => s.Ordinal)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task UpdateSectionsAsync(
+            IEnumerable<Section> sections,
+            CancellationToken cancellationToken)
+        {
+            _dbContext.Sections.UpdateRange(sections);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<bool> IsSectionDescendantOfAsync(
+            Guid candidateSectionId,
+            Guid ancestorSectionId,
+            CancellationToken cancellationToken)
+        {
+            // Load all sections for the standard version that the ancestor belongs to,
+            // then walk the tree in memory to check for a descendant relationship
+            var ancestorSection = await _dbContext.Sections
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == ancestorSectionId, cancellationToken);
+
+            if (ancestorSection is null)
+                return false;
+
+            var allSections = await _dbContext.Sections
+                .AsNoTracking()
+                .Where(s => s.StandardVersionId == ancestorSection.StandardVersionId)
+                .ToListAsync(cancellationToken);
+
+            var childLookup = allSections.ToLookup(s => s.ParentSectionId);
+
+            return IsDescendant(childLookup, ancestorSectionId, candidateSectionId);
+        }
+
+        private static bool IsDescendant(
+            ILookup<Guid?, Section> childLookup,
+            Guid ancestorId,
+            Guid candidateId)
+        {
+            foreach (var child in childLookup[ancestorId])
+            {
+                if (child.Id == candidateId)
+                    return true;
+
+                if (IsDescendant(childLookup, child.Id, candidateId))
+                    return true;
+            }
+            return false;
+        }
+
         private static IEnumerable<Section> OrderSectionsHierarchically(
             IEnumerable<Section> allSections)
         {

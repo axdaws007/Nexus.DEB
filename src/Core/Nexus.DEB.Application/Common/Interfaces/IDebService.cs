@@ -152,6 +152,12 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<Section?> GetSectionByIdAsync(Guid id, CancellationToken cancellationToken);
         Task<IReadOnlyList<Section>> GetSectionsForStandardVersionAsync(Guid standardVersionId, CancellationToken cancellationToken = default);
 
+        Task<List<Section>> GetSiblingSectionsAsync(Guid standardVersionId, Guid? parentSectionId, Guid? excludeSectionId, CancellationToken cancellationToken);
+
+        Task<bool> IsSectionDescendantOfAsync(Guid candidateSectionId, Guid ancestorSectionId, CancellationToken cancellationToken);
+
+        Task UpdateSectionsAsync(IEnumerable<Section> sections, CancellationToken cancellationToken);
+
         #endregion Other
 
         #region Dashboard 

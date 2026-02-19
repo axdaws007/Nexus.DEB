@@ -10,5 +10,9 @@ namespace Nexus.DEB.Api.GraphQL
         [Authorize]
         public static async Task<IReadOnlyList<Section>> GetSectionsForStandardVersionAsync(Guid id, IDebService debService, CancellationToken cancellationToken)
             => await debService.GetSectionsForStandardVersionAsync(id, cancellationToken);
+
+        [Authorize]
+        public static async Task<Section?> GetSectionByIdAsync(Guid id, IDebService debService, CancellationToken cancellationToken)
+            => await debService.GetSectionByIdAsync(id, cancellationToken);
     }
 }

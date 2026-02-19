@@ -149,6 +149,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         IQueryable<UserAndPost> GetPostsWithUsers(string? searchText, ICollection<Guid> postIds, bool includeDeletedUsers = false, bool includedDeletedPosts = false);
 
+        Task<Section?> GetSectionByIdAsync(Guid id, CancellationToken cancellationToken);
         Task<IReadOnlyList<Section>> GetSectionsForStandardVersionAsync(Guid standardVersionId, CancellationToken cancellationToken = default);
 
         #endregion Other

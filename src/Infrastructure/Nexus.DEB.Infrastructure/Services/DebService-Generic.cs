@@ -610,12 +610,19 @@ namespace Nexus.DEB.Infrastructure.Services
 
         #region Sections
 
+        public async Task<Section?> GetSectionByIdAsync(Guid id, CancellationToken cancellationToken)
+            => await _dbContext.Sections
+                .Include(x => x.SectionRequirements.OrderBy(sr => sr.Ordinal))
+                .ThenInclude(x => x.Requirement)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
         public async Task<IReadOnlyList<Section>> GetSectionsForStandardVersionAsync(
             Guid standardVersionId,
             CancellationToken cancellationToken = default)
         {
             var sections = await _dbContext.Sections
-                .Include(x => x.SectionRequirements)
+                .Include(x => x.SectionRequirements.OrderBy(sr => sr.Ordinal))
                 .ThenInclude(x => x.Requirement)
                 .Where(s => s.StandardVersionId == standardVersionId)
                 .AsNoTracking()

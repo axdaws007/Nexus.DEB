@@ -51,7 +51,8 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .IsRequired();
 
             builder.Property(e => e.ReviewDate)
-                .HasColumnName("ReviewDate");
+                .HasColumnName("ReviewDate")
+                .IsRequired();
 
             builder.Property(e => e.CreatedBy)
                 .HasColumnName("CreatedBy");

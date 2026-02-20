@@ -8,7 +8,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
             Guid ownerId,
             string title,
             string statementText,
-            DateOnly? reviewDate,
+            DateOnly reviewDate,
             ICollection<RequirementScopes>? RequirementScopeCombinations,
             CancellationToken cancellationToken);
 
@@ -17,7 +17,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
             Guid ownerId,
             string title,
             string statementText,
-            DateOnly? reviewDate,
+            DateOnly reviewDate,
             ICollection<RequirementScopes>? requirementScopeCombinations,
             CancellationToken cancellationToken);
 

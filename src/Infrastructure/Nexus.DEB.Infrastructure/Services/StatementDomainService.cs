@@ -26,11 +26,11 @@ namespace Nexus.DEB.Infrastructure.Services
             Guid ownerId,
             string title,
             string statementText,
-            DateOnly? reviewDate,
+            DateOnly reviewDate,
             ICollection<RequirementScopes>? requirementScopeCombinations,
             CancellationToken cancellationToken)
         {
-            await ValidateFieldsAsync(null, ownerId, title, statementText, reviewDate, requirementScopeCombinations);
+            await ValidateFieldsAsync(null, ownerId, title, statementText, requirementScopeCombinations);
 
             if (ValidationErrors.Count > 0)
             {
@@ -68,7 +68,7 @@ namespace Nexus.DEB.Infrastructure.Services
             Guid ownerId,
             string title,
             string statementText,
-            DateOnly? reviewDate,
+            DateOnly reviewDate,
             ICollection<RequirementScopes>? requirementScopeCombinations,
             CancellationToken cancellationToken)
         {
@@ -84,7 +84,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 });
             }
 
-            await ValidateFieldsAsync(statement, ownerId, title, statementText, reviewDate, requirementScopeCombinations);
+            await ValidateFieldsAsync(statement, ownerId, title, statementText, requirementScopeCombinations);
 
             if (ValidationErrors.Count > 0)
             {
@@ -115,7 +115,6 @@ namespace Nexus.DEB.Infrastructure.Services
             Guid ownerId,
             string title,
             string statementText,
-            DateOnly? reviewDate,
             ICollection<RequirementScopes>? requirementScopeCombinations)
         {
             await ValidateOwnerAsync(ownerId);

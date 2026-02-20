@@ -281,33 +281,26 @@ namespace Nexus.DEB.Infrastructure.Services
         public async Task<Requirement?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken)
             => await _dbContext.Requirements.FirstOrDefaultAsync(x => x.EntityId == id, cancellationToken);
 
+
         public async Task<RequirementDetail?> GetRequirementDetailByIdAsync(Guid id, CancellationToken cancellationToken)
 		{
-			var requirement = await _dbContext.Requirements.AsNoTracking()
-				.Include(r => r.RequirementType)
-				.Include(r => r.RequirementCategory)
-				.FirstOrDefaultAsync(s => s.EntityId == id, cancellationToken);
+            var requirement = await _dbContext.RequirementDetails.AsNoTracking()
+                .Include(r => r.RequirementType)
+                .Include(r => r.RequirementCategory)
+                .FirstOrDefaultAsync(s => s.EntityId == id, cancellationToken);
 
 			if (requirement == null)
 				return null;
 
 			var requirementDetail = requirement.Adapt<RequirementDetail>();
 
-            requirementDetail.RequirementTypeTitle = requirement.RequirementType?.Title;
-            requirementDetail.RequirementCategoryTitle = requirement.RequirementCategory?.Title;
-            requirementDetail.ComplianceWeighting = requirement.ComplianceWeighting;
-            requirementDetail.EffectiveStartDate = requirement.EffectiveStartDate;
-            requirementDetail.EffectiveEndDate = requirement.EffectiveEndDate;
-
             requirementDetail.StandardVersionSections = GetRelatedStandardVersionsAndSections(id);
 			requirementDetail.ScopeStatements = GetRelatedScopesWithStatements(id);
             
-
-
             return requirementDetail;
 		}
 
-		public ICollection<StandardVersionWithSections> GetRelatedStandardVersionsAndSections(Guid requirementId)
+        public ICollection<StandardVersionWithSections> GetRelatedStandardVersionsAndSections(Guid requirementId)
 		{
 			var sectionsAndStandardVersions = _dbContext.Sections.AsNoTracking()
                 .Include(r => r.StandardVersion)

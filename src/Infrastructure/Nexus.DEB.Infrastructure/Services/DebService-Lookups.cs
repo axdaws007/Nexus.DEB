@@ -43,6 +43,49 @@ namespace Nexus.DEB.Infrastructure.Services
         }
 
 
+        public IQueryable<RequirementType> GetRequirementTypes()
+        {
+            var query = from s in _dbContext.RequirementTypes
+                        where s.IsEnabled == true
+                        orderby s.Ordinal
+                        select s;
+
+            return query;
+        }
+
+        public async Task<ICollection<FilterItem>> GetRequirementTypesLookupAsync(CancellationToken cancellationToken)
+        {
+            return await (from s in _dbContext.RequirementTypes.AsNoTracking()
+                          orderby s.Ordinal
+                          select new FilterItem()
+                          {
+                              Id = s.Id,
+                              Value = s.Title,
+                              IsEnabled = s.IsEnabled
+                          }).ToListAsync(cancellationToken);
+        }
+
+        public IQueryable<RequirementCategory> GetRequirementCategories()
+        {
+            var query = from s in _dbContext.RequirementCategories
+                        where s.IsEnabled == true
+                        orderby s.Ordinal
+                        select s;
+
+            return query;
+        }
+
+        public async Task<ICollection<FilterItem>> GetRequirementCategoriesLookupAsync(CancellationToken cancellationToken)
+        {
+            return await (from s in _dbContext.RequirementCategories.AsNoTracking()
+                          orderby s.Ordinal
+                          select new FilterItem()
+                          {
+                              Id = s.Id,
+                              Value = s.Title,
+                              IsEnabled = s.IsEnabled
+                          }).ToListAsync(cancellationToken);
+        }
         public IQueryable<TaskType> GetTaskTypes()
         {
             var query = from s in _dbContext.TaskTypes

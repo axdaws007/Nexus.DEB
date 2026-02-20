@@ -5,6 +5,7 @@ using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Nexus.DEB.Domain.Models.Other;
+using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Application.Common.Interfaces
@@ -81,6 +82,10 @@ namespace Nexus.DEB.Application.Common.Interfaces
 		Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(CancellationToken cancellationToken);
 		IQueryable<TaskType> GetTaskTypes();
         Task<ICollection<FilterItem>> GetTaskTypesLookupAsync(CancellationToken cancellationToken);
+        IQueryable<RequirementType> GetRequirementTypes();
+        Task<ICollection<FilterItem>> GetRequirementTypesLookupAsync(CancellationToken cancellationToken);
+        IQueryable<RequirementCategory> GetRequirementCategories();
+        Task<ICollection<FilterItem>> GetRequirementCategoriesLookupAsync(CancellationToken cancellationToken);
 
         #endregion
 

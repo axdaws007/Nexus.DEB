@@ -59,6 +59,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<StandardVersionSummary> StandardVersionSummaries { get; set; }
         public DbSet<StandardVersionExport> StandardVersionExport { get; set; }
 		public DbSet<StandardVersionDetailView> StandardVersionDetails { get; set; }
+        public DbSet<RequirementDetailView> RequirementDetails { get; set; }
         public DbSet<ScopeDetailView> ScopeDetails { get; set; }
 		public DbSet<ScopeSummary> ScopeSummaries { get; set; }
         public DbSet<ScopeExport> ScopeExport { get; set; }

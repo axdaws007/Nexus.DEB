@@ -16,15 +16,15 @@ namespace Nexus.DEB.Api.GraphQL
 
             switch(entity.EntityTypeTitle)
             {
-                case EntityTypes.Task:
-                    if (debUser.Capabilities.Contains(editCapability))
+                case EntityTypes.StandardVersion:
+                    var pseudostateTitle = await dataloader.LoadAsync(entity.EntityId, cancellationToken);
+
+                    if (!string.IsNullOrEmpty(pseudostateTitle) && DebHelper.Paws.States.AllEditableStates.Contains(pseudostateTitle) && debUser.Capabilities.Contains(editCapability))
                         canEdit = true;
                     break;
 
                 default:
-                    var pseudostateTitle = await dataloader.LoadAsync(entity.EntityId, cancellationToken);
-
-                    if (!string.IsNullOrEmpty(pseudostateTitle) && DebHelper.Paws.States.AllEditableStates.Contains(pseudostateTitle) && debUser.Capabilities.Contains(editCapability))
+                    if (debUser.Capabilities.Contains(editCapability))
                         canEdit = true;
                     break;
             }

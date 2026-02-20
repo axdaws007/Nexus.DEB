@@ -38,9 +38,7 @@ namespace Nexus.DEB.Domain
 
                 public static ReadOnlyCollection<string> AllEditableStates => new(
                 [
-                    Draft,
-                    Open,
-                    Active
+                    Draft
                 ]);
             }
 

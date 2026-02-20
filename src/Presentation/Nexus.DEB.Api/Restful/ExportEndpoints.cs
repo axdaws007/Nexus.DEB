@@ -2,6 +2,7 @@
 using CsvHelper.Configuration;
 using GreenDonut.Data;
 using Mapster;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Api.Restful.Maps;
@@ -89,16 +90,40 @@ namespace Nexus.DEB.Api.Restful
         }
 
         private static async Task<IResult> ExportTasksAsCsv(
-            [FromBody] TaskSummaryFilters? filters,
+            [FromBody] GraphQL.TaskSummaryFilters? filters,
             [FromServices] IDebService debService,
             [FromServices] ILogger<Program> logger,
             [FromServices] IAuditService auditService,
             [FromServices] ICurrentUserService currentUserService,
+            [FromServices] ICisService cisService,
             CancellationToken cancellationToken)
         {
+            var f = filters is null
+            ? new TaskSummaryFilters()
+            : new TaskSummaryFilters
+            {
+                DueDateFrom = filters.DueDateFrom,
+                DueDateTo = filters.DueDateTo,
+                SearchText = filters.SearchText?.Trim(),
+                StandardVersionIds = filters.StandardVersionIds,
+                StatementId = filters.StatementId,
+                StatusIds = filters.StatusIds,
+                TaskTypeIds = filters.TaskTypeIds
+            };
+
+            if (!string.IsNullOrEmpty(filters?.OwnedBy))
+            {
+                var posts = cisService.GetPostsBySearchTextAsync(filters.OwnedBy).GetAwaiter().GetResult();
+
+                if (posts != null && posts.Count > 0)
+                {
+                    f.OwnedByIds = [.. posts.Select(x => x.ID)];
+                }
+            }
+
             return await ExportToCsvAsync(
                 entityName: EntityTypes.Task,
-                getDataQuery: () => debService.GetTasksForExport(filters),
+                getDataQuery: () => debService.GetTasksForExport(f),
                 fileNamePrefix: "tasks",
                 registerClassMap: csv => csv.Context.RegisterClassMap<TaskExportMap>(),
                 filters: filters,
@@ -149,16 +174,39 @@ namespace Nexus.DEB.Api.Restful
         }
 
         private static async Task<IResult> ExportStatementsAsCsv(
-            [FromBody] StatementSummaryFilters? filters,
+            [FromBody] GraphQL.StatementSummaryFilters? filters,
             [FromServices] IDebService debService,
             [FromServices] ILogger<Program> logger,
             [FromServices] IAuditService auditService,
             [FromServices] ICurrentUserService currentUserService,
+            [FromServices] ICisService cisService,
             CancellationToken cancellationToken)
         {
+            var f = filters is null
+            ? new StatementSummaryFilters()
+            : new StatementSummaryFilters
+            {
+                ModifiedFrom = filters.ModifiedFrom,
+                ModifiedTo = filters.ModifiedTo,
+                ScopeIds = filters.ScopeIds,
+                SearchText = filters.SearchText?.Trim(),
+                StandardVersionIds = filters.StandardVersionIds,
+                StatusIds = filters.StatusIds,
+            };
+
+            if (!string.IsNullOrEmpty(filters?.OwnedBy))
+            {
+                var posts = cisService.GetPostsBySearchTextAsync(filters.OwnedBy).GetAwaiter().GetResult();
+
+                if (posts != null && posts.Count > 0)
+                {
+                    f.OwnedByIds = [.. posts.Select(x => x.ID)];
+                }
+            }
+
             return await ExportToCsvAsync(
                 entityName: EntityTypes.SoC,
-                getDataQuery: () => debService.GetStatementsForExport(filters),
+                getDataQuery: () => debService.GetStatementsForExport(f),
                 fileNamePrefix: "statements",
                 registerClassMap: csv => csv.Context.RegisterClassMap<StatementExportMap>(),
                 filters: filters,

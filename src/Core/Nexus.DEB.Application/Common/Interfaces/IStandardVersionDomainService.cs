@@ -12,7 +12,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 			string delimiter,
 			int? majorVersion,
 			int? minorVersion,
-			DateOnly effectiveStartDate,
+			DateOnly? effectiveStartDate,
 			DateOnly? effectiveEndDate,
 			CancellationToken cancellationToken);
 
@@ -23,7 +23,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 			string delimiter,
 			int? majorVersion,
 			int? minorVersion,
-			DateOnly effectiveStartDate,
+			DateOnly? effectiveStartDate,
 			DateOnly? effectiveEndDate,
 			CancellationToken cancellationToken);
 	}

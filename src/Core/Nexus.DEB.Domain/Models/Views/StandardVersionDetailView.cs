@@ -25,7 +25,7 @@ namespace Nexus.DEB.Domain.Models
 		public DateTime LastModifiedDate { get; set; }
 		public int? MajorVersion { get; set; }
 		public int? MinorVersion { get; set; }
-		public DateOnly EffectiveStartDate { get; set; }
+		public DateOnly? EffectiveStartDate { get; set; }
 		public DateOnly? EffectiveEndDate { get; set; }
 	}
 }

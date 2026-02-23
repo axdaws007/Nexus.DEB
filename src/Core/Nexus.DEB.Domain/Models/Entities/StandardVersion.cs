@@ -9,7 +9,7 @@ namespace Nexus.DEB.Domain.Models
             EntityTypeTitle = EntityTypes.StandardVersion;
         }
 
-        public DateOnly EffectiveStartDate { get; set; }
+        public DateOnly? EffectiveStartDate { get; set; }
         public DateOnly? EffectiveEndDate { get; set; }
         public string Delimiter { get; set; } = string.Empty;
         public int? MajorVersion { get; set; }

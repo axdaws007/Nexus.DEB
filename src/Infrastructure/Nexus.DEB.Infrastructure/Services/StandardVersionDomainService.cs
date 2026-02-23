@@ -29,7 +29,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			string delimiter,
 			int? majorVersion,
 			int? minorVersion,
-			DateOnly effectiveStartDate,
+			DateOnly? effectiveStartDate,
 			DateOnly? effectiveEndDate,
 			CancellationToken cancellationToken)
 		{
@@ -81,7 +81,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			string delimiter,
 			int? majorVersion,
 			int? minorVersion,
-			DateOnly effectiveStartDate,
+			DateOnly? effectiveStartDate,
 			DateOnly? effectiveEndDate,
 			CancellationToken cancellationToken)
 		{
@@ -133,7 +133,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			StandardVersion? standardVersion,
 			Guid ownerId,
 			string versionTitle,
-			DateOnly effectiveStartDate,
+			DateOnly? effectiveStartDate,
 			DateOnly? effectiveEndDate)
 		{
 			await ValidateOwnerAsync(ownerId);
@@ -173,20 +173,20 @@ namespace Nexus.DEB.Infrastructure.Services
 			}
 		}
 
-		protected void ValidateEffectiveDates(DateOnly effectiveStartDate, DateOnly? effectiveEndDate)
+		protected void ValidateEffectiveDates(DateOnly? effectiveStartDate, DateOnly? effectiveEndDate)
 		{
-			if(effectiveStartDate == DateOnly.MinValue)
-			{
-				ValidationErrors.Add(
-					new ValidationError()
-					{
-						Code = "INVALID_EFFECTIVESTARTDATE",
-						Field = nameof(effectiveStartDate),
-						Message = "The 'effective start date' must be provided."
-					});
-			}
+			//if(effectiveStartDate == DateOnly.MinValue)
+			//{
+			//	ValidationErrors.Add(
+			//		new ValidationError()
+			//		{
+			//			Code = "INVALID_EFFECTIVESTARTDATE",
+			//			Field = nameof(effectiveStartDate),
+			//			Message = "The 'effective start date' must be provided."
+			//		});
+			//}
 
-			if (effectiveEndDate.HasValue && effectiveEndDate.Value <= effectiveStartDate)
+			if (effectiveEndDate.HasValue && effectiveStartDate.HasValue && effectiveEndDate.Value <= effectiveStartDate)
 			{
 				ValidationErrors.Add(
 					new ValidationError()

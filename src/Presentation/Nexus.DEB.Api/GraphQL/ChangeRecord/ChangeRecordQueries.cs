@@ -1,5 +1,6 @@
 ﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Api.GraphQL
@@ -15,7 +16,7 @@ namespace Nexus.DEB.Api.GraphQL
 			=> await debService.GetChangeRecordsForEntityAsync(entityId, cancellationToken);
 
 		[Authorize]
-		public static async Task<ICollection<ChangeRecordItem>> GetChangeRecordItemsForChangeRecordAsync(
+		public static async Task<ICollection<ChangeRecordItemModel>> GetChangeRecordItemsForChangeRecordAsync(
 			long changeRecordId,
 			IDebService debService,
 			CancellationToken cancellationToken)

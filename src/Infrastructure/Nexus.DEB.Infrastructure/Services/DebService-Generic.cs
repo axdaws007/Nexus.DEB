@@ -128,12 +128,21 @@ namespace Nexus.DEB.Infrastructure.Services
 				.OrderByDescending(x => x.ChangeDate)
 				.ToListAsync(cancellationToken);
 
-		public async Task<ICollection<ChangeRecordItem>> GetChangeRecordItemsForChangeRecordAsync(
+		public async Task<ICollection<ChangeRecordItemModel>> GetChangeRecordItemsForChangeRecordAsync(
 			long changeRecordId,
 			CancellationToken cancellationToken)
 			=> await _dbContext.ChangeRecordItems.AsNoTracking()
 				.Where(x => !x.IsDeleted && x.ChangeRecordId == changeRecordId)
-				.OrderBy(x => x.FriendlyFieldName)
+                .Select(x => new ChangeRecordItemModel
+                {
+                    Id = x.Id,
+                    ChangedFrom = x.ChangedFrom ?? string.Empty,
+                    ChangedTo = x.ChangedTo ?? string.Empty,
+                    ChangeRecordId = x.ChangeRecordId,
+                    FieldName = x.FieldName,
+                    FriendlyFieldName = x.FriendlyFieldName
+                })
+                .OrderBy(x => x.FriendlyFieldName)
 				.ToListAsync(cancellationToken);
 
         public async Task AddChangeRecordItem(Guid entityId, string fieldName, string friendlyFieldName, string oldValue, string newValue, CancellationToken cancellationToken)

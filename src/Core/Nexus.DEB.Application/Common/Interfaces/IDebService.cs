@@ -155,13 +155,19 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<UserAndPost> GetPostsWithUsers(string? searchText, ICollection<Guid> postIds, bool includeDeletedUsers = false, bool includedDeletedPosts = false);
 
         Task<Section?> GetSectionByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<Section?> GetSectionAsync(Guid id, CancellationToken cancellationToken);
         Task<IReadOnlyList<Section>> GetSectionsForStandardVersionAsync(Guid standardVersionId, CancellationToken cancellationToken = default);
 
         Task<List<Section>> GetSiblingSectionsAsync(Guid standardVersionId, Guid? parentSectionId, Guid? excludeSectionId, CancellationToken cancellationToken);
 
-        Task<bool> IsSectionDescendantOfAsync(Guid candidateSectionId, Guid ancestorSectionId, CancellationToken cancellationToken);
+        Task<Section> CreateSectionAsync(Section section, CancellationToken cancellationToken);
+        Task<Section> UpdateSectionAsync(Section section, CancellationToken cancellationToken);
+        Task<bool> DeleteSectionByIdAsync(Guid id, CancellationToken cancellationToken);
 
         Task UpdateSectionsAsync(IEnumerable<Section> sections, CancellationToken cancellationToken);
+
+        Task<bool> IsSectionDescendantOfAsync(Guid candidateSectionId, Guid ancestorSectionId, CancellationToken cancellationToken);
+
 
         #endregion Other
 

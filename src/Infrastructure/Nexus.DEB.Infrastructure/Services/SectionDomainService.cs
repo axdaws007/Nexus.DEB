@@ -120,5 +120,125 @@ namespace Nexus.DEB.Infrastructure.Services
                 return Result.Failure($"An error occurred moving the Section: {ex.Message}");
             }
         }
+
+        public async Task<Result<Section>> CreateSectionAsync(
+            string reference,
+            string title,
+            bool displayReference,
+            bool displayTitle,
+            Guid? parentId,
+            Guid standardVersionId,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var ordinal = 1;
+
+                var siblings = await _debService.GetSiblingSectionsAsync(standardVersionId, parentId, null, cancellationToken);
+
+                if (siblings != null && siblings.Count > 0)
+                {
+                    ordinal = siblings.Last().Ordinal + 1;
+                }
+
+                var section = new Section()
+                {
+                    Id = Guid.NewGuid(),
+                    CreatedDate = DateTime.Now,
+                    IsReferenceDisplayed = displayReference,
+                    IsTitleDisplayed = displayTitle,
+                    LastModifiedDate = DateTime.Now,
+                    Ordinal = ordinal,
+                    ParentSectionId = parentId,
+                    Reference = reference,
+                    StandardVersionId = standardVersionId,
+                    Title = title
+                };
+
+                await _debService.CreateSectionAsync(section, cancellationToken);
+
+                return Result<Section>.Success(section);
+            }
+            catch (Exception ex)
+            {
+                return Result<Section>.Failure($"An error occurred creating the Section: {ex.Message}");
+            }
+        }
+
+        public async Task<Result<Section>> UpdateSectionAsync(
+            Guid sectionId,
+            string reference,
+            string title,
+            bool displayReference,
+            bool displayTitle,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var section = await _debService.GetSectionAsync(sectionId, cancellationToken);
+
+                if (section == null)
+                {
+                    return Result<Section>.Failure(new ValidationError()
+                    {
+                        Code = "INVALID_SECTION_ID",
+                        Field = nameof(sectionId),
+                        Message = "Section does not exist"
+                    });
+                }
+
+                section.IsReferenceDisplayed = displayReference;
+                section.IsTitleDisplayed = displayTitle;
+                section.LastModifiedDate = DateTime.Now;
+                section.Reference = reference;
+                section.Title = title;
+
+                await _debService.UpdateSectionAsync(section, cancellationToken);
+
+                return Result<Section>.Success(section);
+            }
+            catch (Exception ex)
+            {
+                return Result<Section>.Failure($"An error occurred updating the Section: {ex.Message}");
+            }
+        }
+
+        public async Task<Result<bool>> DeleteSectionAsync(Guid sectionId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var section = await _debService.GetSectionByIdAsync(sectionId, cancellationToken);
+
+                if (section == null)
+                {
+                    return Result<bool>.Failure(new ValidationError()
+                    {
+                        Code = "INVALID_SECTION_ID",
+                        Field = nameof(sectionId),
+                        Message = "Section does not exist"
+                    });
+                }
+
+                var children = await _debService.GetSiblingSectionsAsync(section.StandardVersionId, section.Id, null, cancellationToken);
+
+                if (children != null && children.Count > 0)
+                {
+                    return Result<bool>.Failure(new ValidationError()
+                    {
+                        Code = "SECTION_HAS_CHILDREN",
+                        Field = nameof(sectionId),
+                        Message = "The section has children and cannot be deleted."
+                    });
+                }
+
+                var isDeleted = await _debService.DeleteSectionByIdAsync(section.Id, cancellationToken);
+
+                return Result<bool>.Success(isDeleted);
+            }
+            catch (Exception ex)
+            {
+                return Result<bool>.Failure($"An error occurred deleting the Section: {ex.Message}");
+            }
+        }
     }
 }

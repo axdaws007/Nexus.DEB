@@ -1,6 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Domain;
@@ -8,7 +7,6 @@ using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Other;
 using Nexus.DEB.Infrastructure.Helpers;
 using System.Data;
-using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -626,6 +624,9 @@ namespace Nexus.DEB.Infrastructure.Services
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
+        public async Task<Section?> GetSectionAsync(Guid id, CancellationToken cancellationToken)
+            => await _dbContext.Sections.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
         public async Task<IReadOnlyList<Section>> GetSectionsForStandardVersionAsync(
             Guid standardVersionId,
             CancellationToken cancellationToken = default)
@@ -649,17 +650,39 @@ namespace Nexus.DEB.Infrastructure.Services
             return await _dbContext.Sections
                 .Where(s => s.StandardVersionId == standardVersionId
                          && s.ParentSectionId == parentSectionId
-                         && s.Id != excludeSectionId)
+                         && (!excludeSectionId.HasValue || (excludeSectionId.HasValue && s.Id != excludeSectionId)))
                 .OrderBy(s => s.Ordinal)
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task UpdateSectionsAsync(
-            IEnumerable<Section> sections,
-            CancellationToken cancellationToken)
+        public async Task<Section> CreateSectionAsync(Section section, CancellationToken cancellationToken)
+        {
+            await _dbContext.Sections.AddAsync(section, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return section;
+        }
+
+        public async Task<Section> UpdateSectionAsync(Section section, CancellationToken cancellationToken)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return section;
+        }
+
+        public async Task UpdateSectionsAsync(IEnumerable<Section> sections, CancellationToken cancellationToken)
         {
             _dbContext.Sections.UpdateRange(sections);
             await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<bool> DeleteSectionByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var rowsDeleted = await _dbContext.Sections.Where(x => x.Id == id).ExecuteDeleteAsync(cancellationToken);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return rowsDeleted == 1;
         }
 
         public async Task<bool> IsSectionDescendantOfAsync(

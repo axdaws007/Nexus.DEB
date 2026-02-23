@@ -7,6 +7,7 @@ namespace Nexus.DEB.Domain.Models
         public Guid EntityId { get; set; }
         public string? SerialNumber { get; set; }
         public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
         public Guid OwnedById { get; set; }
         public string? OwnedBy { get; set; }
         public DateOnly? DueDate { get; set; }

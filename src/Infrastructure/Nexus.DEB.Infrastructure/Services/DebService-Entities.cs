@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Extensions;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
-using Nexus.DEB.Application.Common.Models.Sorting;
-using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
@@ -73,6 +71,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     EntityId = r.EntityId,
                     SerialNumber = r.SerialNumber,
                     Title = r.Title,
+                    Description = r.Description,
                     LastModifiedDate = r.LastModifiedDate,
                     Sections = r.SectionRequirements
                         .Where(sr => sr.IsEnabled) // Only include enabled sections
@@ -129,7 +128,10 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Text search on Title
                 if (!string.IsNullOrWhiteSpace(filters.SearchText))
                 {
-                    query = query.Where(r => r.Title.Contains(filters.SearchText));
+                    query = query.Where(r => 
+                        r.Title.Contains(filters.SearchText) || 
+                        (r.Description != null && r.Description.Contains(filters.SearchText)) || 
+                        (r.SerialNumber != null && r.SerialNumber.Contains(filters.SearchText)));
                 }
 
                 // Date range filter
@@ -172,6 +174,7 @@ namespace Nexus.DEB.Infrastructure.Services
                             RequirementId = svr.RequirementId,
                             SerialNumber = svr.SerialNumber,
                             Title = svr.Title,
+                            Description = svr.Description,
                             SectionId = svr.SectionId,
                             Section = svr.Section,
                             OtherScopes = r.Scopes.Where(w => filters == null || w.EntityId != filters.ScopeId).Count(),
@@ -185,9 +188,12 @@ namespace Nexus.DEB.Infrastructure.Services
                     query = query.Where(w => w.SectionId == filters.SectionId.Value);
                 }
 
-                if (filters.SearchText != null && !string.IsNullOrWhiteSpace(filters.SearchText))
+                if (!string.IsNullOrWhiteSpace(filters.SearchText))
                 {
-                    query = query.Where(w => w.Title.Contains(filters.SearchText) || w.SerialNumber.Contains(filters.SearchText));
+                    query = query.Where(w => 
+                        w.Title.Contains(filters.SearchText) || 
+                        w.SerialNumber.Contains(filters.SearchText) || 
+                        (w.Description != null && w.Description.Contains(filters.SearchText)));
                 }
             }
 
@@ -205,6 +211,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 RequirementId = s.RequirementId,
                 SerialNumber = s.SerialNumber,
                 Title = s.Title,
+                Description = s.Description,
                 SectionId = s.SectionId,
                 Section = s.Section,
                 OtherScopes = s.OtherScopes,
@@ -247,7 +254,10 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Text search on Title
                 if (!string.IsNullOrWhiteSpace(filters.SearchText))
                 {
-                    query = query.Where(r => r.Title.Contains(filters.SearchText));
+                    query = query.Where(r => 
+                        r.Title.Contains(filters.SearchText) || 
+                        (r.Description != null && r.Description.Contains(filters.SearchText)) ||
+                        (r.SerialNumber != null && r.SerialNumber.Contains(filters.SearchText)));
                 }
 
                 // Date range filter
@@ -754,8 +764,9 @@ namespace Nexus.DEB.Infrastructure.Services
                 .Select(s => new StatementSummary
                 {
                     EntityId = s.EntityId,
-                    SerialNumber = s.SerialNumber,
+                    SerialNumber = s.SerialNumber ?? string.Empty,
                     Title = s.Title,
+                    Description = s.Description,
                     LastModifiedDate = s.LastModifiedDate,
                     OwnedById = s.OwnedById,
                     EntityTypeTitle = s.EntityTypeTitle,
@@ -816,7 +827,10 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Text search on Title
                 if (!string.IsNullOrWhiteSpace(filters.SearchText))
                 {
-                    query = query.Where(s => s.Title.Contains(filters.SearchText));
+                    query = query.Where(s => 
+                        s.Title.Contains(filters.SearchText) ||
+                        (s.Description != null && s.Description.Contains(filters.SearchText)) ||
+                        s.SerialNumber.Contains(filters.SearchText));
                 }
 
                 // Date range filter
@@ -873,10 +887,13 @@ namespace Nexus.DEB.Infrastructure.Services
                     query = query.Where(r => statementIds.Contains(r.EntityId));
                 }
 
-                // Text search on Title
+                // Text search on Title, Description and SerialNumber
                 if (!string.IsNullOrWhiteSpace(filters.SearchText))
                 {
-                    query = query.Where(r => r.Title.Contains(filters.SearchText));
+                    query = query.Where(r => 
+                        r.Title.Contains(filters.SearchText) || 
+                        (r.Description != null && r.Description.Contains(filters.SearchText)) ||
+                        (r.SerialNumber != null && r.SerialNumber.Contains(filters.SearchText)));
                 }
 
                 // Date range filter
@@ -1280,7 +1297,10 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Text search on Title
                 if (!string.IsNullOrWhiteSpace(filters.SearchText))
                 {
-                    query = query.Where(r => r.Title.Contains(filters.SearchText));
+                    query = query.Where(r => 
+                        r.Title.Contains(filters.SearchText) || 
+                        (r.Description != null && r.Description.Contains(filters.SearchText)) || 
+                        (r.SerialNumber != null && r.SerialNumber.Contains(filters.SearchText)));
                 }
 
                 // Date range filter
@@ -1339,7 +1359,10 @@ namespace Nexus.DEB.Infrastructure.Services
                 // Text search on Title
                 if (!string.IsNullOrWhiteSpace(filters.SearchText))
                 {
-                    query = query.Where(r => r.Title.Contains(filters.SearchText));
+                    query = query.Where(r =>
+                        r.Title.Contains(filters.SearchText) ||
+                        (r.Description != null && r.Description.Contains(filters.SearchText)) ||
+                        (r.SerialNumber != null && r.SerialNumber.Contains(filters.SearchText)));
                 }
 
                 // Date range filter

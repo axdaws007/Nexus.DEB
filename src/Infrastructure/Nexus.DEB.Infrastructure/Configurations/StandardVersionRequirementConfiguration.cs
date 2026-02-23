@@ -32,7 +32,10 @@ namespace Nexus.DEB.Infrastructure.Configurations
 				.HasColumnName("Title")
 				.IsRequired();
 
-			builder.Property(e => e.StandardVersionId)
+            builder.Property(e => e.Description)
+                .HasColumnName("Description");
+
+            builder.Property(e => e.StandardVersionId)
 				.HasColumnName("StandardVersionId");
 
 			builder.Property(e => e.StandardVersion)

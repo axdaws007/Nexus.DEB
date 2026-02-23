@@ -27,6 +27,9 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .HasColumnName("Title")
                 .IsRequired();
 
+            builder.Property(e => e.Description)
+                .HasColumnName("Description");
+
             builder.Property(e => e.OwnedById)
                 .HasColumnName("OwnedById")
                 .IsRequired();

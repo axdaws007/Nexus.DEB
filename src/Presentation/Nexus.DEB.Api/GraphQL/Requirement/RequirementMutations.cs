@@ -107,7 +107,7 @@ namespace Nexus.DEB.Api.GraphQL
                 EntityType = requirementDetail.EntityTypeTitle,
                 EntityId = requirementDetail.EntityId,
                 SerialNumber = requirementDetail.SerialNumber ?? string.Empty,
-                IsNew = true,
+                IsNew = false,
             }, cancellationToken);
 
             return result.Data;

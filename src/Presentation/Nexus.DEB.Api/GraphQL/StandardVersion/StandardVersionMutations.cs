@@ -94,7 +94,7 @@ namespace Nexus.DEB.Api.GraphQL
 				EntityType = standardVersion.EntityTypeTitle,
 				EntityId = standardVersion.EntityId,
 				SerialNumber = standardVersion.SerialNumber ?? string.Empty,
-				IsNew = true,
+				IsNew = false,
 			}, cancellationToken);
 
 			return result.Data;

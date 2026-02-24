@@ -9,7 +9,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Scope> builder)
         {
-            builder.ToTable("Scope", "deb");
+            builder.ToTable("Scope", "deb", t => { t.HasTrigger("Scope_ChangeTracking"); });
 
             builder.HasBaseType<EntityHead>();
 
@@ -31,7 +31,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
                         .HasForeignKey("ScopeId")
                         .OnDelete(DeleteBehavior.NoAction),
                     // Join table configuration
-                    j => j.ToTable("ScopeRequirement", "deb")
+                    j => j.ToTable("ScopeRequirement", "deb", t => { t.HasTrigger("ScopeRequirement_ChangeTracking"); })
                 );
 
         }

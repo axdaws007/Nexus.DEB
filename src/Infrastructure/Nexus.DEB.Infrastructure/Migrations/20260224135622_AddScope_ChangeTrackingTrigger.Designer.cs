@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20260224135622_AddScope_ChangeTrackingTrigger")]
+    partial class AddScope_ChangeTrackingTrigger
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2005,12 +2008,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
                     b.HasIndex("ScopeId");
 
-                    b.ToTable("ScopeRequirement", "deb", t =>
-                        {
-                            t.HasTrigger("ScopeRequirement_ChangeTracking");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.ToTable("ScopeRequirement", "deb");
                 });
 
             modelBuilder.Entity("StandardVersionRequirement", b =>
@@ -2067,12 +2065,7 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.Property<DateOnly?>("TargetImplementationDate")
                         .HasColumnType("date");
 
-                    b.ToTable("Scope", "deb", t =>
-                        {
-                            t.HasTrigger("Scope_ChangeTracking");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                    b.ToTable("Scope", "deb");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.StandardVersion", b =>

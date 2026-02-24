@@ -747,7 +747,7 @@ namespace Nexus.DEB.Infrastructure.Services
 				}
 			}
 
-			await _dbContext.SaveChangesAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             return await GetScopeDetailByIdAsync(scopeId, cancellationToken);
 		}

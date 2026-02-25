@@ -696,7 +696,7 @@ namespace Nexus.DEB.Infrastructure.Services
         public async Task<List<SectionRequirement>> GetSectionRequirementsForSectionAsync(Guid sectionId, CancellationToken cancellationToken)
             => await _dbContext.SectionRequirements.Where(x => x.SectionID == sectionId).OrderBy(x => x.Ordinal).ToListAsync();
 
-        public async Task<ICollection<Guid>> UpdateSectionRequirementsAsync(
+        public async Task<ICollection<RequirementItem>> UpdateSectionRequirementsAsync(
             Guid sectionId,
             ICollection<Guid> idsToAdd,
             ICollection<Guid> idsToRemove,
@@ -765,7 +765,15 @@ namespace Nexus.DEB.Infrastructure.Services
 
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            return sectionRequirements.Select(x => x.RequirementID).ToList();
+            var requirementIds = sectionRequirements.Select(x => x.RequirementID).ToList();
+
+            return await _dbContext.EntityHeads
+                .Where(x => requirementIds.Contains(x.EntityId))
+                .Select(x => new RequirementItem()
+                {
+                    Id = x.EntityId,
+                    Title = x.Title,
+                }).ToListAsync(cancellationToken);
         }
 
         public async Task UpdateSectionRequirementsAsync(

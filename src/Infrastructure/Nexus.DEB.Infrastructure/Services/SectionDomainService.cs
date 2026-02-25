@@ -272,7 +272,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             try
             {
-                var requirementIds = await _debService.UpdateSectionRequirementsAsync(
+                var requirementItems = await _debService.UpdateSectionRequirementsAsync(
                     section.Id,
                     idsToAdd,
                     idsToRemove,
@@ -283,7 +283,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     SectionId = section.Id,
                     StandardVersion = standardVersionDetail,
-                    RequirementIds = requirementIds
+                    Requirements = requirementItems
                 });
             }
             catch (Exception ex)

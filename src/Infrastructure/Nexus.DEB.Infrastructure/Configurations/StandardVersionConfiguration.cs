@@ -9,7 +9,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<StandardVersion> builder)
         {
-            builder.ToTable("StandardVersion", "deb");
+            builder.ToTable("StandardVersion", "deb", t => { t.HasTrigger("StandardVersion_ChangeTracking"); });
 
             builder.HasBaseType<EntityHead>();
 
@@ -44,7 +44,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
                         .HasForeignKey("StandardVersionId")
                         .OnDelete(DeleteBehavior.NoAction),
                     // Join table configuration
-                    j => j.ToTable("StandardVersionRequirement", "deb")
+                    j => j.ToTable("StandardVersionRequirement", "deb", t => { t.HasTrigger("StandardVersionRequirement_ChangeTracking"); })
                 );
 
             builder.Property(x => x.VersionTitle).HasDefaultValue(string.Empty).HasMaxLength(50);

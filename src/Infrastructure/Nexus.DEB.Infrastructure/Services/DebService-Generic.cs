@@ -693,9 +693,11 @@ namespace Nexus.DEB.Infrastructure.Services
                 .Select(x => x.RequirementID)
                 .ToListAsync(cancellationToken);
 
-        public async Task<SectionRequirementResponse> UpdateSectionRequirementsAsync(
-            Section section,
-            StandardVersionDetail standardVersionDetail,
+        public async Task<List<SectionRequirement>> GetSectionRequirementsForSectionAsync(Guid sectionId, CancellationToken cancellationToken)
+            => await _dbContext.SectionRequirements.Where(x => x.SectionID == sectionId).OrderBy(x => x.Ordinal).ToListAsync();
+
+        public async Task<ICollection<Guid>> UpdateSectionRequirementsAsync(
+            Guid sectionId,
             ICollection<Guid> idsToAdd,
             ICollection<Guid> idsToRemove,
             Guid postId,
@@ -707,7 +709,7 @@ namespace Nexus.DEB.Infrastructure.Services
             var currentOrdinal = 1;
 
             var sectionRequirements = _dbContext.SectionRequirements
-                .Where(x => x.SectionID == section.Id)
+                .Where(x => x.SectionID == sectionId)
                 .OrderBy(x => x.Ordinal)
                 .ToList();
 
@@ -746,7 +748,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     var sectionRequirement = new SectionRequirement
                     {
-                        SectionID = section.Id,
+                        SectionID = sectionId,
                         RequirementID = requirement.EntityId,
                         Ordinal = currentOrdinal,
                         LastModifiedBy = postId,
@@ -763,15 +765,25 @@ namespace Nexus.DEB.Infrastructure.Services
 
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            var requirementIds = sectionRequirements.Select(x => x.RequirementID).ToList();
-
-            return new SectionRequirementResponse
-            {
-                SectionId = section.Id,
-                StandardVersion = standardVersionDetail,
-                RequirementIds = requirementIds
-            };
+            return sectionRequirements.Select(x => x.RequirementID).ToList();
         }
+
+        public async Task UpdateSectionRequirementsAsync(
+            IEnumerable<SectionRequirement> toUpdate,
+            SectionRequirement? toAdd,
+            SectionRequirement? toRemove,
+            CancellationToken cancellationToken)
+        {
+            if (toRemove is not null)
+                _dbContext.Set<SectionRequirement>().Remove(toRemove);
+
+            if (toAdd is not null)
+                await _dbContext.Set<SectionRequirement>().AddAsync(toAdd, cancellationToken);
+
+            // toUpdate entries are already tracked — EF will detect the ordinal changes
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
 
         public async Task<bool> IsSectionDescendantOfAsync(
             Guid candidateSectionId,

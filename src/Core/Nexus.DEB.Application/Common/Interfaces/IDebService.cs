@@ -173,13 +173,16 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task<IReadOnlyList<Guid>> GetRequirementIdsForSectionAsync(Guid sectionId, CancellationToken cancellationToken);
 
-        Task<SectionRequirementResponse> UpdateSectionRequirementsAsync(
-            Section section, 
-            StandardVersionDetail standardVersionDetail, 
+        Task<ICollection<Guid>> UpdateSectionRequirementsAsync(
+            Guid sectionId, 
             ICollection<Guid> idsToAdd, 
             ICollection<Guid> idsToRemove, 
             Guid postId,
             CancellationToken cancellationToken);
+
+        Task<List<SectionRequirement>> GetSectionRequirementsForSectionAsync(Guid sectionId, CancellationToken cancellationToken);
+
+        Task UpdateSectionRequirementsAsync(IEnumerable<SectionRequirement> toUpdate, SectionRequirement? toAdd, SectionRequirement? toRemove, CancellationToken cancellationToken);
 
         #endregion Other
 

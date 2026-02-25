@@ -118,5 +118,24 @@ namespace Nexus.DEB.Api.GraphQL
 
             return result.Data;
         }
+
+        [Authorize(Policy = DebHelper.Policies.CanEditStdVersion)]
+        public static async Task<bool> MoveRequirementsAssignedToSection(
+            Guid requirementId,
+            Guid oldSectionId,
+            Guid newSectionId,
+            int ordinal,
+            ISectionDomainService sectionDomainService,
+            CancellationToken cancellationToken)
+        {
+            var result = await sectionDomainService.MoveRequirementAssignedToSectionAsync(requirementId, oldSectionId, newSectionId, ordinal, cancellationToken);
+
+            if (!result.IsSuccess)
+            {
+                throw ExceptionHelper.BuildException(result);
+            }
+
+            return true;
+        }
     }
 }

@@ -7,10 +7,12 @@ namespace Nexus.DEB.Infrastructure.Services
     public class SectionDomainService : ISectionDomainService
     {
         private readonly IDebService _debService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public SectionDomainService(IDebService debService)
+        public SectionDomainService(IDebService debService, ICurrentUserService currentUserService)
         {
             _debService = debService;
+            _currentUserService = currentUserService;
         }
 
         public async Task<Result> MoveSectionAsync(Guid sectionId, Guid? newParentSectionId, int newOrdinal, CancellationToken cancellationToken)
@@ -238,6 +240,50 @@ namespace Nexus.DEB.Infrastructure.Services
             catch (Exception ex)
             {
                 return Result<bool>.Failure($"An error occurred deleting the Section: {ex.Message}");
+            }
+        }
+
+        public async Task<Result<SectionRequirementResponse>> UpdateSectionRequirementsAsync(Guid sectionId, ICollection<Guid> idsToAdd, ICollection<Guid> idsToRemove, CancellationToken cancellationToken)
+        {
+            var section = await _debService.GetSectionByIdAsync(sectionId, cancellationToken);
+
+            if (section == null)
+            {
+                return Result<SectionRequirementResponse>.Failure(new ValidationError()
+                {
+                    Code = "INVALID_SECTION_ID",
+                    Field = nameof(sectionId),
+                    Message = "Section does not exist"
+                });
+            }
+
+            var standardVersionDetail = await _debService.GetStandardVersionDetailByIdAsync(section.StandardVersionId, cancellationToken);
+
+            if (standardVersionDetail == null)
+            {
+                return Result<SectionRequirementResponse>.Failure(new ValidationError()
+                {
+                    Code = "INVALID_STANDARD_VERSION_ID",
+                    Field = nameof(sectionId),
+                    Message = "Standard Version does not exist"
+                });
+            }
+
+            try
+            {
+                var response = await _debService.UpdateSectionRequirementsAsync(
+                    section,
+                    standardVersionDetail,
+                    idsToAdd,
+                    idsToRemove,
+                    _currentUserService.PostId,
+                    cancellationToken);
+
+                return Result<SectionRequirementResponse>.Success(response);
+            }
+            catch (Exception ex)
+            {
+                return Result<SectionRequirementResponse>.Failure($"An error occurred updating the Section / Reference: {ex.Message}");
             }
         }
     }

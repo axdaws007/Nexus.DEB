@@ -693,6 +693,86 @@ namespace Nexus.DEB.Infrastructure.Services
                 .Select(x => x.RequirementID)
                 .ToListAsync(cancellationToken);
 
+        public async Task<SectionRequirementResponse> UpdateSectionRequirementsAsync(
+            Section section,
+            StandardVersionDetail standardVersionDetail,
+            ICollection<Guid> idsToAdd,
+            ICollection<Guid> idsToRemove,
+            Guid postId,
+            CancellationToken cancellationToken)
+        {
+            idsToAdd = idsToAdd.Distinct().ToList();
+            idsToRemove = idsToRemove.Distinct().ToList();
+
+            var currentOrdinal = 1;
+
+            var sectionRequirements = _dbContext.SectionRequirements
+                .Where(x => x.SectionID == section.Id)
+                .OrderBy(x => x.Ordinal)
+                .ToList();
+
+            if (idsToRemove.Count > 0)
+            {
+                var itemsToRemove = sectionRequirements
+                    .Where(x => idsToRemove.Contains(x.RequirementID))
+                    .ToList();
+
+                _dbContext.SectionRequirements.RemoveRange(itemsToRemove);
+
+                sectionRequirements.RemoveAll(x => idsToRemove.Contains(x.RequirementID));
+
+                foreach (var sectionRequirement in sectionRequirements)
+                {
+                    sectionRequirement.Ordinal = currentOrdinal;
+                    sectionRequirement.LastModifiedAt = DateTime.Now;
+                    sectionRequirement.LastModifiedBy = postId;
+
+                    currentOrdinal++;
+                }
+            }
+            else
+            {
+                currentOrdinal = sectionRequirements.Count + 1;
+            }
+
+            if (idsToAdd.Count > 0)
+            {
+                var requirementsToAdd = _dbContext.Requirements
+                    .Where(x => idsToAdd.Contains(x.EntityId) && x.IsRemoved == false)
+                    .OrderBy(x => x.SerialNumber)
+                    .ToList();
+
+                foreach (var requirement in requirementsToAdd)
+                {
+                    var sectionRequirement = new SectionRequirement
+                    {
+                        SectionID = section.Id,
+                        RequirementID = requirement.EntityId,
+                        Ordinal = currentOrdinal,
+                        LastModifiedBy = postId,
+                        LastModifiedAt = DateTime.Now,
+                        IsEnabled = true
+                    };
+
+                    _dbContext.SectionRequirements.Add(sectionRequirement);
+                    sectionRequirements.Add(sectionRequirement);
+
+                    currentOrdinal++;
+                }
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            var requirementIds = sectionRequirements.Select(x => x.RequirementID).ToList();
+
+            return new SectionRequirementResponse
+            {
+                SectionId = section.Id,
+                StandardVersion = standardVersionDetail,
+                RequirementIds = requirementIds
+            };
+        }
+
         public async Task<bool> IsSectionDescendantOfAsync(
             Guid candidateSectionId,
             Guid ancestorSectionId,

@@ -6,6 +6,7 @@ using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
+using Nexus.DEB.Domain.Models.Views;
 using Scope = Nexus.DEB.Domain.Models.Scope;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -471,6 +472,43 @@ namespace Nexus.DEB.Infrastructure.Services
             await _dbContext.SaveChangesAsync(cancellationToken);
 
             return requirement;
+        }
+
+        public IQueryable<RequirementSectionSummary> GetRequirementsWithSectionCounts(RequirementSectionFilters filters)
+        {
+            var query = _dbContext.RequirementSectionSummaries.AsNoTracking();
+
+            if (filters != null)
+            {
+                if (filters.StatusIds != null && filters.StatusIds.Count > 0)
+                {
+                    query = query.Where(x => filters.StatusIds.Contains(x.StatusId));
+                }
+
+                if (!string.IsNullOrEmpty(filters.SearchText))
+                {
+                    query = query.Where(x =>
+                        (x.Title != null && x.Title.Contains(filters.SearchText)) ||
+                        (x.SerialNumber != null && x.SerialNumber.Contains(filters.SearchText)) ||
+                        (x.Description != null && x.Description.Contains(filters.SearchText)));
+                }
+
+                switch(filters.HasSectionsAssigned)
+                {
+                    case true:
+                        query = query.Where(x => x.NumberOfLinkedSections > 0);
+                        break;
+
+                    case false:
+                        query = query.Where(x => x.NumberOfLinkedSections == 0);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            return query;
         }
 
         #endregion Requirements

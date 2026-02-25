@@ -679,11 +679,19 @@ namespace Nexus.DEB.Infrastructure.Services
         public async Task<bool> DeleteSectionByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var rowsDeleted = await _dbContext.Sections.Where(x => x.Id == id).ExecuteDeleteAsync(cancellationToken);
+            var otherDeletedRows = await _dbContext.SectionRequirements.Where(x => x.SectionID == id).ExecuteDeleteAsync(cancellationToken);
 
             await _dbContext.SaveChangesAsync(cancellationToken);
 
             return rowsDeleted == 1;
         }
+
+        public async Task<IReadOnlyList<Guid>> GetRequirementIdsForSectionAsync(Guid sectionId, CancellationToken cancellationToken)
+            => await _dbContext.SectionRequirements
+                .Where(x => x.SectionID == sectionId)
+                .OrderBy(x => x.Ordinal)
+                .Select(x => x.RequirementID)
+                .ToListAsync(cancellationToken);
 
         public async Task<bool> IsSectionDescendantOfAsync(
             Guid candidateSectionId,

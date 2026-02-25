@@ -5,6 +5,7 @@ using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Nexus.DEB.Domain.Models.Other;
+using Nexus.DEB.Domain.Models.Views;
 using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
@@ -25,6 +26,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<Requirement?> GetRequirementByIdAsync(Guid id, CancellationToken cancellationToken);
         Task<Requirement> CreateRequirementAsync(Requirement requirement, CancellationToken cancellationToken = default);
         Task<Requirement> UpdateRequirementAsync(Requirement requirement, CancellationToken cancellationToken = default);
+        IQueryable<RequirementSectionSummary> GetRequirementsWithSectionCounts(RequirementSectionFilters filters);
+
         ICollection<StandardVersionWithSections> GetRelatedStandardVersionsAndSections(Guid requirementId);
 		ICollection<ScopeWithStatements> GetRelatedScopesWithStatements(Guid requirementId);
 		Task<RequirementChildCounts> GetChildCountsForRequirementAsync(Guid id, CancellationToken cancellationToken);
@@ -168,6 +171,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task<bool> IsSectionDescendantOfAsync(Guid candidateSectionId, Guid ancestorSectionId, CancellationToken cancellationToken);
 
+        Task<IReadOnlyList<Guid>> GetRequirementIdsForSectionAsync(Guid sectionId, CancellationToken cancellationToken);
 
         #endregion Other
 

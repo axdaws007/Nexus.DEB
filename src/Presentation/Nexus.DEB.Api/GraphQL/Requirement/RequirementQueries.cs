@@ -3,6 +3,7 @@ using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Domain.Models.Views;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -52,5 +53,14 @@ namespace Nexus.DEB.Api.GraphQL
 		[Authorize]
 		public static async Task<RequirementChildCounts> GetChildCountsForRequirement(Guid requirementId, IDebService debService, CancellationToken cancellationToken)
 		    => await debService.GetChildCountsForRequirementAsync(requirementId, cancellationToken);
-	}
+
+		[Authorize]
+		[UseOffsetPaging]
+		[UseSorting]
+		public static IQueryable<RequirementSectionSummary> GetRequirementsWithSectionCounts(
+			RequirementSectionFilters filters,
+			IDebService debService)
+			=> debService.GetRequirementsWithSectionCounts(filters);
+
+    }
 }

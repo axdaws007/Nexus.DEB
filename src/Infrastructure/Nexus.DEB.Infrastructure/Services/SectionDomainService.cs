@@ -1,4 +1,5 @@
-﻿using Nexus.DEB.Application.Common.Interfaces;
+﻿using Microsoft.Win32.SafeHandles;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
 
@@ -7,10 +8,12 @@ namespace Nexus.DEB.Infrastructure.Services
     public class SectionDomainService : ISectionDomainService
     {
         private readonly IDebService _debService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public SectionDomainService(IDebService debService)
+        public SectionDomainService(IDebService debService, ICurrentUserService currentUserService)
         {
             _debService = debService;
+            _currentUserService = currentUserService;
         }
 
         public async Task<Result> MoveSectionAsync(Guid sectionId, Guid? newParentSectionId, int newOrdinal, CancellationToken cancellationToken)
@@ -56,7 +59,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 if (newOrdinal < 1 || newOrdinal > maxOrdinal)
                     return Result.Failure($"Ordinal must be between 1 and {maxOrdinal}.");
 
-                var sectionsToUpdate = new List<Section>();
+                var sectionsToUpdate = new List<Domain.Models.Section>();
 
                 if (parentChanged)
                 {
@@ -238,6 +241,174 @@ namespace Nexus.DEB.Infrastructure.Services
             catch (Exception ex)
             {
                 return Result<bool>.Failure($"An error occurred deleting the Section: {ex.Message}");
+            }
+        }
+
+        public async Task<Result<SectionRequirementResponse>> UpdateSectionRequirementsAsync(Guid sectionId, ICollection<Guid> idsToAdd, ICollection<Guid> idsToRemove, CancellationToken cancellationToken)
+        {
+            var section = await _debService.GetSectionByIdAsync(sectionId, cancellationToken);
+
+            if (section == null)
+            {
+                return Result<SectionRequirementResponse>.Failure(new ValidationError()
+                {
+                    Code = "INVALID_SECTION_ID",
+                    Field = nameof(sectionId),
+                    Message = "Section does not exist"
+                });
+            }
+
+            var standardVersionDetail = await _debService.GetStandardVersionDetailByIdAsync(section.StandardVersionId, cancellationToken);
+
+            if (standardVersionDetail == null)
+            {
+                return Result<SectionRequirementResponse>.Failure(new ValidationError()
+                {
+                    Code = "INVALID_STANDARD_VERSION_ID",
+                    Field = nameof(sectionId),
+                    Message = "Standard Version does not exist"
+                });
+            }
+
+            try
+            {
+                var requirementItems = await _debService.UpdateSectionRequirementsAsync(
+                    section.Id,
+                    idsToAdd,
+                    idsToRemove,
+                    _currentUserService.PostId,
+                    cancellationToken);
+
+                return Result<SectionRequirementResponse>.Success(new SectionRequirementResponse()
+                {
+                    SectionId = section.Id,
+                    StandardVersion = standardVersionDetail,
+                    Requirements = requirementItems
+                });
+            }
+            catch (Exception ex)
+            {
+                return Result<SectionRequirementResponse>.Failure($"An error occurred updating the Section / Reference: {ex.Message}");
+            }
+        }
+
+        public async Task<Result> MoveRequirementAssignedToSectionAsync(Guid requirementId, Guid oldSectionId, Guid newSectionId, int ordinal, CancellationToken cancellationToken)
+        {
+            try
+            {
+                bool sectionChanged = oldSectionId != newSectionId;
+
+                // 1. Load the SectionRequirement being moved
+                var oldSectionRequirements = await _debService.GetSectionRequirementsForSectionAsync(oldSectionId, cancellationToken);
+                var movingEntry = oldSectionRequirements.FirstOrDefault(sr => sr.RequirementID == requirementId);
+
+                if (movingEntry is null)
+                    return Result.Failure($"Requirement '{requirementId}' is not assigned to section '{oldSectionId}'.");
+
+                var oldOrdinal = movingEntry.Ordinal;
+
+                List<SectionRequirement> newSectionRequirements;
+
+                if (sectionChanged)
+                {
+                    // 2a. Load the destination section's requirements (excluding any stale reference to this requirement)
+                    newSectionRequirements = await _debService.GetSectionRequirementsForSectionAsync(newSectionId, cancellationToken);
+
+                    // Validate the target section exists by checking if we can load it
+                    var newSection = await _debService.GetSectionByIdAsync(newSectionId, cancellationToken);
+                    if (newSection is null)
+                        return Result.Failure($"Section '{newSectionId}' was not found.");
+
+                    // Guard: requirement must not already be assigned to the destination section
+                    if (newSectionRequirements.Any(sr => sr.RequirementID == requirementId))
+                        return Result.Failure($"Requirement '{requirementId}' is already assigned to section '{newSectionId}'.");
+                }
+                else
+                {
+                    // Same section — the loaded list IS the destination list (minus the moving entry itself)
+                    newSectionRequirements = oldSectionRequirements
+                        .Where(sr => sr.RequirementID != requirementId)
+                        .ToList();
+                }
+
+                // 3. Validate ordinal range (1-based, max allows appending at end)
+                var maxOrdinal = newSectionRequirements.Count + 1;
+
+                if (ordinal < 1 || ordinal > maxOrdinal)
+                    return Result.Failure($"Ordinal must be between 1 and {maxOrdinal}.");
+
+                // 4. Early-exit: same section, same position
+                if (!sectionChanged && ordinal == oldOrdinal)
+                    return Result.Success();
+
+                var toUpdate = new List<SectionRequirement>();
+                SectionRequirement? toAdd = null;
+                SectionRequirement? toRemove = null;
+
+                if (sectionChanged)
+                {
+                    // 5a. Close the gap at the OLD section — shift down everything above the old ordinal
+                    foreach (var sr in oldSectionRequirements.Where(sr => sr.RequirementID != requirementId && sr.Ordinal > oldOrdinal))
+                    {
+                        sr.Ordinal--;
+                        toUpdate.Add(sr);
+                    }
+
+                    // 5b. Open a slot at the NEW section — shift up everything at or above the target ordinal
+                    foreach (var sr in newSectionRequirements.Where(sr => sr.Ordinal >= ordinal))
+                    {
+                        sr.Ordinal++;
+                        toUpdate.Add(sr);
+                    }
+
+                    // 5c. Remove the old link and insert the new one
+                    toRemove = movingEntry;
+                    toAdd = new SectionRequirement
+                    {
+                        SectionID = newSectionId,
+                        RequirementID = requirementId,
+                        Ordinal = ordinal,
+                        IsEnabled = movingEntry.IsEnabled,
+                        LastModifiedAt = DateTime.UtcNow,
+                        LastModifiedBy = movingEntry.LastModifiedBy   // caller can update this if needed
+                    };
+                }
+                else
+                {
+                    // 5d. Same section — shift the neighbours between the old and new positions
+                    if (ordinal < oldOrdinal)
+                    {
+                        // Moving up: push items in the vacated range down by 1
+                        foreach (var sr in newSectionRequirements.Where(sr => sr.Ordinal >= ordinal && sr.Ordinal < oldOrdinal))
+                        {
+                            sr.Ordinal++;
+                            toUpdate.Add(sr);
+                        }
+                    }
+                    else
+                    {
+                        // Moving down: pull items in the vacated range up by 1
+                        foreach (var sr in newSectionRequirements.Where(sr => sr.Ordinal > oldOrdinal && sr.Ordinal <= ordinal))
+                        {
+                            sr.Ordinal--;
+                            toUpdate.Add(sr);
+                        }
+                    }
+
+                    // Update the entry's ordinal in place (no delete/insert needed — PK hasn't changed)
+                    movingEntry.Ordinal = ordinal;
+                    movingEntry.LastModifiedAt = DateTime.UtcNow;
+                    toUpdate.Add(movingEntry);
+                }
+
+                // 6. Persist everything in a single SaveChanges
+                await _debService.UpdateSectionRequirementsAsync(toUpdate, toAdd, toRemove, cancellationToken);
+
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure($"An error occurred moving the Requirement: {ex.Message}");
             }
         }
     }

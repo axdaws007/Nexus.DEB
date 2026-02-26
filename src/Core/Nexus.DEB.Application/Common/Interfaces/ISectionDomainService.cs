@@ -1,5 +1,6 @@
 ﻿using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
+using System.Threading;
 
 namespace Nexus.DEB.Application.Common.Interfaces
 {
@@ -9,5 +10,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<Result<Section>> CreateSectionAsync(string reference, string title, bool displayReference, bool displayTitle, Guid? parentId, Guid standardVersionId, CancellationToken cancellationToken);
         Task<Result<Section>> UpdateSectionAsync(Guid sectionId, string reference, string title, bool displayReference, bool displayTitle, CancellationToken cancellationToken);
         Task<Result<bool>> DeleteSectionAsync(Guid sectionId, CancellationToken cancellationToken);
+        Task<Result<SectionRequirementResponse>> UpdateSectionRequirementsAsync(Guid sectionId, ICollection<Guid> idsToAdd, ICollection<Guid> idsToRemove, CancellationToken cancellationToken);
+        Task<Result> MoveRequirementAssignedToSectionAsync(Guid requirementId, Guid oldSectionId, Guid newSectionId, int ordinal, CancellationToken cancellationToken);
     }
 }

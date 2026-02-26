@@ -1,5 +1,6 @@
 ﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
+using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 
@@ -95,6 +96,46 @@ namespace Nexus.DEB.Api.GraphQL
             }
 
             return result.Data;
+        }
+
+        [Authorize(Policy = DebHelper.Policies.CanEditStdVersion)]
+        public static async Task<SectionRequirementResponse?> UpdateRequirementsAssignedToSection(
+            Guid sectionId,
+            ICollection<Guid> idsToAdd,
+            ICollection<Guid> idsToRemove,
+            ISectionDomainService sectionDomainService, 
+            CancellationToken cancellationToken,
+            bool addAll = false,                       // Not used, but Stewart wanted it present for consistency
+            bool removeAll = false                    // Not used, but Stewart wanted it present for consistency
+            )
+        {
+            var result = await sectionDomainService.UpdateSectionRequirementsAsync(sectionId, idsToAdd, idsToRemove, cancellationToken);
+
+            if (!result.IsSuccess)
+            {
+                throw ExceptionHelper.BuildException(result);
+            }
+
+            return result.Data;
+        }
+
+        [Authorize(Policy = DebHelper.Policies.CanEditStdVersion)]
+        public static async Task<bool> MoveRequirementsAssignedToSection(
+            Guid requirementId,
+            Guid oldSectionId,
+            Guid newSectionId,
+            int ordinal,
+            ISectionDomainService sectionDomainService,
+            CancellationToken cancellationToken)
+        {
+            var result = await sectionDomainService.MoveRequirementAssignedToSectionAsync(requirementId, oldSectionId, newSectionId, ordinal, cancellationToken);
+
+            if (!result.IsSuccess)
+            {
+                throw ExceptionHelper.BuildException(result);
+            }
+
+            return true;
         }
     }
 }

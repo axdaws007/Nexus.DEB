@@ -617,6 +617,13 @@ namespace Nexus.DEB.Infrastructure.Services
 
         #region Sections
 
+        public async Task<int> GetSectionsCountForEntityAsync(
+            Guid entityId,
+            CancellationToken cancellationToken)
+            => await _dbContext.Sections.AsNoTracking()
+                .Where(x => x.StandardVersionId == entityId)
+                .CountAsync(cancellationToken);
+
         public async Task<Section?> GetSectionByIdAsync(Guid id, CancellationToken cancellationToken)
             => await _dbContext.Sections
                 .Include(x => x.SectionRequirements.OrderBy(sr => sr.Ordinal))

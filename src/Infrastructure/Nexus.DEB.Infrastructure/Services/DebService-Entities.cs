@@ -1276,10 +1276,13 @@ namespace Nexus.DEB.Infrastructure.Services
 
 			var numberOfHistoryEvents = await GetChangeRecordsCountForEntityAsync(id, cancellationToken);
 
+            var numberOfSections = await GetSectionsCountForEntityAsync(id, cancellationToken);
+
 			return new StandardVersionChildCounts()
 			{
 				CommentsCount = numberOfComments,
-				HistoryCount = numberOfHistoryEvents
+				HistoryCount = numberOfHistoryEvents,
+                SectionCount = numberOfSections
 			};
 		}
 

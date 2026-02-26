@@ -79,7 +79,7 @@ namespace Nexus.DEB.Api.GraphQL
 				EntityType = scopeDetail.EntityTypeTitle,
 				EntityId = scopeDetail.EntityId,
 				SerialNumber = scopeDetail.SerialNumber ?? string.Empty,
-				IsNew = true,
+				IsNew = false,
 			}, cancellationToken);
 
 			return result.Data;

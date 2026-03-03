@@ -1162,7 +1162,7 @@ namespace Nexus.DEB.Infrastructure.Services
                                     .Select(s => new FilterItemEntity()
                                     {
                                         Id = s.Id,
-                                        Value = s.Reference + s.Title,
+                                        Value = s.Reference + " " + s.Title,
                                         IsEnabled = true
 									})
                                     .ToListAsync(cancellationToken);

@@ -8,7 +8,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Section> builder)
         {
-            builder.ToTable("Section", "deb");
+            builder.ToTable("Section", "deb", t => { t.HasTrigger("Section_ChangeTracking"); });
 
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Reference).HasMaxLength(50);

@@ -167,7 +167,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<Section> UpdateSectionAsync(Section section, CancellationToken cancellationToken);
         Task<bool> DeleteSectionByIdAsync(Guid id, CancellationToken cancellationToken);
 
-        Task UpdateSectionsAsync(IEnumerable<Section> sections, CancellationToken cancellationToken);
+        Task UpdateSectionsAsync(Guid sectionId, IEnumerable<Section> sections, CancellationToken cancellationToken);
 
         Task<bool> IsSectionDescendantOfAsync(Guid candidateSectionId, Guid ancestorSectionId, CancellationToken cancellationToken);
 

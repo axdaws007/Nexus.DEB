@@ -1,5 +1,4 @@
-﻿using Microsoft.Win32.SafeHandles;
-using Nexus.DEB.Application.Common.Interfaces;
+﻿using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Domain.Models;
 
@@ -114,7 +113,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 sectionsToUpdate.Add(section);
 
                 // 7. Persist all changes in a single batch
-                await _debService.UpdateSectionsAsync(sectionsToUpdate, cancellationToken);
+                await _debService.UpdateSectionsAsync(sectionId, sectionsToUpdate, cancellationToken);
 
                 await UpdateParentStandardVersionModifiedDetails(section.StandardVersionId, cancellationToken);
 

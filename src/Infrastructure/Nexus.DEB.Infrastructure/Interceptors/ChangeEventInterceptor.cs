@@ -111,11 +111,16 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 					var user = new DebUser(httpContext.User);
 					userDetails = user.UserDetails;
 				}
-			}
-			await SetSessionContextAsync(eventData.Context, SessionContextEventId, eventId, cancellationToken);
-			await SetSessionContextAsync(eventData.Context, SessionContextUserDetails, userDetails, cancellationToken);
 
-		}
+                if (httpContext.Items.TryGetValue("MovedSectionId", out var movedSectionIdObj)
+                    && movedSectionIdObj is Guid movedSectionId)
+                {
+                    await SetSessionContextAsync(eventData.Context, "MovedSectionId", movedSectionId, cancellationToken);
+                }
+            }
+            await SetSessionContextAsync(eventData.Context, SessionContextEventId, eventId, cancellationToken);
+			await SetSessionContextAsync(eventData.Context, SessionContextUserDetails, userDetails, cancellationToken);
+        }
 
 		return result;
 	}
@@ -142,7 +147,14 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 					var user = new DebUser(httpContext.User);
 					userDetails = user.UserDetails;
 				}
-			}
+
+                if (httpContext.Items.TryGetValue("MovedSectionId", out var movedSectionIdObj)
+                    && movedSectionIdObj is Guid movedSectionId)
+                {
+                    SetSessionContext(eventData.Context, "MovedSectionId", movedSectionId);
+                }
+            }
+
 			SetSessionContext(eventData.Context, SessionContextEventId, eventId);
 			SetSessionContext(eventData.Context, SessionContextUserDetails, userDetails);
 		}

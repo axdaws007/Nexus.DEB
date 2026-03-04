@@ -680,12 +680,19 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public async Task UpdateSectionsAsync(Guid sectionId, IEnumerable<Section> sections, CancellationToken cancellationToken)
         {
-            await _dbContext.Database.ExecuteSqlRawAsync("EXEC sp_set_session_context @key = N'MovedSectionId', @value = @p0", sectionId.ToString());
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext != null)
+            {
+                httpContext.Items["MovedSectionId"] = sectionId;
+            }
 
             _dbContext.Sections.UpdateRange(sections);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            await _dbContext.Database.ExecuteSqlRawAsync("EXEC sp_set_session_context @key = N'MovedSectionId', @value = NULL");
+            if (httpContext != null)
+            {
+                httpContext.Items.Remove("MovedSectionId");
+            }
         }
 
         public async Task<bool> DeleteSectionByIdAsync(Guid id, CancellationToken cancellationToken)

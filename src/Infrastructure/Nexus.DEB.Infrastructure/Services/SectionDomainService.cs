@@ -116,6 +116,8 @@ namespace Nexus.DEB.Infrastructure.Services
                 // 7. Persist all changes in a single batch
                 await _debService.UpdateSectionsAsync(sectionsToUpdate, cancellationToken);
 
+                await UpdateParentStandardVersionModifiedDetails(section.StandardVersionId, cancellationToken);
+
                 return Result<Section>.Success(section);
             }
             catch (Exception ex)
@@ -160,6 +162,8 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 await _debService.CreateSectionAsync(section, cancellationToken);
 
+                await UpdateParentStandardVersionModifiedDetails(section.StandardVersionId, cancellationToken);
+
                 return Result<Section>.Success(section);
             }
             catch (Exception ex)
@@ -198,6 +202,8 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 await _debService.UpdateSectionAsync(section, cancellationToken);
 
+                await UpdateParentStandardVersionModifiedDetails(section.StandardVersionId, cancellationToken);
+
                 return Result<Section>.Success(section);
             }
             catch (Exception ex)
@@ -235,6 +241,8 @@ namespace Nexus.DEB.Infrastructure.Services
                 }
 
                 var isDeleted = await _debService.DeleteSectionByIdAsync(section.Id, cancellationToken);
+
+                await UpdateParentStandardVersionModifiedDetails(section.StandardVersionId, cancellationToken);
 
                 return Result<Section>.Success(section);
             }
@@ -279,6 +287,8 @@ namespace Nexus.DEB.Infrastructure.Services
                     _currentUserService.PostId,
                     cancellationToken);
 
+                await UpdateParentStandardVersionModifiedDetails(section.StandardVersionId, cancellationToken);
+
                 return Result<SectionRequirementResponse>.Success(new SectionRequirementResponse()
                 {
                     SectionId = section.Id,
@@ -309,13 +319,14 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 List<SectionRequirement> newSectionRequirements;
 
+                var newSection = await _debService.GetSectionByIdAsync(newSectionId, cancellationToken);
+
                 if (sectionChanged)
                 {
                     // 2a. Load the destination section's requirements (excluding any stale reference to this requirement)
                     newSectionRequirements = await _debService.GetSectionRequirementsForSectionAsync(newSectionId, cancellationToken);
 
                     // Validate the target section exists by checking if we can load it
-                    var newSection = await _debService.GetSectionByIdAsync(newSectionId, cancellationToken);
                     if (newSection is null)
                         return Result.Failure($"Section '{newSectionId}' was not found.");
 
@@ -404,12 +415,24 @@ namespace Nexus.DEB.Infrastructure.Services
                 // 6. Persist everything in a single SaveChanges
                 await _debService.UpdateSectionRequirementsAsync(toUpdate, toAdd, toRemove, cancellationToken);
 
+                await UpdateParentStandardVersionModifiedDetails(newSection.StandardVersionId, cancellationToken);
+
                 return Result.Success();
             }
             catch (Exception ex)
             {
                 return Result.Failure($"An error occurred moving the Requirement: {ex.Message}");
             }
+        }
+
+        private async Task<Result> UpdateParentStandardVersionModifiedDetails(Guid standardVersionId, CancellationToken cancellationToken)
+        {
+            // update the last modified date of the parent standard version
+            var parentStandardVersion = await _debService.GetStandardVersionByIdAsync(standardVersionId, cancellationToken);
+            parentStandardVersion.LastModifiedDate = DateTime.Now;
+            await _debService.UpdateStandardVersionAsync(parentStandardVersion, cancellationToken);
+
+            return Result.Success();
         }
     }
 }

@@ -7,6 +7,7 @@ using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Other;
 using Nexus.DEB.Infrastructure.Helpers;
 using System.Data;
+using System.Text.Json;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -860,6 +861,61 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     yield return child;
                 }
+            }
+        }
+
+        #endregion
+
+        #region Audit
+
+        public async Task<AuditData?> GetAuditDataAsync(
+            Guid entityId,
+            string entityTypeTitle,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(entityTypeTitle))
+            {
+                throw new ArgumentNullException(nameof(entityTypeTitle));
+            }
+
+            var entityTypeTitleNoSpaces = entityTypeTitle.Replace(" ", "");
+            string storedProcedureName = $"[audit].[BS10008_Snapshot_{entityTypeTitleNoSpaces}]";
+
+            var moduleSettingKey = $"AuditSnapshotSP:{entityTypeTitle}";
+            var moduleSetting = await _dbContext.ModuleSettings.FirstOrDefaultAsync(x => x.Name == moduleSettingKey);
+
+            if (moduleSetting != null && !string.IsNullOrEmpty(moduleSetting.Value))
+            {
+                storedProcedureName = moduleSetting.Value;
+            }
+
+            var idParam = new SqlParameter("@EntityId", entityId);
+            var typeTitleParam = new SqlParameter("@EntityTypeTitle", entityTypeTitle);
+
+            try
+            {
+                // EF Core executes the SP and returns raw string rows
+                var results = await _dbContext.Database
+                    .SqlQueryRaw<string>(
+                        $"EXEC {storedProcedureName} @EntityId, @EntityTypeTitle",
+                        idParam,
+                        typeTitleParam)
+                    .ToListAsync(cancellationToken);
+
+                // The SP may return the JSON fragmented across multiple rows — concatenate them
+                var rawJson = string.Concat(results);
+
+                if (string.IsNullOrWhiteSpace(rawJson))
+                    return null;
+
+                var jsonElement = JsonSerializer.Deserialize<JsonElement>(rawJson);
+
+                return new AuditData(jsonElement, entityTypeTitle);
+            }
+            catch (Exception ex)
+            {
+                // If the stored procedure call fails (e.g. the stored procedure doesn't exist), then return null.  The calling method will use an alternative option.
+                return null;
             }
         }
 

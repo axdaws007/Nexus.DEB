@@ -221,5 +221,11 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<MyWorkDetailItem> GetMyWorkDetailItems(MyWorkDetailSupplementedFilters filters);
 
         #endregion Dashboard
+
+        #region Audit
+
+        Task<AuditData?> GetAuditDataAsync(Guid entityId, string entityTypeTitle, CancellationToken cancellationToken = default);
+
+        #endregion
     }
 }

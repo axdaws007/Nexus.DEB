@@ -16,7 +16,7 @@ namespace Nexus.DEB.Infrastructure.Services
             _currentUserService = currentUserService;
         }
 
-        public async Task<Result> MoveSectionAsync(Guid sectionId, Guid? newParentSectionId, int newOrdinal, CancellationToken cancellationToken)
+        public async Task<Result<Section>> MoveSectionAsync(Guid sectionId, Guid? newParentSectionId, int newOrdinal, CancellationToken cancellationToken)
         {
             try
             {
@@ -24,7 +24,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 var section = await _debService.GetSectionByIdAsync(sectionId, cancellationToken);
 
                 if (section is null)
-                    return Result.Failure($"Section '{sectionId}' was not found.");
+                    return Result<Section>.Failure($"Section '{sectionId}' was not found.");
 
                 var oldParentSectionId = section.ParentSectionId;
                 var oldOrdinal = section.Ordinal;
@@ -39,15 +39,15 @@ namespace Nexus.DEB.Infrastructure.Services
                     var newParent = await _debService.GetSectionByIdAsync(newParentSectionId.Value, cancellationToken);
 
                     if (newParent is null)
-                        return Result.Failure($"Parent section '{newParentSectionId}' was not found.");
+                        return Result<Section>.Failure($"Parent section '{newParentSectionId}' was not found.");
 
                     if (newParent.StandardVersionId != standardVersionId)
-                        return Result.Failure("The parent section does not belong to the same standard version.");
+                        return Result<Section>.Failure("The parent section does not belong to the same standard version.");
 
                     var isDescendant = await _debService.IsSectionDescendantOfAsync(newParentSectionId.Value, sectionId, cancellationToken);
 
                     if (isDescendant)
-                        return Result.Failure("Cannot move a section to one of its own descendants.");
+                        return Result<Section>.Failure("Cannot move a section to one of its own descendants.");
                 }
 
                 // 3. Load siblings at the NEW parent location (excluding the moving section)
@@ -57,7 +57,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 var maxOrdinal = newSiblings.Count + 1;
 
                 if (newOrdinal < 1 || newOrdinal > maxOrdinal)
-                    return Result.Failure($"Ordinal must be between 1 and {maxOrdinal}.");
+                    return Result<Section>.Failure($"Ordinal must be between 1 and {maxOrdinal}.");
 
                 var sectionsToUpdate = new List<Domain.Models.Section>();
 
@@ -103,7 +103,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     else
                     {
                         // No change
-                        return Result.Success();
+                        return Result<Section>.Success(section);
                     }
                 }
 
@@ -116,11 +116,11 @@ namespace Nexus.DEB.Infrastructure.Services
                 // 7. Persist all changes in a single batch
                 await _debService.UpdateSectionsAsync(sectionsToUpdate, cancellationToken);
 
-                return Result.Success();
+                return Result<Section>.Success(section);
             }
             catch (Exception ex)
             {
-                return Result.Failure($"An error occurred moving the Section: {ex.Message}");
+                return Result<Section>.Failure($"An error occurred moving the Section: {ex.Message}");
             }
         }
 
@@ -206,7 +206,7 @@ namespace Nexus.DEB.Infrastructure.Services
             }
         }
 
-        public async Task<Result<bool>> DeleteSectionAsync(Guid sectionId, CancellationToken cancellationToken)
+        public async Task<Result<Section>> DeleteSectionAsync(Guid sectionId, CancellationToken cancellationToken)
         {
             try
             {
@@ -214,7 +214,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 if (section == null)
                 {
-                    return Result<bool>.Failure(new ValidationError()
+                    return Result<Section>.Failure(new ValidationError()
                     {
                         Code = "INVALID_SECTION_ID",
                         Field = nameof(sectionId),
@@ -226,7 +226,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 if (children != null && children.Count > 0)
                 {
-                    return Result<bool>.Failure(new ValidationError()
+                    return Result<Section>.Failure(new ValidationError()
                     {
                         Code = "SECTION_HAS_CHILDREN",
                         Field = nameof(sectionId),
@@ -236,11 +236,11 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 var isDeleted = await _debService.DeleteSectionByIdAsync(section.Id, cancellationToken);
 
-                return Result<bool>.Success(isDeleted);
+                return Result<Section>.Success(section);
             }
             catch (Exception ex)
             {
-                return Result<bool>.Failure($"An error occurred deleting the Section: {ex.Message}");
+                return Result<Section>.Failure($"An error occurred deleting the Section: {ex.Message}");
             }
         }
 

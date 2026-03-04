@@ -5,7 +5,7 @@
         /// <summary>
         /// The entity that was saved. Can be any detail type (TaskDetail, StatementDetail, ScopeDetail, etc.)
         /// </summary>
-        public required object Entity { get; init; }
+        public object? Entity { get; init; }
 
         /// <summary>
         /// The entity type from EntityTypes struct (e.g., "Task", "Statement of Compliance", "Scope")

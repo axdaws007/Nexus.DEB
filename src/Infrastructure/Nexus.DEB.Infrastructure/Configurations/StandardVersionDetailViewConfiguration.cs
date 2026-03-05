@@ -65,8 +65,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
 			builder.Property(e => e.MinorVersion)
 				.HasColumnName("MinorVersion");
 			builder.Property(e => e.EffectiveStartDate)
-				.HasColumnName("EffectiveStartDate")
-				.IsRequired();
+				.HasColumnName("EffectiveStartDate");
 			builder.Property(e => e.EffectiveEndDate)
 				.HasColumnName("EffectiveEndDate");
 		}

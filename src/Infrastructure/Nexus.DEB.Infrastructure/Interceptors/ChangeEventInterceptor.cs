@@ -117,6 +117,30 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
                 {
                     await SetSessionContextAsync(eventData.Context, "MovedSectionId", movedSectionId, cancellationToken);
                 }
+
+                if (httpContext.Items.TryGetValue("MovedRequirementId", out var movedReqIdObj)
+                    && movedReqIdObj is Guid movedRequirementId)
+                {
+                    await SetSessionContextAsync(eventData.Context, "MovedRequirementId", movedRequirementId, cancellationToken);
+                }
+
+                if (httpContext.Items.TryGetValue("SuppressOrdinalAudit", out var suppressObj)
+                    && suppressObj is bool suppress && suppress)
+                {
+                    await SetSessionContextAsync(eventData.Context, "SuppressOrdinalAudit", "true", cancellationToken);
+                }
+
+                if (httpContext.Items.TryGetValue("MovedRequirementOldSectionId", out var oldSectionObj)
+                    && oldSectionObj is Guid oldSectionId)
+                {
+                    await SetSessionContextAsync(eventData.Context, "MovedRequirementOldSectionId", oldSectionId, cancellationToken);
+                }
+
+                if (httpContext.Items.TryGetValue("MovedRequirementOldOrdinal", out var oldOrdinalObj)
+                    && oldOrdinalObj is int oldOrdinal)
+                {
+                    await SetSessionContextAsync(eventData.Context, "MovedRequirementOldOrdinal", oldOrdinal.ToString(), cancellationToken);
+                }
             }
             await SetSessionContextAsync(eventData.Context, SessionContextEventId, eventId, cancellationToken);
 			await SetSessionContextAsync(eventData.Context, SessionContextUserDetails, userDetails, cancellationToken);
@@ -152,6 +176,30 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
                     && movedSectionIdObj is Guid movedSectionId)
                 {
                     SetSessionContext(eventData.Context, "MovedSectionId", movedSectionId);
+                }
+
+                if (httpContext.Items.TryGetValue("MovedRequirementId", out var movedReqIdObj)
+                    && movedReqIdObj is Guid movedRequirementId)
+                {
+                    SetSessionContext(eventData.Context, "MovedRequirementId", movedRequirementId);
+                }
+
+                if (httpContext.Items.TryGetValue("SuppressOrdinalAudit", out var suppressObj)
+                    && suppressObj is bool suppress && suppress)
+                {
+                    SetSessionContext(eventData.Context, "SuppressOrdinalAudit", "true");
+                }
+
+                if (httpContext.Items.TryGetValue("MovedRequirementOldSectionId", out var oldSectionObj)
+                    && oldSectionObj is Guid oldSectionId)
+                {
+                    SetSessionContext(eventData.Context, "MovedRequirementOldSectionId", oldSectionId);
+                }
+
+                if (httpContext.Items.TryGetValue("MovedRequirementOldOrdinal", out var oldOrdinalObj)
+                    && oldOrdinalObj is int oldOrdinal)
+                {
+                    SetSessionContext(eventData.Context, "MovedRequirementOldOrdinal", oldOrdinal.ToString());
                 }
             }
 

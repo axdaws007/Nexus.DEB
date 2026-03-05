@@ -165,7 +165,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task<Section> CreateSectionAsync(Section section, CancellationToken cancellationToken);
         Task<Section> UpdateSectionAsync(Section section, CancellationToken cancellationToken);
-        Task<bool> DeleteSectionByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<bool> DeleteSectionAndLinkedRequirementsAsync(Section section, CancellationToken cancellationToken);
 
         Task UpdateSectionsAsync(Guid sectionId, IEnumerable<Section> sections, CancellationToken cancellationToken);
 
@@ -182,7 +182,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task<List<SectionRequirement>> GetSectionRequirementsForSectionAsync(Guid sectionId, CancellationToken cancellationToken);
 
-        Task UpdateSectionRequirementsAsync(IEnumerable<SectionRequirement> toUpdate, SectionRequirement? toAdd, SectionRequirement? toRemove, CancellationToken cancellationToken);
+        Task UpdateSectionRequirementsAsync(IEnumerable<SectionRequirement> toUpdate, SectionRequirement? toAdd, SectionRequirement? toRemove, Guid? movedRequirementId, Guid? movedRequirementOldSectionId, int? movedRequirementOldOrdinal, CancellationToken cancellationToken);
 
         #endregion Other
 

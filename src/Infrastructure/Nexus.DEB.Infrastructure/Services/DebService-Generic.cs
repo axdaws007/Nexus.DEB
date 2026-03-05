@@ -695,14 +695,16 @@ namespace Nexus.DEB.Infrastructure.Services
             }
         }
 
-        public async Task<bool> DeleteSectionByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<bool> DeleteSectionAndLinkedRequirementsAsync(Section section, CancellationToken cancellationToken)
         {
-            var rowsDeleted = await _dbContext.Sections.Where(x => x.Id == id).ExecuteDeleteAsync(cancellationToken);
-            var otherDeletedRows = await _dbContext.SectionRequirements.Where(x => x.SectionID == id).ExecuteDeleteAsync(cancellationToken);
+            var sectionRequirements = await _dbContext.SectionRequirements.Where(x => x.SectionID == section.Id).ToListAsync();
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            _dbContext.SectionRequirements.RemoveRange(sectionRequirements);
+            _dbContext.Sections.Remove(section);
 
-            return rowsDeleted == 1;
+            var rowsDeleted = await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return rowsDeleted > 0;
         }
 
         public async Task<IReadOnlyList<Guid>> GetRequirementIdsForSectionAsync(Guid sectionId, CancellationToken cancellationToken)
@@ -782,7 +784,12 @@ namespace Nexus.DEB.Infrastructure.Services
                 }
             }
 
+            var httpContext = _httpContextAccessor.HttpContext;
+            httpContext?.Items.Add("SuppressOrdinalAudit", true);
+
             await _dbContext.SaveChangesAsync(cancellationToken);
+
+            httpContext?.Items.Remove("SuppressOrdinalAudit");
 
             var requirementIds = sectionRequirements.Select(x => x.RequirementID).ToList();
 
@@ -799,6 +806,9 @@ namespace Nexus.DEB.Infrastructure.Services
             IEnumerable<SectionRequirement> toUpdate,
             SectionRequirement? toAdd,
             SectionRequirement? toRemove,
+            Guid? movedRequirementId,
+            Guid? movedRequirementOldSectionId,
+            int? movedRequirementOldOrdinal,
             CancellationToken cancellationToken)
         {
             if (toRemove is not null)
@@ -807,11 +817,27 @@ namespace Nexus.DEB.Infrastructure.Services
             if (toAdd is not null)
                 await _dbContext.Set<SectionRequirement>().AddAsync(toAdd, cancellationToken);
 
-            // toUpdate entries are already tracked — EF will detect the ordinal changes
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext != null && movedRequirementId.HasValue)
+            {
+                httpContext.Items["MovedRequirementId"] = movedRequirementId.Value;
+
+                if (movedRequirementOldSectionId.HasValue)
+                    httpContext.Items["MovedRequirementOldSectionId"] = movedRequirementOldSectionId.Value;
+
+                if (movedRequirementOldOrdinal.HasValue)
+                    httpContext.Items["MovedRequirementOldOrdinal"] = movedRequirementOldOrdinal.Value;
+            }
+
             await _dbContext.SaveChangesAsync(cancellationToken);
+
+            if (httpContext != null)
+            {
+                httpContext.Items.Remove("MovedRequirementId");
+                httpContext.Items.Remove("MovedRequirementOldSectionId");
+                httpContext.Items.Remove("MovedRequirementOldOrdinal");
+            }
         }
-
-
         public async Task<bool> IsSectionDescendantOfAsync(
             Guid candidateSectionId,
             Guid ancestorSectionId,

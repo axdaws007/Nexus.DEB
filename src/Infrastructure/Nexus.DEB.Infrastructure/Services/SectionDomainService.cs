@@ -215,7 +215,7 @@ namespace Nexus.DEB.Infrastructure.Services
         {
             try
             {
-                var section = await _debService.GetSectionByIdAsync(sectionId, cancellationToken);
+                var section = await _debService.GetSectionAsync(sectionId, cancellationToken);
 
                 if (section == null)
                 {
@@ -239,7 +239,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     });
                 }
 
-                var isDeleted = await _debService.DeleteSectionByIdAsync(section.Id, cancellationToken);
+                var isDeleted = await _debService.DeleteSectionAndLinkedRequirementsAsync(section, cancellationToken);
 
                 await UpdateParentStandardVersionModifiedDetails(section.StandardVersionId, cancellationToken);
 
@@ -412,7 +412,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 }
 
                 // 6. Persist everything in a single SaveChanges
-                await _debService.UpdateSectionRequirementsAsync(toUpdate, toAdd, toRemove, cancellationToken);
+                await _debService.UpdateSectionRequirementsAsync(toUpdate, toAdd, toRemove, requirementId, oldSectionId, oldOrdinal, cancellationToken);
 
                 await UpdateParentStandardVersionModifiedDetails(newSection.StandardVersionId, cancellationToken);
 

@@ -119,6 +119,7 @@ namespace Nexus.DEB.Api.GraphQL
             bool removeAll, 
             IDebService debService,
             IDmsService dmsService,
+            IDomainEventPublisher eventPublisher,
             IApplicationSettingsService applicationSettingsService,
             CancellationToken cancellationToken)
         {
@@ -134,15 +135,44 @@ namespace Nexus.DEB.Api.GraphQL
 
             if (isSuccessful)
             {
+                string deletedDocuments = string.Empty;
+                string insertedDocuments = string.Empty;
+
                 if (linkDiff.toDelete != null && linkDiff.toDelete.Count > 0) 
                 {
+                    deletedDocuments = $"{linkDiff.toDelete.Count} " + (linkDiff.toDelete.Count > 1 ? "documents have been removed" : "document has been removed");
+
                     await LogLinkedCommonDocUpdateInChangeHistory(entityId, libraryId, false, linkDiff.toDelete, debService, dmsService, cancellationToken);
                 }
 				if (linkDiff.toInsert != null && linkDiff.toInsert.Count > 0)
 				{
-					await LogLinkedCommonDocUpdateInChangeHistory(entityId, libraryId, true, linkDiff.toInsert, debService, dmsService, cancellationToken);
+                    insertedDocuments = $"{linkDiff.toInsert.Count} " + (linkDiff.toInsert.Count > 1 ? "documents have been linked" : "document has been linked");
+
+                    await LogLinkedCommonDocUpdateInChangeHistory(entityId, libraryId, true, linkDiff.toInsert, debService, dmsService, cancellationToken);
 				}
-			}
+
+                var entity = await debService.GetEntityHeadAsync(entityId, cancellationToken);
+
+                if (entity != null && (linkDiff.toDelete?.Count > 0 || linkDiff.toInsert?.Count > 0))
+                {
+                    string context = string.Empty;
+
+                    if (linkDiff.toDelete?.Count > 0 && linkDiff.toInsert?.Count > 0)
+                        context = $"{insertedDocuments}, and {deletedDocuments}.";
+                    else if (linkDiff.toDelete?.Count > 0)
+                        context = deletedDocuments;
+                    else
+                        context = insertedDocuments;
+
+                    await eventPublisher.PublishAsync(new ChildEntitySavedEvent
+                        {
+                            ParentEntityType = entity.EntityTypeTitle,
+                            ParentEntityId = entityId,
+                            ChildEntityType = "EntityDocumentLinking",
+                            EventContext = context
+                        }, cancellationToken);
+                }
+            }
 
             return await debService.GetStatementDetailByIdAsync(entityId, cancellationToken);
         }

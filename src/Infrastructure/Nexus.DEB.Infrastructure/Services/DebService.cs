@@ -9,15 +9,20 @@ namespace Nexus.DEB.Infrastructure.Services
     {
         private readonly DebContext _dbContext;
         private readonly ICurrentUserService _currentUserService;
-		protected readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICorrelationIdAccessor _correlationIdAccessor;
+        private readonly IDateTimeProvider _dateTimeProvider;
 
-		// Constructor
-		public DebService(IDbContextFactory<DebContext> dbContextFactory, ICurrentUserService currentUserService, IHttpContextAccessor httpContextAccessor)
+        protected readonly IHttpContextAccessor _httpContextAccessor;
+
+        // Constructor
+        public DebService(IDbContextFactory<DebContext> dbContextFactory, ICurrentUserService currentUserService, IHttpContextAccessor httpContextAccessor, ICorrelationIdAccessor correlationIdAccessor, IDateTimeProvider dateTimeProvider)
         {
-			_dbContext = dbContextFactory.CreateDbContext();
-			_currentUserService = currentUserService;
-			_httpContextAccessor = httpContextAccessor;
-		}
+            _dbContext = dbContextFactory.CreateDbContext();
+            _currentUserService = currentUserService;
+            _httpContextAccessor = httpContextAccessor;
+            _correlationIdAccessor = correlationIdAccessor;
+            _dateTimeProvider = dateTimeProvider;
+        }
 
         // Dispose
         public ValueTask DisposeAsync() => _dbContext.DisposeAsync();

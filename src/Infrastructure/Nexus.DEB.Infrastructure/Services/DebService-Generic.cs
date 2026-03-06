@@ -174,6 +174,40 @@ namespace Nexus.DEB.Infrastructure.Services
             );
         }
 
+        public async Task CreateBatchOfChangeRecordsAsync(ICollection<Guid> entityIds, string comments, string userDetails, List<ChangeRecordItemParameters> items, CancellationToken cancellationToken)
+        {
+            List<ChangeRecord> changeRecords = new List<ChangeRecord>();
+
+            foreach (var entityId in entityIds)
+            {
+                var changeRecord = new ChangeRecord();
+
+                changeRecord.EntityId = entityId;
+                changeRecord.EventId = Guid.Parse(_correlationIdAccessor.CorrelationId);
+                changeRecord.ChangeByUser = userDetails;
+                changeRecord.ChangeDate = _dateTimeProvider.Now;
+                changeRecord.Comments = comments;
+                changeRecord.ChangeRecordItems = new List<ChangeRecordItem>();
+
+                foreach (var item in items)
+                {
+                    var changeRecordItem = new ChangeRecordItem();
+
+                    changeRecordItem.FieldName = item.FieldName;
+                    changeRecordItem.FriendlyFieldName = item.FriendlyFieldName;
+                    changeRecordItem.ChangedFrom = item.From;
+                    changeRecordItem.ChangedTo = item.To;
+
+                    changeRecord.ChangeRecordItems.Add(changeRecordItem);
+                }
+
+                changeRecords.Add(changeRecord);
+            }
+
+            await _dbContext.ChangeRecords.AddRangeAsync(changeRecords, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
 		#endregion ChangeRecords
 
 		#region SavedSearch
@@ -613,6 +647,24 @@ namespace Nexus.DEB.Infrastructure.Services
         
         public async Task<int> GetCountOfLinkedDocumentsAsync(Guid entityId, EntityDocumentLinkingContexts context, CancellationToken cancellationToken)
             => await _dbContext.EntityDocumentLinking.AsNoTracking().Where(x => x.EntityId == entityId && x.Context == context).CountAsync(cancellationToken);
+
+        public async Task<ICollection<Guid>> GetLinkedEntitiesForDocumentAsync(Guid libraryId, Guid documentId, CancellationToken cancellationToken)
+        {
+            var entityIds = await _dbContext.EntityDocumentLinking
+                    .AsNoTracking()
+                    .Where(x => x.LibraryId == libraryId && x.DocumentId == documentId)
+                    .Select(x => x.EntityId)
+                    .Distinct()
+                    .ToListAsync();
+
+            if (entityIds.Count == 0)
+                return [];
+
+            return entityIds;
+        }
+
+        public async Task DeleteLinkedDocumentAsync(Guid libraryId, Guid documentId, CancellationToken cancellationToken)
+            => await _dbContext.EntityDocumentLinking.Where(x => x.LibraryId == libraryId && x.DocumentId == documentId).ExecuteDeleteAsync(cancellationToken);
 
         #endregion
 

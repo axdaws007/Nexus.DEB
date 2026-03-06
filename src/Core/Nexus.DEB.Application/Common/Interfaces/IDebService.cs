@@ -6,6 +6,7 @@ using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Nexus.DEB.Domain.Models.Other;
 using Nexus.DEB.Domain.Models.Views;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
@@ -107,8 +108,9 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<ICollection<ChangeRecord>> GetChangeRecordsForEntityAsync(Guid entityId, CancellationToken cancellationToken);
 		Task<ICollection<ChangeRecordItemModel>> GetChangeRecordItemsForChangeRecordAsync(long changeRecordId, CancellationToken cancellationToken);
         Task AddChangeRecordItem(Guid entityID, string fieldName, string friendlyFieldName, string oldValue, string newValue, CancellationToken cancellationToken);
+        Task CreateBatchOfChangeRecordsAsync(ICollection<Guid> entityIds, string comments, string userDetails, List<ChangeRecordItemParameters> items, CancellationToken cancellationToken);
 
-		Task<PawsEntityDetail?> GetCurrentWorkflowStatusForEntityAsync(Guid entityId, CancellationToken cancellationToken);
+        Task<PawsEntityDetail?> GetCurrentWorkflowStatusForEntityAsync(Guid entityId, CancellationToken cancellationToken);
 
         Task<ICollection<SavedSearch>> GetSavedSearchesByContextAsync(string context, CancellationToken cancellationToken);
 		IQueryable<SavedSearch> GetSavedSearchesForGridAsync(SavedSearchesGridFilters filters, CancellationToken cancellationToken);
@@ -121,6 +123,10 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IEnumerable<DmsDocumentIdentifier> GetLinkedDocumentsForEntityAndContext(Guid entityId, EntityDocumentLinkingContexts entityDocumentLinkingContexts);
 
         Task<bool> UpdateLinkedCommonDocumentsAsync(Guid entityId, Guid libraryId, List<Guid>? toDelete, List<Guid>? toInsert);
+
+        Task<ICollection<Guid>> GetLinkedEntitiesForDocumentAsync(Guid libraryId, Guid documentId, CancellationToken cancellationToken);
+
+        Task DeleteLinkedDocumentAsync(Guid libraryId, Guid documentId, CancellationToken cancellationToken);
 
         Task<int> GetCountOfLinkedDocumentsAsync(Guid entityId, EntityDocumentLinkingContexts context, CancellationToken cancellationToken);
 

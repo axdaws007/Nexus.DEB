@@ -1,10 +1,12 @@
 ﻿using HotChocolate.Authorization;
+using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Domain;
+using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
-using Nexus.DEB.Infrastructure.Services;
+using Nexus.DEB.Infrastructure.Helpers;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -17,8 +19,14 @@ namespace Nexus.DEB.Api.GraphQL
            string library,
            Guid documentId,
            IApplicationSettingsService applicationSettingsService,
-           IDmsService dmsService)
+           IDebService debService,
+           IDmsService dmsService,
+           IDomainEventPublisher eventPublisher,
+           IResolverContext resolverContext,
+           CancellationToken cancellationToken)
         {
+            var debUser = new DebUser(resolverContext.GetUser());
+
             try
             {
                 DebHelper.Dms.Libraries.Validator.ValidateOrThrow(library);
@@ -29,6 +37,33 @@ namespace Nexus.DEB.Api.GraphQL
             }
 
             var libraryId = applicationSettingsService.GetLibraryId(library);
+
+            var document = await dmsService.GetDocumentAsync(libraryId, documentId);
+
+            if (document == null)
+            {
+                throw ExceptionHelper.BuildException(new FileNotFoundException($"'{documentId}' does not exist."));
+            }
+
+            var affectedEntities = await debService.GetLinkedEntitiesForDocumentAsync(libraryId, documentId, cancellationToken);
+
+            if (affectedEntities.Count > 0)
+            {
+                try
+                {
+                    await debService.DeleteLinkedDocumentAsync(libraryId, documentId, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    throw ExceptionHelper.BuildException(ex);
+                }
+
+                var comment = $"Removing link to document '{document.FileName}' due to it's deletion.";
+
+                var changeRecordItem = new ChangeRecordItemParameters("EntityDocumentLinking", "Removed document link", document.FileName, string.Empty);
+
+                await debService.CreateBatchOfChangeRecordsAsync(affectedEntities, comment, debUser.UserDetails, [changeRecordItem], cancellationToken);
+            }
 
             return await dmsService.DeleteDocumentAsync(libraryId, documentId);
         }

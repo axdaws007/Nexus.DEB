@@ -3,6 +3,7 @@ using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Dms;
+using Nexus.DEB.Application.Common.Models.Events;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
@@ -38,11 +39,38 @@ namespace Nexus.DEB.Api.GraphQL
 
             var libraryId = applicationSettingsService.GetLibraryId(library);
 
-            var document = await dmsService.GetDocumentAsync(libraryId, documentId);
+            var documentTitle = string.Empty;
+            var fileName = string.Empty;
+            var documentFound = false;
 
-            if (document == null)
+            switch(library)
             {
-                throw ExceptionHelper.BuildException(new FileNotFoundException($"'{documentId}' does not exist."));
+                case DebHelper.Dms.Libraries.CommonDocuments:
+                    var commonDocument = await dmsService.GetCommonLibraryDocumentAsync(libraryId, documentId);
+
+                    if (commonDocument != null)
+                    {
+                        documentTitle = commonDocument.Title;
+                        fileName = commonDocument.FileName;
+                        documentFound = true;
+                    }
+                    break;
+
+                case DebHelper.Dms.Libraries.DebDocuments:
+                    var debDocument = await dmsService.GetDebLibraryDocumentAsync(libraryId, documentId);
+
+                    if (debDocument != null)
+                    {
+                        documentTitle = debDocument.Title;
+                        fileName = debDocument.FileName;
+                        documentFound = true;
+                    }
+                    break;
+            }
+
+            if (!documentFound)
+            {
+                throw ExceptionHelper.BuildException(new FileNotFoundException($"Document ID '{documentId}' in library '{libraryId}' does not exist."));
             }
 
             var affectedEntities = await debService.GetLinkedEntitiesForDocumentAsync(libraryId, documentId, cancellationToken);
@@ -58,11 +86,25 @@ namespace Nexus.DEB.Api.GraphQL
                     throw ExceptionHelper.BuildException(ex);
                 }
 
-                var comment = $"Removing link to document '{document.FileName}' due to it's deletion.";
+                var fileReference = $"'{documentTitle}' ({fileName})";
+                var comment = $"Removing link to document {fileReference} due to it's deletion.";
 
-                var changeRecordItem = new ChangeRecordItemParameters("EntityDocumentLinking", "Removed document link", document.FileName, string.Empty);
+                var changeRecordItem = new ChangeRecordItemParameters("EntityDocumentLinking", "Removed document link", fileReference, string.Empty);
 
                 await debService.CreateBatchOfChangeRecordsAsync(affectedEntities, comment, debUser.UserDetails, [changeRecordItem], cancellationToken);
+
+                var entities = await debService.GetEntityHeadsAsync(affectedEntities, cancellationToken);
+
+                foreach (var entity in entities)
+                {
+                    await eventPublisher.PublishAsync(new ChildEntitySavedEvent
+                    {
+                        ParentEntityType = entity.Value.EntityTypeTitle,
+                        ParentEntityId = entity.Key,
+                        ChildEntityType = "EntityDocumentLinking",
+                        EventContext = comment
+                    }, cancellationToken);
+                }
             }
 
             return await dmsService.DeleteDocumentAsync(libraryId, documentId);

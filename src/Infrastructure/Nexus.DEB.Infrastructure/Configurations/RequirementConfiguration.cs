@@ -9,7 +9,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Requirement> builder)
         {
-            builder.ToTable("Requirement", "deb");
+            builder.ToTable("Requirement", "deb", t => { t.HasTrigger("Requirement_ChangeTracking"); });
 
             builder.HasBaseType<EntityHead>();
 

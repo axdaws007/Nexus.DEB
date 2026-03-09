@@ -19,6 +19,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastru
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexus.DEB.Infrastructure", "src\Infrastructure\Nexus.DEB.Infrastructure\Nexus.DEB.Infrastructure.csproj", "{917D6B8F-2D6F-4E87-A536-5FBF23CB05EE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "documents", "documents", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		documents\Nexus-DEB-Workflow-Validation-SideEffects-Guide.docx = documents\Nexus-DEB-Workflow-Validation-SideEffects-Guide.docx
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,5 +94,8 @@ Global
 		{A042848D-08EF-4CD7-ABD5-2DCF3CB87143} = {8D626EA8-CB54-BC41-363A-217881BEBA6E}
 		{9048EB7F-3875-A59E-E36B-5BD4C6F2A282} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{917D6B8F-2D6F-4E87-A536-5FBF23CB05EE} = {9048EB7F-3875-A59E-E36B-5BD4C6F2A282}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {98579F09-7E2B-4ED8-BB7B-E57E1BFABA27}
 	EndGlobalSection
 EndGlobal

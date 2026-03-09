@@ -1,6 +1,6 @@
 ﻿namespace Nexus.DEB.Domain.Models
 {
-	public class StandardVersionRequirement
+	public class StandardVersionRequirementView
 	{
 		public Guid RequirementId { get; set; }
 		public string SerialNumber { get; set; } = string.Empty;

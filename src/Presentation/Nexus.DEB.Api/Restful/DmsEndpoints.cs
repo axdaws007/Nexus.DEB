@@ -271,7 +271,19 @@ namespace Nexus.DEB.Api.Restful
                             }
                         }
                     }
-				}
+                    else
+                    {
+                        if (file != null)
+                        {
+                            await dmsService.AddDocumentUploadedAuditRecordAsync(result.DocumentId.Value, null);
+                        }
+                        else
+                        {
+                            await dmsService.AddDocumentUpdatedAuditRecordAsync(result.DocumentId.Value, null);
+                        }
+                    }
+
+                }
 
 				return Results.Ok(result);
             }

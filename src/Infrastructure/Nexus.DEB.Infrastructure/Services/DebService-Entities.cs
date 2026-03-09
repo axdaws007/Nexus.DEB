@@ -167,7 +167,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public async Task<IEnumerable<StandardVersionRequirementDetail>> GetStandardVersionRequirementsForGridAsync(StandardVersionRequirementsFilters? filters, CancellationToken cancellationToken)
 		{
-            var query = from svr in _dbContext.StandardVersionRequirements.AsNoTracking()
+            var query = from svr in _dbContext.StandardVersionRequirementSummary.AsNoTracking()
                         join r in (_dbContext.Requirements.AsNoTracking().Include(r => r.Scopes).Include(r => r.StandardVersions)) on svr.RequirementId equals r.EntityId
                         where filters == null || !filters.StandardVersionId.HasValue || (svr.StandardVersionId == filters.StandardVersionId.Value)
                         select new StandardVersionRequirementDetail
@@ -205,7 +205,7 @@ namespace Nexus.DEB.Infrastructure.Services
              * was causing issues with EF Core translating to SQL. This should be       *
              * revisited at a later date to see if it can be optimised. 09/02/26        *
              ****************************************************************************/
-			var allStandardVersionRequirements = _dbContext.StandardVersionRequirements;
+			var allStandardVersionRequirements = _dbContext.StandardVersionRequirementSummary;
 
             return query.ToList().Select(s => new StandardVersionRequirementDetail
             {

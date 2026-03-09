@@ -7,6 +7,7 @@ using Nexus.DEB.Domain.Models.Common;
 using Nexus.DEB.Domain.Models.Other;
 using Nexus.DEB.Domain.Models.Views;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
@@ -189,6 +190,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<List<SectionRequirement>> GetSectionRequirementsForSectionAsync(Guid sectionId, CancellationToken cancellationToken);
 
         Task UpdateSectionRequirementsAsync(IEnumerable<SectionRequirement> toUpdate, SectionRequirement? toAdd, SectionRequirement? toRemove, Guid? movedRequirementId, Guid? movedRequirementOldSectionId, int? movedRequirementOldOrdinal, CancellationToken cancellationToken);
+
+        Task UpdateStandardVersionRequirementsAsync(Guid standardVersionId, CancellationToken cancellationToken);
 
         #endregion Other
 

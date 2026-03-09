@@ -890,6 +890,60 @@ namespace Nexus.DEB.Infrastructure.Services
                 httpContext.Items.Remove("MovedRequirementOldOrdinal");
             }
         }
+
+        public async Task UpdateStandardVersionRequirementsAsync(
+            Guid standardVersionId,
+            CancellationToken cancellationToken)
+        {
+            // Get the distinct set of RequirementIds that should be linked
+            // (inferred from SectionRequirement data)
+            var requiredIds = await _dbContext.Sections
+                .Where(x => x.StandardVersionId == standardVersionId)
+                .SelectMany(x => x.SectionRequirements)
+                .Select(x => x.RequirementID)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            // Get the existing linked RequirementIds
+            var existingIds = await _dbContext.StandardVersionRequirements
+                .Where(x => x.StandardVersionId == standardVersionId)
+                .Select(x => x.RequirementId)
+                .ToListAsync(cancellationToken);
+
+            // Calculate deltas
+            var requiredSet = new HashSet<Guid>(requiredIds);
+            var existingSet = new HashSet<Guid>(existingIds);
+
+            var toInsert = new HashSet<Guid>(requiredSet);
+            toInsert.ExceptWith(existingSet);
+
+            var toDelete = new HashSet<Guid>(existingSet);
+            toDelete.ExceptWith(requiredSet);
+
+            // Delete records no longer needed
+            if (toDelete.Count > 0)
+            {
+                await _dbContext.StandardVersionRequirements
+                    .Where(x => x.StandardVersionId == standardVersionId
+                             && toDelete.Contains(x.RequirementId))
+                    .ExecuteDeleteAsync(cancellationToken);
+            }
+
+            // Insert new records
+            if (toInsert.Count > 0)
+            {
+                var newRecords = toInsert.Select(requirementId => new StandardVersionRequirement
+                {
+                    StandardVersionId = standardVersionId,
+                    RequirementId = requirementId
+                });
+
+                _dbContext.StandardVersionRequirements.AddRange(newRecords);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+
         public async Task<bool> IsSectionDescendantOfAsync(
             Guid candidateSectionId,
             Guid ancestorSectionId,

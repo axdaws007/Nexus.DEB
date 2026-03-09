@@ -241,6 +241,8 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 var isDeleted = await _debService.DeleteSectionAndLinkedRequirementsAsync(section, cancellationToken);
 
+                await _debService.UpdateStandardVersionRequirementsAsync(section.StandardVersionId, cancellationToken);
+
                 await UpdateParentStandardVersionModifiedDetails(section.StandardVersionId, cancellationToken);
 
                 return Result<Section>.Success(section);
@@ -285,6 +287,8 @@ namespace Nexus.DEB.Infrastructure.Services
                     idsToRemove,
                     _currentUserService.PostId,
                     cancellationToken);
+
+                await _debService.UpdateStandardVersionRequirementsAsync(section.StandardVersionId, cancellationToken);
 
                 await UpdateParentStandardVersionModifiedDetails(section.StandardVersionId, cancellationToken);
 

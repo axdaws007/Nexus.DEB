@@ -24,27 +24,17 @@ namespace Nexus.DEB.Infrastructure.Configurations
             builder
                 .HasMany(x => x.Requirements)
                 .WithMany(y => y.StandardVersions)
-                .UsingEntity(z => z.ToTable("StandardVersionRequirement", "deb"));
-
-            builder
-                .HasMany(x => x.Requirements)
-                .WithMany(y => y.StandardVersions)
-                .UsingEntity<Dictionary<string, object>>(
-                    "StandardVersionRequirement",
-                    // Right side (Requirement)
+                .UsingEntity<StandardVersionRequirement>(
                     j => j
                         .HasOne<Requirement>()
                         .WithMany()
-                        .HasForeignKey("RequirementId")
+                        .HasForeignKey(x => x.RequirementId)
                         .OnDelete(DeleteBehavior.NoAction),
-                    // Left side (StandardVersion)
                     j => j
                         .HasOne<StandardVersion>()
                         .WithMany()
-                        .HasForeignKey("StandardVersionId")
-                        .OnDelete(DeleteBehavior.NoAction),
-                    // Join table configuration
-                    j => j.ToTable("StandardVersionRequirement", "deb", t => { t.HasTrigger("StandardVersionRequirement_ChangeTracking"); })
+                        .HasForeignKey(x => x.StandardVersionId)
+                        .OnDelete(DeleteBehavior.NoAction)
                 );
 
             builder.Property(x => x.VersionTitle).HasDefaultValue(string.Empty).HasMaxLength(50);

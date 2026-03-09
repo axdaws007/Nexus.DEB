@@ -31,6 +31,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
 
         // Linking
         public DbSet<SectionRequirement> SectionRequirements { get; set; }
+        public DbSet<StandardVersionRequirement> StandardVersionRequirements { get; set; }
         public DbSet<StatementRequirementScope> StatementsRequirementsScopes { get; set; }
         public DbSet<EntityDocumentLinking> EntityDocumentLinking { get; set; }
 
@@ -65,7 +66,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<ScopeExport> ScopeExport { get; set; }
         public DbSet<RequirementExport> RequirementExport { get; set; }
         public DbSet<RequirementSectionSummary> RequirementSectionSummaries { get; set; }
-        public DbSet<StandardVersionRequirement> StandardVersionRequirements { get; set; }
+        public DbSet<StandardVersionRequirementView> StandardVersionRequirementSummary { get; set; }
 		public DbSet<StatementExport> StatementExport { get; set; }
         public DbSet<StatementDetailView> StatementDetails { get; set; }
         public DbSet<TaskSummary> TaskSummaries { get; set; }

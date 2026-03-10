@@ -526,19 +526,25 @@ namespace Nexus.DEB.Infrastructure.Services
             return query;
         }
 
-        public async Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(CancellationToken cancellationToken)
+        public async Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(Guid? standardVersionId,CancellationToken cancellationToken)
         {
-            return await (from sc in _dbContext.Scopes
-                          orderby sc.Title
-                          select new FilterItemEntity()
-                          {
-                              Id = sc.EntityId,
-                              Value = sc.Title,
-                              IsEnabled = !sc.IsRemoved,
-                              EntityType = sc.EntityTypeTitle
-                          }).ToListAsync(cancellationToken);
-        }
+            var query = from sc in _dbContext.Scopes
+                        .Include(s => s.Requirements)
+                        where standardVersionId == null
+                              || (from svr in _dbContext.StandardVersionRequirements
+                                  where svr.StandardVersionId == standardVersionId
+                                  select sc.EntityId).Contains(sc.EntityId)
+                        orderby sc.Title
+                        select new FilterItemEntity
+                        {
+                            Id = sc.EntityId,
+                            Value = sc.Title,
+                            IsEnabled = !sc.IsRemoved,
+                            EntityType = sc.EntityTypeTitle
+                        };
 
+            return await query.ToListAsync(cancellationToken);
+        }
 
         public IQueryable<ScopeSummary> GetScopesForGrid(ScopeFilters? filters)
         {

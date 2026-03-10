@@ -84,7 +84,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 		Task<ICollection<FilterItem>> GetStandardsLookupAsync(CancellationToken cancellationToken);
 		Task<ICollection<FilterItemEntity>> GetStandardVersionsLookupAsync(CancellationToken cancellationToken);
 		Task<ICollection<FilterItemEntity>> GetStandardVersionSectionsLookupAsync(Guid standardVersionId, CancellationToken cancellationToken);
-		Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(CancellationToken cancellationToken);
+		Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(Guid? standardVersionId, CancellationToken cancellationToken);
 		IQueryable<TaskType> GetTaskTypes();
         Task<ICollection<FilterItem>> GetTaskTypesLookupAsync(CancellationToken cancellationToken);
         IQueryable<RequirementType> GetRequirementTypes();

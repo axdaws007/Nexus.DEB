@@ -31,8 +31,9 @@ namespace Nexus.DEB.Api.GraphQL
         public async static Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(
             IDebService debService,
             IResolverContext resolverContext,
+            Guid? standardVersionId,
             CancellationToken cancellationToken)
-            => await debService.GetScopesLookupAsync(cancellationToken);
+            => await debService.GetScopesLookupAsync(standardVersionId, cancellationToken);
 
         [Authorize]
         public static async Task<ICollection<ScopeCondensed>> GetScopesForRequirement(

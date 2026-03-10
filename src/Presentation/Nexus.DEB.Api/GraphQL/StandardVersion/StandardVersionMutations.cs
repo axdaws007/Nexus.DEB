@@ -1,6 +1,5 @@
 ﻿using HotChocolate.Authorization;
 using Nexus.DEB.Application.Common.Interfaces;
-using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Events;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Interfaces;
@@ -14,7 +13,7 @@ namespace Nexus.DEB.Api.GraphQL
 		[Authorize(Policy = DebHelper.Policies.CanEditStdVersion)]
 		public static async Task<StandardVersion> CreateStandardVersionAsync(
 			Guid ownerId,
-			int standardId,
+			short standardId,
 			string versionTitle,
 			string delimiter,
 			int? majorVersion,

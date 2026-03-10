@@ -1317,13 +1317,16 @@ namespace Nexus.DEB.Infrastructure.Services
 			return standardVersion;
 		}
 
-		#endregion StandardVersions
+        public async Task<List<StandardVersionSummary>> GetStandardVersionsForThisStandardAndStatusAsync(short standardId, string status, CancellationToken cancellationToken)
+            => await _dbContext.StandardVersionSummaries.Where(x => x.StandardId == standardId && x.Status == status).ToListAsync(cancellationToken);
 
-		// --------------------------------------------------------------------------------------------------------------
+        #endregion StandardVersions
 
-		#region Tasks
+        // --------------------------------------------------------------------------------------------------------------
 
-		public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
+        #region Tasks
+
+        public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
         {
             var query = _dbContext.TaskSummaries.AsQueryable();
 

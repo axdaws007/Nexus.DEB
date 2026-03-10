@@ -165,6 +165,7 @@ namespace Nexus.DEB.Infrastructure
             services.AddScoped<ITransitionSideEffectRegistry, TransitionSideEffectRegistry>();
 
             // Register all validators (auto-discovered)
+            services.AddScoped<ITransitionValidator, ActiveStandardVersionsValidator>();
             services.AddScoped<ITransitionValidator, ValidateReviewDateTransitionValidator>();
 
             // HTTP request correlationId service

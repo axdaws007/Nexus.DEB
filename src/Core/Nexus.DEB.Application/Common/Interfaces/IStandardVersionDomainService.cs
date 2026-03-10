@@ -7,7 +7,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 	{
 		Task<Result<StandardVersion>> CreateStandardVersionAsync(
 			Guid ownerId,
-			int standardId,
+			short standardId,
 			string versionTitle,
 			string delimiter,
 			int? majorVersion,

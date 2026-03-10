@@ -7,10 +7,10 @@
         public int DestinationActivityId { get; set; }
         public int TriggerStatusId { get; set; }
 
-        // Parse MUTTags column into list of validator names
+        // Parse MUTHandler column into list of validator names
         public List<string> ValidatorNames { get; set; } = new();
 
-        // Parse MUTHandler column into list of side effect names
+        // Parse MUTTags column into list of side effect names
         public List<string> SideEffectNames { get; set; } = new();
     }
 }

@@ -6,9 +6,6 @@ using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Nexus.DEB.Domain.Models.Other;
 using Nexus.DEB.Domain.Models.Views;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Application.Common.Interfaces
@@ -56,8 +53,10 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<int?> GetStandardVersionTotalRequirementsAsync(Guid id, CancellationToken cancellationToken);
         Task<StandardVersion> CreateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default);
         Task<StandardVersion> UpdateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default);
+        Task<List<StandardVersionSummary>> GetStandardVersionsForThisStandardAndStatusAsync(short standardId, string status, CancellationToken cancellationToken);
 
-		IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
+
+        IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
         IQueryable<StandardVersionExport> GetStandardVersionsForExport(StandardVersionSummaryFilters? filters);
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);
         Task<StatementDetail?> GetStatementDetailByIdAsync(Guid id, CancellationToken cancellationToken = default);

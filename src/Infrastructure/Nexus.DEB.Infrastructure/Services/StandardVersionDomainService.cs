@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Task = System.Threading.Tasks.Task;
@@ -24,7 +25,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
 		public async Task<Result<StandardVersion>> CreateStandardVersionAsync(
 			Guid ownerId,
-			int standardId,
+			short standardId,
 			string versionTitle,
 			string delimiter,
 			int? majorVersion,
@@ -32,49 +33,75 @@ namespace Nexus.DEB.Infrastructure.Services
 			DateOnly? effectiveStartDate,
 			DateOnly? effectiveEndDate,
 			CancellationToken cancellationToken)
-		{
-			await ValidateFieldsAsync(null, ownerId, versionTitle, effectiveStartDate, effectiveEndDate);
+        {
+            await ValidatePreExistingStandard(standardId, cancellationToken);
 
-			if (ValidationErrors.Count > 0)
-			{
-				return Result<StandardVersion>.Failure(ValidationErrors);
-			}
+            if (ValidationErrors.Count > 0)
+            {
+                return Result<StandardVersion>.Failure(ValidationErrors);
+            }
 
-			try
-			{
-				var standard = await this.DebService.GetStandardByIdAsync(standardId, cancellationToken);
+            await ValidateFieldsAsync(null, ownerId, versionTitle, effectiveStartDate, effectiveEndDate);
 
-				var standardVersion = new StandardVersion()
-				{
-					EntityTypeTitle = EntityTypes.StandardVersion,
-					OwnedById = ownerId,
-					SerialNumber = await DebService.GenerateSerialNumberAsync(this.ModuleId, this.InstanceId, EntityTypes.StandardVersion),
-					Title = string.Format("{0}{1}{2}",standard.Title, delimiter, versionTitle),
-					VersionTitle = versionTitle,
-					Delimiter = delimiter,
-					MajorVersion = majorVersion,
-					MinorVersion = minorVersion,
-					EffectiveStartDate = effectiveStartDate,
-					EffectiveEndDate = effectiveEndDate,
-					Standard = standard,
-					StandardId = standard.Id
-				};
+            if (ValidationErrors.Count > 0)
+            {
+                return Result<StandardVersion>.Failure(ValidationErrors);
+            }
 
-				standardVersion = await this.DebService.CreateStandardVersionAsync(standardVersion, cancellationToken);
+            try
+            {
+                var standard = await this.DebService.GetStandardByIdAsync(standardId, cancellationToken);
 
-				await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, standardVersion.EntityId, null, null, cancellationToken);
+                var standardVersion = new StandardVersion()
+                {
+                    EntityTypeTitle = EntityTypes.StandardVersion,
+                    OwnedById = ownerId,
+                    SerialNumber = await DebService.GenerateSerialNumberAsync(this.ModuleId, this.InstanceId, EntityTypes.StandardVersion),
+                    Title = string.Format("{0}{1}{2}", standard.Title, delimiter, versionTitle),
+                    VersionTitle = versionTitle,
+                    Delimiter = delimiter,
+                    MajorVersion = majorVersion,
+                    MinorVersion = minorVersion,
+                    EffectiveStartDate = effectiveStartDate,
+                    EffectiveEndDate = effectiveEndDate,
+                    Standard = standard,
+                    StandardId = standard.Id
+                };
 
-				var fullStandardVersion = await this.DebService.GetStandardVersionByIdAsync(standardVersion.EntityId, cancellationToken);
+                standardVersion = await this.DebService.CreateStandardVersionAsync(standardVersion, cancellationToken);
 
-				return Result<StandardVersion>.Success(fullStandardVersion);
-			}
-			catch (Exception ex)
-			{
-				return Result<StandardVersion>.Failure($"An error occurred creating the Standard Version: {ex.Message}");
-			}
-		}
+                await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, standardVersion.EntityId, null, null, cancellationToken);
 
-		public async Task<Result<StandardVersion>> UpdateStandardVersionAsync(
+                var fullStandardVersion = await this.DebService.GetStandardVersionByIdAsync(standardVersion.EntityId, cancellationToken);
+
+                return Result<StandardVersion>.Success(fullStandardVersion);
+            }
+            catch (Exception ex)
+            {
+                return Result<StandardVersion>.Failure($"An error occurred creating the Standard Version: {ex.Message}");
+            }
+        }
+
+        private async Task ValidatePreExistingStandard(short standardId, CancellationToken cancellationToken)
+        {
+            var standardVersions = await this.DebService.GetStandardVersionsForThisStandardAndStatusAsync(standardId, DebHelper.Paws.States.Draft, cancellationToken);
+
+            if (standardVersions.Count > 0)
+            {
+                var standard = await this.DebService.GetStandardByIdAsync(standardId, cancellationToken);
+                var standardVersionTitles = string.Join(", ", standardVersions.Select(x => x.Title));
+
+                ValidationErrors.Add(
+                    new ValidationError()
+                    {
+                        Code = "EXISTING_DRAFT_STANDARD_VERSION",
+                        Field = "Status",
+                        Message = $"There is already a draft Standard Version for the Standard '{standard.Title}': {standardVersionTitles}"
+                    });
+            }
+        }
+
+        public async Task<Result<StandardVersion>> UpdateStandardVersionAsync(
 			Guid id,
 			Guid ownerId,
 			string versionTitle,

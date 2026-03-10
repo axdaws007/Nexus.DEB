@@ -39,8 +39,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .HasColumnName("Description");
 
             builder.Property(e => e.EffectiveStartDate)
-                .HasColumnName("EffectiveStartDate")
-                .IsRequired();
+                .HasColumnName("EffectiveStartDate");
 
             builder.Property(e => e.EffectiveEndDate)
                 .HasColumnName("EffectiveEndDate");

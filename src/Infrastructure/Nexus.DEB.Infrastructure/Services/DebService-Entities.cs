@@ -1145,11 +1145,12 @@ namespace Nexus.DEB.Infrastructure.Services
         {
             var results = await (from sv in _dbContext.StandardVersions
                                                .Include(x => x.Standard)
+                                               .Where(w => !w.IsRemoved && !w.IsArchived)
                                   select new FilterItemEntity()
                                   {
                                       Id = sv.EntityId,
                                       Value = sv.Title,
-                                      IsEnabled = !sv.IsRemoved,
+                                      IsEnabled = true,
 									  EntityType = sv.EntityTypeTitle
 								  }).ToListAsync(cancellationToken);
 

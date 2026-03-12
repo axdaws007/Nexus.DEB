@@ -14,7 +14,7 @@ namespace Nexus.DEB.Infrastructure.Services
         private readonly IMemoryCache _cache;
         private readonly ILogger<ComplianceStateEngine> _logger;
 
-        private const string PseudostateMappingsCacheKey = "ComplianceEngine:PseudostateMappings";
+        private const string ComplianceStateMappingsCacheKey = "ComplianceEngine:ComplianceStateMappings";
         private const string BubbleUpRulesCacheKey = "ComplianceEngine:BubbleUpRules";
         private const string NodeDefaultsCacheKey = "ComplianceEngine:NodeDefaults";
         private const string ComplianceStatesCacheKey = "ComplianceEngine:ComplianceStates";
@@ -32,18 +32,18 @@ namespace Nexus.DEB.Infrastructure.Services
             _logger = logger;
         }
 
-        public async Task<int?> ResolveComplianceStateAsync(string entityType, int pseudoStateId)
+        public async Task<int?> ResolveComplianceStateAsync(WorkflowInfo workflowInfo)
         {
-            var mappings = await GetPseudostateMappingsAsync();
+            var mappings = await GetComplianceStateMappingsAsync();
 
             var mapping = mappings
-                .FirstOrDefault(m => m.EntityType == entityType && m.PseudoStateID == pseudoStateId);
+                .FirstOrDefault(m => m.WorkflowID == workflowInfo.WorkflowId && m.ActivityID == workflowInfo.ActivityId && m.StatusID == workflowInfo.StatusId);
 
             if (mapping == null)
             {
                 _logger.LogWarning(
-                    "No pseudostate mapping found for EntityType={EntityType}, PseudoStateID={PseudoStateID}",
-                    entityType, pseudoStateId);
+                    "No compliance state mapping found for WorkflowID={workflowId}, ActivityID={activityId}, StatusID={statusId}",
+                    workflowInfo.WorkflowId, workflowInfo.ActivityId, workflowInfo.StatusId);
                 return null;
             }
 
@@ -136,13 +136,13 @@ namespace Nexus.DEB.Infrastructure.Services
                 .ToList();
         }
 
-        private async Task<IReadOnlyList<PseudostateMapping>> GetPseudostateMappingsAsync()
+        private async Task<IReadOnlyList<ComplianceStateMapping>> GetComplianceStateMappingsAsync()
         {
-            return await _cache.GetOrCreateAsync(PseudostateMappingsCacheKey, async entry =>
+            return await _cache.GetOrCreateAsync(ComplianceStateMappingsCacheKey, async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = CacheDuration;
-                return await _debService.GetPseudostateMappingsAsync();
-            }) ?? Array.Empty<PseudostateMapping>();
+                return await _debService.GetComplianceStateMappingsAsync();
+            }) ?? Array.Empty<ComplianceStateMapping>();
         }
 
         private async Task<IReadOnlyList<BubbleUpRule>> GetBubbleUpRulesAsync(string parentNodeType)

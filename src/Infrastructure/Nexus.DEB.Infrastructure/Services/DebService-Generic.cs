@@ -80,6 +80,7 @@ namespace Nexus.DEB.Infrastructure.Services
             Guid entityId,
             CancellationToken cancellationToken)
             => await _dbContext.PawsEntityDetails.AsNoTracking().FirstOrDefaultAsync(x => x.EntityId == entityId, cancellationToken);
+
 		#endregion Workflow
 
 		#region Comments
@@ -1070,8 +1071,8 @@ namespace Nexus.DEB.Infrastructure.Services
         public async Task<IReadOnlyList<ComplianceState>> GetActiveComplianceStatesAsync(CancellationToken cancellationToken = default)
             => await _dbContext.ComplianceStates.AsNoTracking().Where(x => x.IsActive).ToListAsync(cancellationToken);
 
-        public async Task<IReadOnlyList<PseudostateMapping>> GetPseudostateMappingsAsync(CancellationToken cancellationToken = default)
-            => await _dbContext.PseudostateMappings.AsNoTracking().ToListAsync(cancellationToken);
+        public async Task<IReadOnlyList<ComplianceStateMapping>> GetComplianceStateMappingsAsync(CancellationToken cancellationToken = default)
+            => await _dbContext.ComplianceStateMappings.AsNoTracking().ToListAsync(cancellationToken);
 
         public async Task<IReadOnlyList<BubbleUpRule>> GetActiveBubbleUpRulesAsync(CancellationToken cancellationToken = default)
             => await _dbContext.BubbleUpRules.AsNoTracking().ToListAsync(cancellationToken);

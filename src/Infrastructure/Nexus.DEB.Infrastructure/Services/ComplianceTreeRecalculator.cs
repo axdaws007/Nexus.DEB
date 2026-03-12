@@ -45,9 +45,10 @@ namespace Nexus.DEB.Infrastructure.Services
                 entityType, entityId);
 
             // 1. Get pseudostate and resolve compliance state
-            var pseudoStateId = await GetPseudoStateIdAsync(entityId, entityType, cancellationToken);
-            int? complianceStateId = pseudoStateId.HasValue
-                ? await _engine.ResolveComplianceStateAsync(entityType, pseudoStateId.Value)
+            var workflowInfo = await GetCurrentPawsActivityAndStatusAsync(entityId, entityType, cancellationToken);
+
+            int? complianceStateId = workflowInfo != null
+                ? await _engine.ResolveComplianceStateAsync(workflowInfo)
                 : null;
 
             // 2. Find all tree nodes for this entity across ALL trees (SV + Scope combos)
@@ -64,7 +65,9 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 node.ComplianceStateID = complianceStateId;
                 node.ComplianceStateLabel = null;
-                node.PseudoStateID = pseudoStateId;
+                node.PseudoStateID = workflowInfo.PseudoStateId;
+                node.ActivityId = workflowInfo.ActivityId;
+                node.StatusId = workflowInfo.StatusId;
                 node.LastCalculatedAt = _dateTimeProvider.Now;
             }
             await _treeService.UpsertNodesAsync(nodes, cancellationToken);
@@ -330,17 +333,19 @@ namespace Nexus.DEB.Infrastructure.Services
                 node.ComplianceTreeNodeID, summaries, cancellationToken);
         }
 
-        private async Task<int?> GetPseudoStateIdAsync(
+        private async Task<WorkflowInfo?> GetCurrentPawsActivityAndStatusAsync(
             Guid entityId, string entityType, CancellationToken cancellationToken)
         {
             var moduleId = _appSettings.GetModuleId("DEB");
             var workflowId = await _debService.GetWorkflowIdAsync(moduleId, entityType, cancellationToken);
             if (!workflowId.HasValue) return null;
 
-            // get entity's current pseudostate ID
-            var detail = await _debService.GetWorkflowStatusByIdAsync(entityId, cancellationToken);
+            // get entity's current paws info
+            var detail = await _debService.GetCurrentWorkflowStatusForEntityAsync(entityId, cancellationToken);
 
-            return detail?.StatusId;
+            if (detail == null) return null;
+
+            return new WorkflowInfo(workflowId.Value, detail.ActivityId, detail.StatusId, detail.PseudoStateId);
         }
 
         private async Task ResolveIntrinsicStatesInBatch(
@@ -354,9 +359,9 @@ namespace Nexus.DEB.Infrastructure.Services
             // TODO: Batch PAWS call would be more efficient
             foreach (var entityId in entityIds)
             {
-                var pseudoStateId = await GetPseudoStateIdAsync(entityId, entityType, cancellationToken);
-                int? complianceStateId = pseudoStateId.HasValue
-                    ? await _engine.ResolveComplianceStateAsync(entityType, pseudoStateId.Value)
+                var workflowInfo = await GetCurrentPawsActivityAndStatusAsync(entityId, entityType, cancellationToken);
+                int? complianceStateId = workflowInfo != null
+                    ? await _engine.ResolveComplianceStateAsync(workflowInfo)
                     : null;
 
                 var nodes = await _treeService.GetNodesByEntityAsync(
@@ -365,7 +370,9 @@ namespace Nexus.DEB.Infrastructure.Services
                 foreach (var node in nodes)
                 {
                     node.ComplianceStateID = complianceStateId;
-                    node.PseudoStateID = pseudoStateId;
+                    node.PseudoStateID = workflowInfo.PseudoStateId;
+                    node.ActivityId = workflowInfo.ActivityId;
+                    node.StatusId = workflowInfo.StatusId;
                     node.LastCalculatedAt = _dateTimeProvider.Now;
                 }
 

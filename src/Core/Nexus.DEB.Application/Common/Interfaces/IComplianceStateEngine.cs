@@ -1,6 +1,5 @@
 ﻿using Nexus.DEB.Application.Common.Models.Compliance;
 using Nexus.DEB.Domain.Models;
-using Nexus.DEB.Domain.Models.Other;
 
 namespace Nexus.DEB.Application.Common.Interfaces
 {
@@ -9,7 +8,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         /// <summary>
         /// Resolves an entity's intrinsic compliance state from its pseudostate.
         /// </summary>
-        Task<int?> ResolveComplianceStateAsync(string entityType, int pseudoStateId);
+        Task<int?> ResolveComplianceStateAsync(WorkflowInfo workflowInfo);
 
         /// <summary>
         /// Evaluates bubble-up rules for a parent node given its children's compliance states.

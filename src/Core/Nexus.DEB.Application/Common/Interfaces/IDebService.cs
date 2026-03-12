@@ -252,7 +252,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         #region Configuration
 
         Task<IReadOnlyList<ComplianceState>> GetActiveComplianceStatesAsync(CancellationToken cancellationToken = default);
-        Task<IReadOnlyList<PseudostateMapping>> GetPseudostateMappingsAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<ComplianceStateMapping>> GetComplianceStateMappingsAsync(CancellationToken cancellationToken = default);
         Task<IReadOnlyList<BubbleUpRule>> GetActiveBubbleUpRulesAsync(CancellationToken cancellationToken = default);
         Task<IReadOnlyList<NodeDefault>> GetNodeDefaultsAsync(CancellationToken cancellationToken = default);
 

@@ -1,4 +1,6 @@
-﻿namespace Nexus.DEB.Domain.Models
+﻿using static Nexus.DEB.Domain.DebHelper.Paws;
+
+namespace Nexus.DEB.Domain.Models
 {
     public class ComplianceTreeNode
     {
@@ -12,6 +14,8 @@
         public int? ComplianceStateID { get; set; }
         public string? ComplianceStateLabel { get; set; }
         public int? PseudoStateID { get; set; }
+        public int? ActivityId { get; set; }
+        public int? StatusId { get; set; }
         public int? TotalRequirementCount { get; set; }
         public int? TotalSectionCount { get; set; }
         public DateTime LastCalculatedAt { get; set; }

@@ -50,7 +50,7 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<ComplianceTreeNode> ComplianceTreeNodes { get; set; }
         public DbSet<ComplianceTreeNodeSummary> ComplianceTreeNodeSummaries { get; set; }
         public DbSet<NodeDefault> NodeDefaults { get; set; }
-        public DbSet<PseudostateMapping> PseudostateMappings { get; set; }
+        public DbSet<ComplianceStateMapping> ComplianceStateMappings { get; set; }
 
         // Entities
         public DbSet<EntityHead> EntityHeads { get; set; }

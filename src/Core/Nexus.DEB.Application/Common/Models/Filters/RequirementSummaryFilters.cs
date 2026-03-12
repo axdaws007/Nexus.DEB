@@ -12,6 +12,8 @@ namespace Nexus.DEB.Application.Common.Models.Filters
         public DateOnly? ModifiedTo { get; set; }
         public ICollection<int?>? StatusIds { get; set; }
         public bool OnlyShowAvailableRequirementScopeCombinations { get; set; }
+        public ICollection<Guid>? SectionIds { get; set; }
+        public ICollection<int?>? SocStatusIds { get; set; }
         public ICollection<SortByItem>? SortBy { get; set; }
     }
 }

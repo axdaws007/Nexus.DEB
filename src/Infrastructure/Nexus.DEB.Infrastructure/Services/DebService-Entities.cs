@@ -83,6 +83,13 @@ namespace Nexus.DEB.Infrastructure.Services
                             Reference = sr.Section.Reference ?? string.Empty
                         })
                         .ToList(),
+                    Statements = r.StatementsRequirementsScopes
+                         .Select(sr => new ChildItem
+                         {
+                             Id = sr.Statement.EntityId,
+                             Reference = sr.Statement.SerialNumber ?? string.Empty
+                         })
+                        .ToList(),
                     StatusId = _dbContext.PawsStates
                         .Where(ps => ps.EntityId == r.EntityId)
                         .Select(ps => ps.StatusId)
@@ -91,10 +98,6 @@ namespace Nexus.DEB.Infrastructure.Services
                         .Where(ps => ps.EntityId == r.EntityId)
                         .Select(ps => ps.Status)
                         .FirstOrDefault(),
-                    StatementIds = r.StatementsRequirementsScopes
-                        .Select(srs => srs.StatementId)
-                        .Distinct()
-                        .ToList(),
                     StandardVersionTitles = r.StandardVersions.Select(sv => sv.Title).ToList()
                 })
                 .AsNoTracking();
@@ -159,6 +162,26 @@ namespace Nexus.DEB.Infrastructure.Services
                         .Select(r => r.EntityId);
 
                     query = query.Where(r => requirementIdsWithAvailableCombinations.Contains(r.EntityId));
+                }
+
+                if (filters.SectionIds != null && filters.SectionIds.Count > 0)
+                {
+                    var requirementIds = _dbContext.Set<Requirement>()
+                    .Where(r => r.SectionRequirements.Any(s =>
+                        (filters.SectionIds.Contains(s.SectionID))
+                    ))
+                    .Select(r => r.EntityId);
+
+                    query = query.Where(r => requirementIds.Contains(r.EntityId));
+                }
+
+                if (filters.SocStatusIds != null && filters.SocStatusIds.Count > 0)
+                {
+                    var requirementIds = _dbContext.Set<Requirement>()
+                        .Where(r => r.StatementsRequirementsScopes
+                        .Any(srs => _dbContext.PawsStates.Where(ps => ps.EntityId == srs.StatementId)
+                        .Any(x => filters.SocStatusIds.Contains(x.StatusId)))).Select(r => r.EntityId);
+                    query = query.Where(r => requirementIds.Contains(r.EntityId));
                 }
             }
 
@@ -528,20 +551,21 @@ namespace Nexus.DEB.Infrastructure.Services
 
         public async Task<ICollection<FilterItemEntity>> GetScopesLookupAsync(Guid? standardVersionId,CancellationToken cancellationToken)
         {
-            var query = from sc in _dbContext.Scopes
-                        .Include(s => s.Requirements)
-                        where standardVersionId == null
-                              || (from svr in _dbContext.StandardVersionRequirements
-                                  where svr.StandardVersionId == standardVersionId
-                                  select sc.EntityId).Contains(sc.EntityId)
-                        orderby sc.Title
-                        select new FilterItemEntity
-                        {
-                            Id = sc.EntityId,
-                            Value = sc.Title,
-                            IsEnabled = !sc.IsRemoved,
-                            EntityType = sc.EntityTypeTitle
-                        };
+            var query =
+            from sc in _dbContext.Scopes
+            where standardVersionId == null
+                || _dbContext.StandardVersions
+                    .Where(sv => sv.EntityId == standardVersionId)
+                    .SelectMany(sv => sv.Requirements)
+                    .Any(r => r.Scopes.Any(s => s.EntityId == sc.EntityId))
+            orderby sc.Title
+            select new FilterItemEntity
+            {
+                Id = sc.EntityId,
+                Value = sc.Title,
+                IsEnabled = !sc.IsRemoved,
+                EntityType = sc.EntityTypeTitle
+            };
 
             return await query.ToListAsync(cancellationToken);
         }

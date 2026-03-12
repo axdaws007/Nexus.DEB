@@ -182,7 +182,7 @@ builder
     .ModifyCostOptions(options =>
     {
         options.MaxFieldCost = 5000;
-		options.MaxTypeCost = 500;
+		options.MaxTypeCost = 700;
 	})
     .ModifyPagingOptions(x =>
     {

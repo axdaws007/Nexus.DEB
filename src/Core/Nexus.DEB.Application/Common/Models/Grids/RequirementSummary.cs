@@ -13,7 +13,7 @@ namespace Nexus.DEB.Application.Common.Models
         public DateTime LastModifiedDate { get; set; }
         public int? StatusId { get; set; }
         public string? Status { get; set; }
-        public ICollection<Guid>? StatementIds { get; set; }
+        public ICollection<ChildItem>? Statements { get; set; }
         public ICollection<string> StandardVersionTitles { get; set; }
     }
 }

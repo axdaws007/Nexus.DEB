@@ -1,4 +1,4 @@
-﻿namespace Nexus.DEB.Domain.Models.Other
+﻿namespace Nexus.DEB.Domain.Models
 {
     public class ComplianceStateMapping
     {

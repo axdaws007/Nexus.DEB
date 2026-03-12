@@ -64,9 +64,9 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 node.ComplianceStateID = complianceStateId;
                 node.ComplianceStateLabel = null;
-                node.PseudoStateID = workflowInfo.PseudoStateId;
-                node.ActivityId = workflowInfo.ActivityId;
-                node.StatusId = workflowInfo.StatusId;
+                node.PseudoStateID = workflowInfo?.PseudoStateId;
+                node.ActivityId = workflowInfo?.ActivityId;
+                node.StatusId = workflowInfo?.StatusId;
                 node.LastCalculatedAt = _dateTimeProvider.Now;
             }
             await _treeService.UpsertNodesAsync(nodes, cancellationToken);
@@ -309,16 +309,19 @@ namespace Nexus.DEB.Infrastructure.Services
                     var reqAggregates = await _engine.CalculateRequirementAggregatesAsync(
                         tree, node.EntityID, cancellationToken);
                     summaries.AddRange(reqAggregates);
+                    node.TotalRequirementCount = reqAggregates.Sum(a => a.Count);
                     break;
 
                 case ComplianceNodeTypes.StandardVersion:
                     var rootReqAggregates = await _engine.CalculateRequirementAggregatesAsync(
                         tree, node.EntityID, cancellationToken);
                     summaries.AddRange(rootReqAggregates);
+                    node.TotalRequirementCount = rootReqAggregates.Sum(a => a.Count);
 
                     var sectionAggregates = await _engine.CalculateSectionAggregatesAsync(
                         tree, node.EntityID, cancellationToken);
                     summaries.AddRange(sectionAggregates);
+                    node.TotalSectionCount = sectionAggregates.Sum(a => a.Count);
                     break;
 
                 default:
@@ -369,9 +372,9 @@ namespace Nexus.DEB.Infrastructure.Services
                 foreach (var node in nodes)
                 {
                     node.ComplianceStateID = complianceStateId;
-                    node.PseudoStateID = workflowInfo.PseudoStateId;
-                    node.ActivityId = workflowInfo.ActivityId;
-                    node.StatusId = workflowInfo.StatusId;
+                    node.PseudoStateID = workflowInfo?.PseudoStateId;
+                    node.ActivityId = workflowInfo?.ActivityId;
+                    node.StatusId = workflowInfo?.StatusId;
                     node.LastCalculatedAt = _dateTimeProvider.Now;
                 }
 

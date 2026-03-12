@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Nexus.DEB.Domain.Models.Other;
+using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Infrastructure.Configurations
 {

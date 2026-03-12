@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models.Compliance;
 using Nexus.DEB.Domain.Models;
-using Nexus.DEB.Domain.Models.Other;
 
 namespace Nexus.DEB.Infrastructure.Services
 {

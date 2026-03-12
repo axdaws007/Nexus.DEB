@@ -1,6 +1,4 @@
-﻿using static Nexus.DEB.Domain.DebHelper.Paws;
-
-namespace Nexus.DEB.Domain.Models
+﻿namespace Nexus.DEB.Domain.Models
 {
     public class ComplianceTreeNode
     {

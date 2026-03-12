@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Application.Common.Models.Compliance;
 using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
@@ -1063,5 +1064,181 @@ namespace Nexus.DEB.Infrastructure.Services
         }
 
         #endregion
+
+        #region Compliance
+
+        public async Task<IReadOnlyList<ComplianceState>> GetActiveComplianceStatesAsync(CancellationToken cancellationToken = default)
+            => await _dbContext.ComplianceStates.AsNoTracking().Where(x => x.IsActive).ToListAsync(cancellationToken);
+
+        public async Task<IReadOnlyList<PseudostateMapping>> GetPseudostateMappingsAsync(CancellationToken cancellationToken = default)
+            => await _dbContext.PseudostateMappings.AsNoTracking().ToListAsync(cancellationToken);
+
+        public async Task<IReadOnlyList<BubbleUpRule>> GetActiveBubbleUpRulesAsync(CancellationToken cancellationToken = default)
+            => await _dbContext.BubbleUpRules.AsNoTracking().ToListAsync(cancellationToken);
+
+        public async Task<IReadOnlyList<NodeDefault>> GetNodeDefaultsAsync(CancellationToken cancellationToken = default)
+            => await _dbContext.NodeDefaults.AsNoTracking().ToListAsync(cancellationToken);
+
+        public async Task<IReadOnlyList<Section>> GetSectionsByStandardVersionIdAsync(Guid standardVersionId, CancellationToken cancellationToken = default)
+            => await _dbContext.Sections.AsNoTracking().Where(x => x.StandardVersionId == standardVersionId).ToListAsync(cancellationToken);
+
+        public async Task<IReadOnlyList<SectionRequirement>> GetSectionRequirementsByStandardVersionIdAsync(Guid standardVersionId, CancellationToken cancellationToken = default)
+            => await _dbContext.SectionRequirements
+                        .AsNoTracking()
+                        .Include(x => x.Section)
+                        .Where(x => x.Section.StandardVersionId == standardVersionId)
+                        .ToListAsync(cancellationToken);
+
+        public async Task<ComplianceTreeResult> GetFilteredTreeAsync(ComplianceTreeQuery query, CancellationToken cancellationToken = default)
+        {
+            var allNodes = await GetTreeAsync(query.Tree, cancellationToken);
+            var complianceStates = await GetActiveComplianceStatesAsync();
+
+            var workingSet = allNodes.ToList();
+
+            // ── Step 1: Hide empty Sections ──
+            if (query.HideEmptySections)
+            {
+                workingSet = RemoveEmptySections(workingSet);
+            }
+
+            var hasComplianceFilter = query.ComplianceStateFilter is { Count: > 0 };
+
+            // ── Step 2: No compliance filter — return working set as direct matches ──
+            if (!hasComplianceFilter)
+            {
+                return new ComplianceTreeResult
+                {
+                    Nodes = workingSet.Select(n => new ComplianceTreeNodeResult
+                    {
+                        Node = n,
+                        IsDirectMatch = true
+                    }).ToList(),
+                    ComplianceStates = complianceStates,
+                    IsFiltered = false,
+                    EmptySectionsHidden = query.HideEmptySections
+                };
+            }
+
+            // ── Step 3: Apply compliance state filter ──
+            var filterSet = query.ComplianceStateFilter!.ToHashSet();
+
+            var directMatchIds = new HashSet<long>(
+                workingSet
+                    .Where(n => n.ComplianceStateID.HasValue && filterSet.Contains(n.ComplianceStateID.Value))
+                    .Select(n => n.ComplianceTreeNodeID));
+
+            // ── Step 4: Walk up from matches to preserve ancestor paths ──
+            var visibleIds = new HashSet<long>(directMatchIds);
+
+            foreach (var matchId in directMatchIds)
+            {
+                var current = workingSet.First(n => n.ComplianceTreeNodeID == matchId);
+
+                while (current.ParentEntityID != null && current.ParentNodeType != null)
+                {
+                    var parent = workingSet.FirstOrDefault(n =>
+                        n.NodeType == current.ParentNodeType &&
+                        n.EntityID == current.ParentEntityID.Value);
+
+                    if (parent == null)
+                        break;
+
+                    if (!visibleIds.Add(parent.ComplianceTreeNodeID))
+                        break; // Already visited — ancestors above are already included
+
+                    current = parent;
+                }
+            }
+
+            // ── Step 5: Build result ──
+            var resultNodes = workingSet
+                .Where(n => visibleIds.Contains(n.ComplianceTreeNodeID))
+                .Select(n => new ComplianceTreeNodeResult
+                {
+                    Node = n,
+                    IsDirectMatch = directMatchIds.Contains(n.ComplianceTreeNodeID)
+                })
+                .ToList();
+
+            return new ComplianceTreeResult
+            {
+                Nodes = resultNodes,
+                ComplianceStates = complianceStates,
+                IsFiltered = true,
+                EmptySectionsHidden = query.HideEmptySections
+            };
+        }
+
+        /// <summary>
+        /// Removes Sections with no descendant Requirements. Cascades upward:
+        /// if a parent Section's only children were empty Sections, it is also removed.
+        /// The root node is never removed.
+        /// </summary>
+        private static List<ComplianceTreeNode> RemoveEmptySections(List<ComplianceTreeNode> nodes)
+        {
+            var emptyIds = new HashSet<long>();
+            var changed = true;
+
+            // Iteratively remove until stable (handles cascading parent removal)
+            while (changed)
+            {
+                changed = false;
+
+                foreach (var node in nodes)
+                {
+                    if (emptyIds.Contains(node.ComplianceTreeNodeID))
+                        continue;
+
+                    if (node.NodeType != ComplianceNodeTypes.Section)
+                        continue;
+
+                    // A Section is empty if TotalRequirementCount is 0 or null
+                    var isEmpty = !node.TotalRequirementCount.HasValue
+                                  || node.TotalRequirementCount.Value == 0;
+
+                    if (!isEmpty)
+                        continue;
+
+                    // Also check if the Section has any non-empty children remaining
+                    // (another Section that is not yet marked empty)
+                    var hasNonEmptyChild = nodes.Any(n =>
+                        !emptyIds.Contains(n.ComplianceTreeNodeID) &&
+                        n.ParentEntityID == node.EntityID &&
+                        n.NodeType != ComplianceNodeTypes.Section); // non-Section child = not empty
+
+                    if (hasNonEmptyChild)
+                        continue;
+
+                    var hasNonEmptySectionChild = nodes.Any(n =>
+                        !emptyIds.Contains(n.ComplianceTreeNodeID) &&
+                        n.ParentEntityID == node.EntityID &&
+                        n.NodeType == ComplianceNodeTypes.Section);
+
+                    if (hasNonEmptySectionChild)
+                        continue;
+
+                    emptyIds.Add(node.ComplianceTreeNodeID);
+                    changed = true;
+                }
+            }
+
+            return nodes.Where(n => !emptyIds.Contains(n.ComplianceTreeNodeID)).ToList();
+        }
+
+        public async Task<IReadOnlyList<ComplianceTreeNode>> GetTreeAsync(TreeIdentifier tree, CancellationToken cancellationToken = default)
+            => await _dbContext.ComplianceTreeNodes
+                .AsNoTracking()
+                .Include(n => n.ComplianceState)
+                .Include(n => n.Summaries)
+                    .ThenInclude(s => s.ComplianceState)
+                .Where(n => n.StandardVersionID == tree.StandardVersionId
+                          && n.ScopeID == tree.ScopeId)
+                .OrderBy(n => n.NodeType)
+                    .ThenBy(n => n.ParentEntityID)
+                    .ThenBy(n => n.EntityID)
+                .ToListAsync(cancellationToken);
+
+        #endregion Compliance
     }
 }

@@ -98,5 +98,57 @@ namespace Nexus.DEB.Api.GraphQL
 
 			return result.Data;
 		}
+
+		[Authorize(Policy = DebHelper.Policies.CanUpVersionStdVersion)]
+		public static async Task<StandardVersion?> UpVersionStandardVersionAsync(
+			Guid upVersionSourceEntityId,
+			Guid ownerId,
+			short standardId,
+			string versionTitle,
+			string delimiter,
+			int? majorVersion,
+			int? minorVersion,
+			DateOnly? effectiveStartDate,
+			DateOnly? effectiveEndDate,
+			bool cloneSections,
+			bool cloneRequirementLinks,
+			bool cloneCommonEvidence,
+			IStandardVersionDomainService standardVersionService,
+			IDomainEventPublisher eventPublisher,
+			CancellationToken cancellationToken = default)
+		{
+			var result = await standardVersionService.UpVersionStandardVersionAsync(
+				upVersionSourceEntityId,
+				ownerId,
+				standardId,
+				versionTitle,
+				delimiter,
+				majorVersion,
+				minorVersion,
+				effectiveStartDate,
+				effectiveEndDate,
+				cloneSections,
+				cloneRequirementLinks,
+				cloneCommonEvidence,
+				cancellationToken);
+
+			if (!result.IsSuccess)
+			{
+				throw ExceptionHelper.BuildException(result);
+			}
+
+			var standardVersion = result.Data!;
+
+			await eventPublisher.PublishAsync(new EntitySavedEvent
+			{
+				Entity = standardVersion,
+				EntityType = standardVersion.EntityTypeTitle,
+				EntityId = standardVersion.EntityId,
+				SerialNumber = standardVersion.SerialNumber ?? string.Empty,
+				IsNew = true,
+			}, cancellationToken);
+
+			return result.Data;
+		}
 	}
 }

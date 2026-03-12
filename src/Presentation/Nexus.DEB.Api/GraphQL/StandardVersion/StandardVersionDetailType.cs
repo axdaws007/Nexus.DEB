@@ -7,6 +7,9 @@ namespace Nexus.DEB.Api.GraphQL
 	{
 		protected override void Configure(IObjectTypeDescriptor<StandardVersionDetail> descriptor)
 		{
+			descriptor.Field("canUpVersion")
+				.ResolveWith<CanUpVersionStandardVersionResolver>(i => i.GetCanUpVersionAsync(default, default, default, default, default, default));
+
 			base.Configure(descriptor);
 		}
 	}

@@ -26,5 +26,20 @@ namespace Nexus.DEB.Application.Common.Interfaces
 			DateOnly? effectiveStartDate,
 			DateOnly? effectiveEndDate,
 			CancellationToken cancellationToken);
+
+		Task<Result<StandardVersion>> UpVersionStandardVersionAsync(
+			Guid upVersionSourceEntityId,
+			Guid ownerId,
+			short standardId,
+			string versionTitle,
+			string delimiter,
+			int? majorVersion,
+			int? minorVersion,
+			DateOnly? effectiveStartDate,
+			DateOnly? effectiveEndDate,
+			bool cloneSections,
+			bool cloneRequirementLinks,
+			bool cloneCommonEvidence,
+			CancellationToken cancellationToken);
 	}
 }

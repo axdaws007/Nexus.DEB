@@ -3,7 +3,6 @@ using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models.Compliance;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
-using Nexus.DEB.Domain.Models.Other;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services

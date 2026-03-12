@@ -147,6 +147,9 @@ namespace Nexus.DEB.Infrastructure.Services
 			int? minorVersion,
 			DateOnly? effectiveStartDate,
 			DateOnly? effectiveEndDate,
+			bool cloneSections,
+			bool cloneRequirementLinks,
+			bool cloneCommonEvidence,
 			CancellationToken cancellationToken)
 		{
 			var standardVersionToBeUpVersioned = await DebService.GetStandardVersionByIdAsync(upVersionSourceEntityId, cancellationToken);

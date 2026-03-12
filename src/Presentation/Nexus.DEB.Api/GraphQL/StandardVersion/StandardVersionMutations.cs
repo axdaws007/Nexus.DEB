@@ -110,6 +110,9 @@ namespace Nexus.DEB.Api.GraphQL
 			int? minorVersion,
 			DateOnly? effectiveStartDate,
 			DateOnly? effectiveEndDate,
+			bool cloneSections,
+			bool cloneRequirementLinks,
+			bool cloneCommonEvidence,
 			IStandardVersionDomainService standardVersionService,
 			IDomainEventPublisher eventPublisher,
 			CancellationToken cancellationToken = default)
@@ -124,6 +127,9 @@ namespace Nexus.DEB.Api.GraphQL
 				minorVersion,
 				effectiveStartDate,
 				effectiveEndDate,
+				cloneSections,
+				cloneRequirementLinks,
+				cloneCommonEvidence,
 				cancellationToken);
 
 			if (!result.IsSuccess)

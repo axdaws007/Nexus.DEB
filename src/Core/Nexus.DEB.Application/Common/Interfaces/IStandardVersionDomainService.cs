@@ -37,6 +37,9 @@ namespace Nexus.DEB.Application.Common.Interfaces
 			int? minorVersion,
 			DateOnly? effectiveStartDate,
 			DateOnly? effectiveEndDate,
+			bool cloneSections,
+			bool cloneRequirementLinks,
+			bool cloneCommonEvidence,
 			CancellationToken cancellationToken);
 	}
 }

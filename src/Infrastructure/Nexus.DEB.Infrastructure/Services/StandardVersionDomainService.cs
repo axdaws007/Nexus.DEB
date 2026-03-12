@@ -82,25 +82,6 @@ namespace Nexus.DEB.Infrastructure.Services
             }
         }
 
-        private async Task ValidatePreExistingStandard(short standardId, CancellationToken cancellationToken)
-        {
-            var standardVersions = await this.DebService.GetStandardVersionsForThisStandardAndStatusAsync(standardId, DebHelper.Paws.States.Draft, cancellationToken);
-
-            if (standardVersions.Count > 0)
-            {
-                var standard = await this.DebService.GetStandardByIdAsync(standardId, cancellationToken);
-                var standardVersionTitles = string.Join(", ", standardVersions.Select(x => x.Title));
-
-                ValidationErrors.Add(
-                    new ValidationError()
-                    {
-                        Code = "EXISTING_DRAFT_STANDARD_VERSION",
-                        Field = "Status",
-                        Message = $"There is already a draft Standard Version for the Standard '{standard.Title}': {standardVersionTitles}"
-                    });
-            }
-        }
-
         public async Task<Result<StandardVersion>> UpdateStandardVersionAsync(
 			Guid id,
 			Guid ownerId,
@@ -156,6 +137,108 @@ namespace Nexus.DEB.Infrastructure.Services
 			}
 		}
 
+		public async Task<Result<StandardVersion>> UpVersionStandardVersionAsync(
+			Guid upVersionSourceEntityId,
+			Guid ownerId,
+			short standardId,
+			string versionTitle,
+			string delimiter,
+			int? majorVersion,
+			int? minorVersion,
+			DateOnly? effectiveStartDate,
+			DateOnly? effectiveEndDate,
+			CancellationToken cancellationToken)
+		{
+			var standardVersionToBeUpVersioned = await DebService.GetStandardVersionByIdAsync(upVersionSourceEntityId, cancellationToken);
+
+			if (standardVersionToBeUpVersioned == null)
+			{
+				return Result<StandardVersion>.Failure(new ValidationError()
+				{
+					Code = "INVALID_STANDARD_VERSION_ID",
+					Field = nameof(upVersionSourceEntityId),
+					Message = "Cannot find Standard Version to be up-versioned"
+				});
+			}
+
+			ValidateUpVersionSpecifics(standardVersionToBeUpVersioned, standardId, cancellationToken);
+
+			await ValidatePreExistingStandard(standardId, cancellationToken);
+
+			await ValidateFieldsAsync(null, ownerId, versionTitle, effectiveStartDate, effectiveEndDate);
+
+			if (ValidationErrors.Count > 0)
+			{
+				return Result<StandardVersion>.Failure(ValidationErrors);
+			}
+
+			try
+			{
+				var standard = await this.DebService.GetStandardByIdAsync(standardId, cancellationToken);
+
+				var standardVersion = new StandardVersion()
+				{
+					EntityTypeTitle = EntityTypes.StandardVersion,
+					OwnedById = ownerId,
+					SerialNumber = await DebService.GenerateSerialNumberAsync(this.ModuleId, this.InstanceId, EntityTypes.StandardVersion),
+					Title = string.Format("{0}{1}{2}", standard.Title, delimiter, versionTitle),
+					VersionTitle = versionTitle,
+					Delimiter = delimiter,
+					MajorVersion = majorVersion,
+					MinorVersion = minorVersion,
+					EffectiveStartDate = effectiveStartDate,
+					EffectiveEndDate = effectiveEndDate,
+					Standard = standard,
+					StandardId = standard.Id
+				};
+
+				standardVersion = await this.DebService.CreateStandardVersionAsync(standardVersion, cancellationToken);
+
+				await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, standardVersion.EntityId, null, null, cancellationToken);
+
+				var fullStandardVersion = await this.DebService.GetStandardVersionByIdAsync(standardVersion.EntityId, cancellationToken);
+
+				return Result<StandardVersion>.Success(fullStandardVersion);
+			}
+			catch (Exception ex)
+			{
+				return Result<StandardVersion>.Failure($"An error occurred creating the Standard Version: {ex.Message}");
+			}
+		}
+
+		private async Task ValidatePreExistingStandard(short standardId, CancellationToken cancellationToken)
+		{
+			var standardVersions = await this.DebService.GetStandardVersionsForThisStandardAndStatusAsync(standardId, DebHelper.Paws.States.Draft, cancellationToken);
+
+			if (standardVersions.Count > 0)
+			{
+				var standard = await this.DebService.GetStandardByIdAsync(standardId, cancellationToken);
+				var standardVersionTitles = string.Join(", ", standardVersions.Select(x => x.Title));
+
+				ValidationErrors.Add(
+					new ValidationError()
+					{
+						Code = "EXISTING_DRAFT_STANDARD_VERSION",
+						Field = "Status",
+						Message = $"There is already a draft Standard Version for the Standard '{standard.Title}': {standardVersionTitles}"
+					});
+			}
+		}
+
+		private void ValidateUpVersionSpecifics(StandardVersion standardVersionToBeUpVersioned, short standardId, CancellationToken cancellationToken)
+		{
+			if (standardVersionToBeUpVersioned.StandardId != standardId)
+			{
+				ValidationErrors.Add(
+					new ValidationError()
+					{
+						Code = "STANDARD_MISMATCH_FOR_UPVERSION",
+						Field = nameof(standardId),
+						Message = $"The specified 'standard' does not match the 'standard' of the Standard Version being up-versioned."
+					});
+			}
+		}
+
 		private async Task ValidateFieldsAsync(
 			StandardVersion? standardVersion,
 			Guid ownerId,
@@ -202,17 +285,6 @@ namespace Nexus.DEB.Infrastructure.Services
 
 		protected void ValidateEffectiveDates(DateOnly? effectiveStartDate, DateOnly? effectiveEndDate)
 		{
-			//if(effectiveStartDate == DateOnly.MinValue)
-			//{
-			//	ValidationErrors.Add(
-			//		new ValidationError()
-			//		{
-			//			Code = "INVALID_EFFECTIVESTARTDATE",
-			//			Field = nameof(effectiveStartDate),
-			//			Message = "The 'effective start date' must be provided."
-			//		});
-			//}
-
 			if (effectiveEndDate.HasValue && effectiveStartDate.HasValue && effectiveEndDate.Value <= effectiveStartDate)
 			{
 				ValidationErrors.Add(

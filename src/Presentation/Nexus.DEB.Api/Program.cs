@@ -165,6 +165,7 @@ try
         options.AddPolicy(DebHelper.Policies.CanCreateOrEditScope, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditScope));
         options.AddPolicy(DebHelper.Policies.CanCreateOrEditRequirement, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditRequirement));
         options.AddPolicy(DebHelper.Policies.CanEditStdVersion, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditStdVersion));
+		options.AddPolicy(DebHelper.Policies.CanUpVersionStdVersion, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanUpVersionStdVersion));
 		options.AddPolicy(DebHelper.Policies.CanCreateSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanCreateSoCTask));
         options.AddPolicy(DebHelper.Policies.CanEditSoCTask, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoCTask));
     });

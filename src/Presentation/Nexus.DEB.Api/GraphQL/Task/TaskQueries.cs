@@ -29,7 +29,8 @@ namespace Nexus.DEB.Api.GraphQL
                 StandardVersionIds = filters.StandardVersionIds,
                 StatementId = filters.StatementId,
                 StatusIds = filters.StatusIds,
-                TaskTypeIds = filters.TaskTypeIds
+                TaskTypeIds = filters.TaskTypeIds,
+                ScopeIds = filters.ScopeIds
             };
 
             if (!string.IsNullOrEmpty(filters?.OwnedBy))

@@ -14,5 +14,6 @@ namespace Nexus.DEB.Application.Common.Models.Filters
         public ICollection<int?>? StatusIds { get; set; }
         public Guid? StatementId { get; set; }
         public ICollection<SortByItem>? SortBy { get; set; }
-    }
+		public ICollection<Guid>? ScopeIds { get; set; }
+	}
 }

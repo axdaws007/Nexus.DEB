@@ -1369,6 +1369,15 @@ namespace Nexus.DEB.Infrastructure.Services
                     query = query.Where(t => taskIds.Contains(t.EntityId));
                 }
 
+                if (filters.ScopeIds != null && filters.ScopeIds.Count > 0)
+                {
+					var taskIds = _dbContext.Set<Domain.Models.Task>()
+						.Where(t => t.Statement.StatementsRequirementsScopes.Any(a => filters.ScopeIds.Contains(a.ScopeId)))
+						.Select(t => t.EntityId);
+
+					query = query.Where(t => taskIds.Contains(t.EntityId));
+				}
+
                 // Text search on Title
                 if (!string.IsNullOrWhiteSpace(filters.SearchText))
                 {

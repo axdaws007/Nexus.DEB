@@ -1345,13 +1345,20 @@ namespace Nexus.DEB.Infrastructure.Services
         public async Task<List<StandardVersionSummary>> GetStandardVersionsForThisStandardAndStatusAsync(short standardId, string status, CancellationToken cancellationToken)
             => await _dbContext.StandardVersionSummaries.Where(x => x.StandardId == standardId && x.Status == status).ToListAsync(cancellationToken);
 
-        #endregion StandardVersions
+        public async Task<List<Section>> CreateSectionsAsync(List<Section> sections, CancellationToken cancellationToken = default)
+		{
+			await _dbContext.Sections.AddRangeAsync(sections, cancellationToken);
+			await _dbContext.SaveChangesAsync(cancellationToken);
+			return sections;
+		}
 
-        // --------------------------------------------------------------------------------------------------------------
+		#endregion StandardVersions
 
-        #region Tasks
+		// --------------------------------------------------------------------------------------------------------------
 
-        public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
+		#region Tasks
+
+		public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
         {
             var query = _dbContext.TaskSummaries.AsQueryable();
 

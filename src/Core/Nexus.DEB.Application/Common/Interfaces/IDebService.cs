@@ -54,9 +54,11 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<StandardVersion> CreateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default);
         Task<StandardVersion> UpdateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default);
         Task<List<StandardVersionSummary>> GetStandardVersionsForThisStandardAndStatusAsync(short standardId, string status, CancellationToken cancellationToken);
+        Task<List<Section>> CreateSectionsAsync(List<Section> sections, CancellationToken cancellationToken);
 
 
-        IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
+
+		IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
         IQueryable<StandardVersionExport> GetStandardVersionsForExport(StandardVersionSummaryFilters? filters);
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);
         Task<StatementDetail?> GetStatementDetailByIdAsync(Guid id, CancellationToken cancellationToken = default);

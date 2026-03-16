@@ -197,6 +197,11 @@ namespace Nexus.DEB.Infrastructure.Services
 
 				standardVersion = await this.DebService.CreateStandardVersionAsync(standardVersion, cancellationToken);
 
+				if (cloneSections)
+				{
+					await CloneStandardVersionSectionsAsync(upVersionSourceEntityId, standardVersion, cancellationToken);
+				}
+
 				await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, standardVersion.EntityId, null, null, cancellationToken);
 
 				var fullStandardVersion = await this.DebService.GetStandardVersionByIdAsync(standardVersion.EntityId, cancellationToken);
@@ -207,6 +212,36 @@ namespace Nexus.DEB.Infrastructure.Services
 			{
 				return Result<StandardVersion>.Failure($"An error occurred creating the Standard Version: {ex.Message}");
 			}
+		}
+
+		private async Task<List<Section>> CloneStandardVersionSectionsAsync(Guid sourceEntityId, StandardVersion target, CancellationToken cancellationToken)
+		{
+			var originalSections = await this.DebService.GetSectionsForStandardVersionAsync(sourceEntityId, cancellationToken);
+
+			var sectionIdMapping = originalSections.Select(s => s.Id).Select(s => new KeyValuePair<Guid, Guid>(s, Guid.NewGuid())).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+			var newSections = new List<Section>();
+			foreach(var section in originalSections)
+			{
+				var newSection = new Section
+				{
+					Id = sectionIdMapping[section.Id],
+					Reference = section.Reference,
+					Title = section.Title,
+					IsReferenceDisplayed = section.IsReferenceDisplayed,
+					IsTitleDisplayed = section.IsTitleDisplayed,
+					ParentSectionId = section.ParentSectionId.HasValue ? sectionIdMapping[section.ParentSectionId.Value] : null,
+					Ordinal = section.Ordinal,
+					CreatedDate = DateTime.Now,
+					LastModifiedDate = DateTime.Now,
+					StandardVersionId = target.EntityId,
+					StandardVersion = target
+				};
+
+				newSections.Add(newSection);
+			}
+
+			return await this.DebService.CreateSectionsAsync(newSections, cancellationToken);
 		}
 
 		private async Task ValidatePreExistingStandard(short standardId, CancellationToken cancellationToken)
@@ -242,12 +277,7 @@ namespace Nexus.DEB.Infrastructure.Services
 			}
 		}
 
-		private async Task ValidateFieldsAsync(
-			StandardVersion? standardVersion,
-			Guid ownerId,
-			string versionTitle,
-			DateOnly? effectiveStartDate,
-			DateOnly? effectiveEndDate)
+		private async Task ValidateFieldsAsync(StandardVersion? standardVersion, Guid ownerId, string versionTitle, DateOnly? effectiveStartDate, DateOnly? effectiveEndDate)
 		{
 			await ValidateOwnerAsync(ownerId);
 

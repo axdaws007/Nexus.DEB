@@ -45,6 +45,12 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<ChangeRecordItem> ChangeRecordItems { get; set; }
         public DbSet<SavedSearch> SavedSearches { get; set; }
         public DbSet<DashboardInfo> DashboardInfos { get; set; }
+        public DbSet<BubbleUpRule> BubbleUpRules { get; set; }
+        public DbSet<ComplianceState> ComplianceStates { get; set; }
+        public DbSet<ComplianceTreeNode> ComplianceTreeNodes { get; set; }
+        public DbSet<ComplianceTreeNodeSummary> ComplianceTreeNodeSummaries { get; set; }
+        public DbSet<NodeDefault> NodeDefaults { get; set; }
+        public DbSet<ComplianceStateMapping> ComplianceStateMappings { get; set; }
 
         // Entities
         public DbSet<EntityHead> EntityHeads { get; set; }

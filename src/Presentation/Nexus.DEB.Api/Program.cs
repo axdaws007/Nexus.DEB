@@ -244,7 +244,9 @@ builder
 
     //if (app.Environment.IsDevelopment())
     //{
-        app.MapTestDataEndpoints();
+    app.MapTestDataEndpoints();
+    app.MapComplianceAdminEndpoints();
+
     //}
 
     app.RunWithGraphQLCommands(args);

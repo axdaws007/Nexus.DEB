@@ -79,6 +79,7 @@ namespace Nexus.DEB.Infrastructure.Services
             Guid entityId,
             CancellationToken cancellationToken)
             => await _dbContext.PawsEntityDetails.AsNoTracking().FirstOrDefaultAsync(x => x.EntityId == entityId, cancellationToken);
+
 		#endregion Workflow
 
 		#region Comments

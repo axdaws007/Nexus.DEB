@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Extensions;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Application.Common.Models.Compliance;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
@@ -820,13 +821,17 @@ namespace Nexus.DEB.Infrastructure.Services
             return await GetScopeDetailByIdAsync(scopeId, cancellationToken);
 		}
 
-		#endregion Scopes
+        public async Task<IReadOnlyList<Guid>> GetRequirementIdsByScopeAsync(Guid scopeId, CancellationToken cancellationToken = default)
+            => await _dbContext.Requirements.Where(w => w.Scopes.Any(a => a.EntityId == scopeId)).Select(x => x.EntityId).Distinct().ToListAsync(cancellationToken);
 
-		// --------------------------------------------------------------------------------------------------------------
 
-		#region Statements
+        #endregion Scopes
 
-		public IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters)
+        // --------------------------------------------------------------------------------------------------------------
+
+        #region Statements
+
+        public IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters)
         {
             var query = _dbContext.Statements
                 .Select(s => new StatementSummary
@@ -1146,6 +1151,17 @@ namespace Nexus.DEB.Infrastructure.Services
             return statement;
         }
 
+        public async Task<IReadOnlyList<StatementRequirementLink>> GetStatementRequirementLinksByScopeAsync(Guid scopeId, CancellationToken cancellationToken = default)
+            => await _dbContext.StatementsRequirementsScopes.AsNoTracking()
+                        .Where(x => x.ScopeId == scopeId)
+                        .Select(x => new StatementRequirementLink
+                        {
+                            RequirementId = x.RequirementId,
+                            StatementId = x.StatementId
+                        })
+                        .Distinct()
+                        .ToListAsync(cancellationToken);
+
         #endregion Statements
 
         // --------------------------------------------------------------------------------------------------------------
@@ -1351,6 +1367,23 @@ namespace Nexus.DEB.Infrastructure.Services
 			await _dbContext.SaveChangesAsync(cancellationToken);
 			return sections;
 		}
+
+        public async Task<IReadOnlyList<Guid>> GetScopeIdsByStandardVersionAsync(Guid standardVersionId, CancellationToken cancellationToken = default)
+            => await _dbContext.StandardVersions.Where(sv => sv.EntityId == standardVersionId)
+				.SelectMany(sv => sv.Requirements)
+				.Include(r => r.Scopes)
+                .SelectMany(s => s.Scopes)
+                .Select(e => e.EntityId)
+                .Distinct()
+				.ToListAsync(cancellationToken);
+
+        public async Task<IReadOnlyList<Guid>> GetStandardVersionIdsByScopeAsync(Guid scopeId, CancellationToken cancellationToken = default)
+            => await _dbContext.Set<Requirement>()
+                .AsNoTracking()
+                .Where(r => r.Scopes.Any(s => s.EntityId == scopeId))
+                .SelectMany(r => r.StandardVersions.Select(sv => sv.EntityId))
+                .Distinct()
+                .ToListAsync(cancellationToken);
 
 		#endregion StandardVersions
 

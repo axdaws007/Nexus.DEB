@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Application.Common.Models.Compliance;
 using Nexus.DEB.Domain.Models;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -29,7 +30,7 @@ namespace Nexus.DEB.Infrastructure.Services
             var allNodes = await _debService.GetComplianceTreeAsync(query.Tree, cancellationToken);
             var complianceStates = await _engine.GetActiveComplianceStatesAsync();
 
-            // 2. Build working list (mutable copy of the node set)
+            // 2. Build working list
             var workingNodes = allNodes.ToList();
 
             // 3. Hide empty sections if requested
@@ -38,23 +39,21 @@ namespace Nexus.DEB.Infrastructure.Services
                 workingNodes = RemoveEmptySections(workingNodes);
             }
 
-            // 4. Order for tree rendering (depth-first traversal)
-            workingNodes = OrderForTreeRendering(workingNodes);
+            // 4. Build traversal entries (node + resolved parent ID)
+            var traversalEntries = BuildTraversalEntries(workingNodes);
 
             var hasStateFilter = query.ComplianceStateFilter is { Count: > 0 };
 
             // 5. No compliance state filter — return everything as direct matches
             if (!hasStateFilter)
             {
-                var lookup = BuildNodeIdLookup(workingNodes);
-
                 return new ComplianceTreeResult
                 {
-                    Nodes = workingNodes.Select(n => new ComplianceTreeNodeResult
+                    Nodes = traversalEntries.Select(e => new ComplianceTreeNodeResult
                     {
-                        Node = n,
+                        Node = e.Node,
                         IsDirectMatch = true,
-                        ParentComplianceTreeNodeID = ResolveParentTreeNodeId(n, lookup)
+                        ParentComplianceTreeNodeID = e.ParentComplianceTreeNodeID
                     }).ToList(),
                     ComplianceStates = complianceStates,
                     IsFiltered = query.HideEmptySections
@@ -63,36 +62,39 @@ namespace Nexus.DEB.Infrastructure.Services
 
             var filterSet = query.ComplianceStateFilter!.ToHashSet();
 
-            // 6. Identify direct matches
-            var directMatchIds = new HashSet<long>(
-                workingNodes
-                    .Where(n => n.ComplianceStateID.HasValue &&
-                                filterSet.Contains(n.ComplianceStateID.Value))
-                    .Select(n => n.ComplianceTreeNodeID));
-
-            // 7. Build lookup for ancestor walking
-            var nodeById = workingNodes.ToDictionary(n => n.ComplianceTreeNodeID);
-
-            // 8. Walk up from each direct match, collecting ancestor node IDs
-            var visibleIds = new HashSet<long>(directMatchIds);
-
-            foreach (var matchId in directMatchIds)
+            // 6. Identify direct match entries (by index, since a node can appear multiple times)
+            var directMatchIndexes = new HashSet<int>();
+            for (var i = 0; i < traversalEntries.Count; i++)
             {
-                WalkUpToRoot(nodeById[matchId], workingNodes, visibleIds);
+                var node = traversalEntries[i].Node;
+                if (node.ComplianceStateID.HasValue && filterSet.Contains(node.ComplianceStateID.Value))
+                {
+                    directMatchIndexes.Add(i);
+                }
             }
 
-            // 9. Build result
-            var nodeLookup = BuildNodeIdLookup(workingNodes);
+            // 7. Walk up from each direct match, collecting visible indexes
+            var visibleIndexes = new HashSet<int>(directMatchIndexes);
 
-            var resultNodes = workingNodes
-                .Where(n => visibleIds.Contains(n.ComplianceTreeNodeID))
-                .Select(n => new ComplianceTreeNodeResult
+            foreach (var matchIndex in directMatchIndexes)
+            {
+                WalkUpEntries(matchIndex, traversalEntries, visibleIndexes);
+            }
+
+            // 8. Build result (preserves depth-first order)
+            var resultNodes = new List<ComplianceTreeNodeResult>();
+            for (var i = 0; i < traversalEntries.Count; i++)
+            {
+                if (visibleIndexes.Contains(i))
                 {
-                    Node = n,
-                    IsDirectMatch = directMatchIds.Contains(n.ComplianceTreeNodeID),
-                    ParentComplianceTreeNodeID = ResolveParentTreeNodeId(n, nodeLookup)
-                })
-                .ToList();
+                    resultNodes.Add(new ComplianceTreeNodeResult
+                    {
+                        Node = traversalEntries[i].Node,
+                        IsDirectMatch = directMatchIndexes.Contains(i),
+                        ParentComplianceTreeNodeID = traversalEntries[i].ParentComplianceTreeNodeID
+                    });
+                }
+            }
 
             return new ComplianceTreeResult
             {
@@ -103,40 +105,71 @@ namespace Nexus.DEB.Infrastructure.Services
         }
 
         /// <summary>
-        /// Orders nodes in depth-first traversal order for tree rendering.
-        /// Root first, then children ordered by node type priority and ordinal.
+        /// Walks up from an entry to the root, adding ancestor indexes to the visible set.
+        /// Uses the traversal's parent chain which correctly handles multi-parent nodes.
         /// </summary>
-        private static List<ComplianceTreeNode> OrderForTreeRendering(List<ComplianceTreeNode> nodes)
+        private static void WalkUpEntries(
+            int entryIndex,
+            List<TraversalEntry> entries,
+            HashSet<int> visibleIndexes)
         {
-            if (nodes.Count == 0) return nodes;
+            var current = entries[entryIndex];
+
+            while (current.ParentComplianceTreeNodeID != null)
+            {
+                // Find the parent entry — it will be earlier in the list (depth-first)
+                // and have the matching ComplianceTreeNodeID
+                var parentIndex = -1;
+                for (var i = entryIndex - 1; i >= 0; i--)
+                {
+                    if (entries[i].Node.ComplianceTreeNodeID == current.ParentComplianceTreeNodeID)
+                    {
+                        parentIndex = i;
+                        break;
+                    }
+                }
+
+                if (parentIndex < 0)
+                    break;
+
+                if (!visibleIndexes.Add(parentIndex))
+                    break; // Already visited — ancestors above are already included
+
+                current = entries[parentIndex];
+                entryIndex = parentIndex;
+            }
+        }
+
+        private static List<TraversalEntry> BuildTraversalEntries(List<ComplianceTreeNode> nodes)
+        {
+            if (nodes.Count == 0) return [];
 
             var childLookup = nodes.ToLookup(n => n.ParentEntityID);
-            var ordered = new List<ComplianceTreeNode>(nodes.Count);
+            var entries = new List<TraversalEntry>(nodes.Count);
 
-            // Find the root (ParentEntityID is null)
             var root = nodes.FirstOrDefault(n => n.ParentEntityID == null);
-            if (root == null) return nodes;
+            if (root == null) return nodes.Select(n => new TraversalEntry(n, null)).ToList();
 
-            TraverseDepthFirst(root, childLookup, ordered);
+            TraverseDepthFirst(root, null, childLookup, entries);
 
-            // Safety: include any orphaned nodes not reached by traversal
-            // (shouldn't happen, but prevents data loss)
-            var orderedIds = new HashSet<long>(ordered.Select(n => n.ComplianceTreeNodeID));
+            // Safety: include any orphaned nodes
+            var includedIds = new HashSet<long>(entries.Select(e => e.Node.ComplianceTreeNodeID));
             foreach (var node in nodes)
             {
-                if (!orderedIds.Contains(node.ComplianceTreeNodeID))
-                    ordered.Add(node);
+                if (!includedIds.Contains(node.ComplianceTreeNodeID))
+                    entries.Add(new TraversalEntry(node, null));
             }
 
-            return ordered;
+            return entries;
         }
 
         private static void TraverseDepthFirst(
             ComplianceTreeNode node,
+            long? parentComplianceTreeNodeID,
             ILookup<Guid?, ComplianceTreeNode> childLookup,
-            List<ComplianceTreeNode> ordered)
+            List<TraversalEntry> entries)
         {
-            ordered.Add(node);
+            entries.Add(new TraversalEntry(node, parentComplianceTreeNodeID));
 
             var children = childLookup[node.EntityID]
                 .OrderBy(c => c.NodeType switch
@@ -151,7 +184,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             foreach (var child in children)
             {
-                TraverseDepthFirst(child, childLookup, ordered);
+                TraverseDepthFirst(child, node.ComplianceTreeNodeID, childLookup, entries);
             }
         }
 
@@ -199,59 +232,6 @@ namespace Nexus.DEB.Infrastructure.Services
             return nodes
                 .Where(n => !emptyIds.Contains(n.ComplianceTreeNodeID))
                 .ToList();
-        }
-
-        /// <summary>
-        /// Walks from a node up through its ancestors to the root,
-        /// adding each ancestor to the visible set.
-        /// </summary>
-        private static void WalkUpToRoot(
-            ComplianceTreeNode node,
-            List<ComplianceTreeNode> allNodes,
-            HashSet<long> visibleIds)
-        {
-            var current = node;
-
-            while (current.ParentEntityID != null && current.ParentNodeType != null)
-            {
-                var parent = allNodes.FirstOrDefault(n =>
-                    n.NodeType == current.ParentNodeType &&
-                    n.EntityID == current.ParentEntityID.Value);
-
-                if (parent == null)
-                    break;
-
-                if (!visibleIds.Add(parent.ComplianceTreeNodeID))
-                    break; // Already visited — ancestors above are already included
-
-                current = parent;
-            }
-        }
-
-        private static Dictionary<(string NodeType, Guid EntityID), long> BuildNodeIdLookup(
-            List<ComplianceTreeNode> nodes)
-        {
-            var lookup = new Dictionary<(string, Guid), long>();
-
-            foreach (var node in nodes)
-            {
-                var key = (node.NodeType, node.EntityID);
-                lookup.TryAdd(key, node.ComplianceTreeNodeID);
-            }
-
-            return lookup;
-        }
-
-        private static long? ResolveParentTreeNodeId(
-            ComplianceTreeNode node,
-            Dictionary<(string NodeType, Guid EntityID), long> lookup)
-        {
-            if (node.ParentNodeType == null || node.ParentEntityID == null)
-                return null;
-
-            return lookup.TryGetValue((node.ParentNodeType, node.ParentEntityID.Value), out var parentId)
-                ? parentId
-                : null;
         }
     }
 }

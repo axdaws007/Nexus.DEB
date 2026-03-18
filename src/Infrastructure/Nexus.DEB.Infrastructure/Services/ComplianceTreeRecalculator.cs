@@ -4,7 +4,6 @@ using Nexus.DEB.Application.Common.Models.Compliance;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
 using Nexus.DEB.Infrastructure.Helpers;
-using System.Data.SqlTypes;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -120,25 +119,26 @@ namespace Nexus.DEB.Infrastructure.Services
                 return;
             }
 
-            // 3. Get in-scope requirement IDs for this Scope
-            var scopeRequirementIds = await _debService.GetRequirementIdsByScopeAsync(
-                tree.ScopeId, cancellationToken);
+            var scopeRequirementIds = await _debService.GetRequirementIdsByScopeAsync(tree.ScopeId, cancellationToken);
             var inScopeRequirementIds = new HashSet<Guid>(scopeRequirementIds);
 
-            // 4. Load sections and section-requirement links
-            var allSections = await _debService.GetSectionsByStandardVersionIdAsync(
-                tree.StandardVersionId, cancellationToken);
-            var sectionRequirements = await _debService.GetSectionRequirementsByStandardVersionIdAsync(
-                tree.StandardVersionId, cancellationToken);
+            var allSections = await _debService.GetSectionsByStandardVersionIdAsync(tree.StandardVersionId, cancellationToken);
+            var sectionRequirements = await _debService.GetSectionRequirementsByStandardVersionIdAsync(tree.StandardVersionId, cancellationToken);
+            var statementLinks = await _debService.GetStatementRequirementLinksByScopeAsync(tree.ScopeId, cancellationToken);
 
-            // 5. Load statement links scoped to this Scope
-            var statementLinks = await _debService.GetStatementRequirementLinksByScopeAsync(
-                tree.ScopeId, cancellationToken);
+            // Batch load entity details for labels
+            var requirementLookup = await _debService.GetEntityHeadsAsync(inScopeRequirementIds, cancellationToken);
 
-            var nodes = new List<ComplianceTreeNode>();
+            var statementIds = statementLinks
+                .Where(link => inScopeRequirementIds.Contains(link.RequirementId))
+                .Select(link => link.StatementId)
+                .Distinct()
+                .ToList();
 
-            // 6. Root node
-            nodes.Add(new ComplianceTreeNode
+            var statementLookup = await _debService.GetEntityHeadsAsync(statementIds, cancellationToken);
+
+            // ── Level 0: Root ──
+            var rootNode = new ComplianceTreeNode
             {
                 StandardVersionID = tree.StandardVersionId,
                 ScopeID = tree.ScopeId,
@@ -146,16 +146,33 @@ namespace Nexus.DEB.Infrastructure.Services
                 EntityID = tree.StandardVersionId,
                 ParentNodeType = null,
                 ParentEntityID = null,
+                ParentComplianceTreeNodeID = null,
                 NodeLabel = StringHelper.Truncate(standardVersion.Title, 150),
-                NodeReference = standardVersion.SerialNumber ?? string.Empty,
+                NodeReference = standardVersion.SerialNumber,
                 Ordinal = 0,
                 LastCalculatedAt = _dateTimeProvider.Now
-            });
+            };
 
-            // 7. Section nodes (full hierarchy regardless of scope)
-            foreach (var section in allSections)
+            await _debService.UpsertComplianceTreeNodeAsync(rootNode, cancellationToken);
+
+            // ── Level 1+: Sections (insert by depth, shallowest first) ──
+            var sectionsByDepth = OrderSectionsByDepthAscending(allSections);
+            var sectionNodeLookup = new Dictionary<Guid, long>(); // Section.Id → ComplianceTreeNodeID
+
+            foreach (var section in sectionsByDepth)
             {
-                nodes.Add(new ComplianceTreeNode
+                long parentTreeNodeId;
+                if (section.ParentSectionId.HasValue)
+                {
+                    if (!sectionNodeLookup.TryGetValue(section.ParentSectionId.Value, out parentTreeNodeId))
+                        continue; // Parent not found — skip
+                }
+                else
+                {
+                    parentTreeNodeId = rootNode.ComplianceTreeNodeID;
+                }
+
+                var sectionNode = new ComplianceTreeNode
                 {
                     StandardVersionID = tree.StandardVersionId,
                     ScopeID = tree.ScopeId,
@@ -165,25 +182,33 @@ namespace Nexus.DEB.Infrastructure.Services
                         ? ComplianceNodeTypes.Section
                         : ComplianceNodeTypes.StandardVersion,
                     ParentEntityID = section.ParentSectionId ?? tree.StandardVersionId,
+                    ParentComplianceTreeNodeID = parentTreeNodeId,
                     NodeLabel = StringHelper.Truncate(section.Title, 150),
                     NodeReference = section.Reference,
                     Ordinal = section.Ordinal,
                     LastCalculatedAt = _dateTimeProvider.Now
-                });
+                };
+
+                await _debService.UpsertComplianceTreeNodeAsync(sectionNode, cancellationToken);
+                sectionNodeLookup[section.Id] = sectionNode.ComplianceTreeNodeID;
             }
 
-            // 8. Requirement nodes — only in-scope Requirements
-            var requirementEntityHeads = await _debService.GetEntityHeadsAsync(inScopeRequirementIds, cancellationToken);
-
+            // ── Requirement level: one per SectionRequirement link ──
+            // A Requirement in two Sections = two tree nodes
             var treeRequirementIds = new HashSet<Guid>();
+            var requirementNodeLookup = new Dictionary<(Guid SectionId, Guid RequirementId), long>();
+
             foreach (var sr in sectionRequirements.Where(sr => sr.IsEnabled))
             {
                 if (!inScopeRequirementIds.Contains(sr.RequirementID))
                     continue;
 
-                requirementEntityHeads.TryGetValue(sr.RequirementID, out var requirement);
+                if (!sectionNodeLookup.TryGetValue(sr.SectionID, out var parentSectionTreeNodeId))
+                    continue;
 
-                nodes.Add(new ComplianceTreeNode
+                requirementLookup.TryGetValue(sr.RequirementID, out var requirement);
+
+                var reqNode = new ComplianceTreeNode
                 {
                     StandardVersionID = tree.StandardVersionId,
                     ScopeID = tree.ScopeId,
@@ -191,51 +216,58 @@ namespace Nexus.DEB.Infrastructure.Services
                     EntityID = sr.RequirementID,
                     ParentNodeType = ComplianceNodeTypes.Section,
                     ParentEntityID = sr.SectionID,
+                    ParentComplianceTreeNodeID = parentSectionTreeNodeId,
                     NodeLabel = StringHelper.Truncate(requirement?.Title, 150),
                     NodeReference = requirement?.SerialNumber,
                     Ordinal = sr.Ordinal,
                     LastCalculatedAt = _dateTimeProvider.Now
-                });
+                };
+
+                await _debService.UpsertComplianceTreeNodeAsync(reqNode, cancellationToken);
+                requirementNodeLookup[(sr.SectionID, sr.RequirementID)] = reqNode.ComplianceTreeNodeID;
                 treeRequirementIds.Add(sr.RequirementID);
             }
 
-            // 9. Statement nodes — only via the specific Scope's StatementRequirementScope links
-            var statementIds = statementLinks
-                .Where(link => treeRequirementIds.Contains(link.RequirementId))
-                .Select(link => link.StatementId)
-                .Distinct()
-                .ToList();
-
-            var statementOrdinal = 0;
-            var statementEntityHeads = await _debService.GetEntityHeadsAsync(statementIds, cancellationToken);
+            // ── Statement level: one per Requirement tree node instance ──
             var statementEntityIds = new HashSet<Guid>();
+
             foreach (var link in statementLinks)
             {
                 if (!treeRequirementIds.Contains(link.RequirementId))
                     continue;
 
-                statementEntityHeads.TryGetValue(link.StatementId, out var statement);
+                statementLookup.TryGetValue(link.StatementId, out var statement);
 
-                nodes.Add(new ComplianceTreeNode
+                // Find ALL Requirement tree nodes for this RequirementId
+                // (there may be multiple if the Requirement is in multiple Sections)
+                var reqTreeNodes = requirementNodeLookup
+                    .Where(kvp => kvp.Key.RequirementId == link.RequirementId)
+                    .ToList();
+
+                foreach (var reqTreeNode in reqTreeNodes)
                 {
-                    StandardVersionID = tree.StandardVersionId,
-                    ScopeID = tree.ScopeId,
-                    NodeType = ComplianceNodeTypes.Statement,
-                    EntityID = link.StatementId,
-                    ParentNodeType = ComplianceNodeTypes.Requirement,
-                    ParentEntityID = link.RequirementId,
-                    NodeLabel = StringHelper.Truncate(statement?.Title, 150),
-                    NodeReference = statement?.SerialNumber,
-                    Ordinal = statementOrdinal++,
-                    LastCalculatedAt = _dateTimeProvider.Now
-                });
+                    var stmtNode = new ComplianceTreeNode
+                    {
+                        StandardVersionID = tree.StandardVersionId,
+                        ScopeID = tree.ScopeId,
+                        NodeType = ComplianceNodeTypes.Statement,
+                        EntityID = link.StatementId,
+                        ParentNodeType = ComplianceNodeTypes.Requirement,
+                        ParentEntityID = link.RequirementId,
+                        ParentComplianceTreeNodeID = reqTreeNode.Value,
+                        NodeLabel = StringHelper.Truncate(statement?.Title, 150),
+                        NodeReference = statement?.SerialNumber,
+                        Ordinal = 0,
+                        LastCalculatedAt = _dateTimeProvider.Now
+                    };
+
+                    await _debService.UpsertComplianceTreeNodeAsync(stmtNode, cancellationToken);
+                }
+
                 statementEntityIds.Add(link.StatementId);
             }
 
-            // 10. Batch insert all structural nodes
-            await _debService.UpsertComplianceTreeNodesAsync(nodes, cancellationToken);
-
-            // 11. Resolve intrinsic compliance states
+            // ── Resolve intrinsic compliance states ──
             await ResolveIntrinsicStatesInBatch(
                 tree, statementEntityIds, EntityTypes.SoC, ComplianceNodeTypes.Statement, cancellationToken);
             await ResolveIntrinsicStatesInBatch(
@@ -244,12 +276,16 @@ namespace Nexus.DEB.Infrastructure.Services
                 tree, new HashSet<Guid> { tree.StandardVersionId }, EntityTypes.StandardVersion,
                 ComplianceNodeTypes.StandardVersion, cancellationToken);
 
-            // 12. Bubble up bottom-to-top
+            // ── Bubble up bottom-to-top ──
             await RecalculateAllParentsBottomUp(tree, allSections, sectionRequirements, treeRequirementIds, cancellationToken);
 
+            // Count total nodes for logging
+            var totalNodes = 1 + sectionNodeLookup.Count + requirementNodeLookup.Count
+                + statementEntityIds.Count; // approximate — statements may have multiple nodes
+
             _logger.LogInformation(
-                "Compliance tree rebuilt for SV={StandardVersionId} Scope={ScopeId}: {NodeCount} nodes",
-                tree.StandardVersionId, tree.ScopeId, nodes.Count);
+                "Compliance tree rebuilt for SV={StandardVersionId} Scope={ScopeId}: ~{NodeCount} nodes",
+                tree.StandardVersionId, tree.ScopeId, totalNodes);
         }
 
         public async Task RebuildAllTreesForStandardVersionAsync(
@@ -445,7 +481,7 @@ namespace Nexus.DEB.Infrastructure.Services
             }
 
             // 2. Sections: process deepest first
-            var sectionsByDepth = OrderSectionsByDepthDescending(allSections);
+            var sectionsByDepth = OrderSectionsByDepthAscending(allSections);
 
             foreach (var section in sectionsByDepth)
             {
@@ -488,7 +524,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 await _debService.UpsertComplianceTreeNodesAsync(rootNodes, cancellationToken);
         }
 
-        private static IReadOnlyList<Section> OrderSectionsByDepthDescending(IReadOnlyList<Section> sections)
+        private static IReadOnlyList<Section> OrderSectionsByDepthAscending(IReadOnlyList<Section> sections)
         {
             var depthMap = new Dictionary<Guid, int>();
 
@@ -503,7 +539,7 @@ namespace Nexus.DEB.Infrastructure.Services
             }
 
             foreach (var s in sections) GetDepth(s);
-            return sections.OrderByDescending(s => depthMap[s.Id]).ToList();
+            return sections.OrderBy(s => depthMap[s.Id]).ThenBy(s => s.Ordinal).ToList();
         }
     }
 }

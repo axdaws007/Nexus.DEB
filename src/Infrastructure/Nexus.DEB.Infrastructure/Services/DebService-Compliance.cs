@@ -146,6 +146,19 @@ namespace Nexus.DEB.Infrastructure.Services
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeChildrenAsync(
+            TreeIdentifier tree, long parentTreeNodeId,
+            CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.ComplianceTreeNodes
+                .AsNoTracking()
+                .Where(n =>
+                    n.StandardVersionID == tree.StandardVersionId &&
+                    n.ScopeID == tree.ScopeId &&
+                    n.ParentComplianceTreeNodeID == parentTreeNodeId)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<IReadOnlyList<ComplianceTreeNode>> GetDescendantRequirementsAsync(
             TreeIdentifier tree, Guid ancestorEntityId,
             CancellationToken cancellationToken = default)

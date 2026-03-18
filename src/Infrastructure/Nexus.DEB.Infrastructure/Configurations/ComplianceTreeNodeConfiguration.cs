@@ -26,10 +26,15 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .HasForeignKey(x => x.ComplianceStateID)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            builder.HasOne(x => x.ParentComplianceTreeNode)
+                .WithMany()
+                .HasForeignKey(x => x.ParentComplianceTreeNodeID)
+                .OnDelete(DeleteBehavior.NoAction);
+
             // Filtered unique: one row per entity per parent per tree, where a parent exists
-            builder.HasIndex(e => new { e.StandardVersionID, e.ScopeID, e.NodeType, e.EntityID, e.ParentEntityID })
+            builder.HasIndex(e => new { e.StandardVersionID, e.ScopeID, e.NodeType, e.EntityID, e.ParentComplianceTreeNodeID })
                 .IsUnique()
-                .HasFilter("[ParentEntityID] IS NOT NULL")
+                .HasFilter("[ParentComplianceTreeNodeID] IS NOT NULL")
                 .HasDatabaseName("UQ_ComplianceTreeNode_WithParent");
 
             // Filtered unique: one root node per tree
@@ -55,6 +60,11 @@ namespace Nexus.DEB.Infrastructure.Configurations
             builder.HasIndex(e => new { e.StandardVersionID, e.ScopeID })
                 .IncludeProperties(e => new { e.NodeType, e.EntityID, e.ParentNodeType, e.ParentEntityID, e.ComplianceStateID, e.ComplianceStateLabel })
                 .HasDatabaseName("IX_ComplianceTreeNode_Tree");
+
+            // Get all parent IDs
+            builder.HasIndex(e => e.ParentComplianceTreeNodeID )
+                .IncludeProperties(e => new { e.ComplianceStateID, e.NodeType })
+                .HasDatabaseName("IX_ComplianceTreeNode_ParentNodeID");
         }
     }
 }

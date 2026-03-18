@@ -481,11 +481,19 @@ namespace Nexus.DEB.Infrastructure.Services
             }
 
             // 2. Sections: process deepest first
-            var sectionsByDepth = OrderSectionsByDepthAscending(allSections);
+            var sectionsByDepth = OrderSectionsByDepthDescending(allSections);
 
             foreach (var section in sectionsByDepth)
             {
                 var children = await _debService.GetComplianceTreeChildrenAsync(tree, section.Id, cancellationToken);
+
+                _logger.LogDebug(
+                    "Processing Section {SectionId} (depth position {Index}), found {ChildCount} children with states [{States}]",
+                    section.Id,
+                    sectionsByDepth.IndexOf(section),
+                    children.Count,
+                    string.Join(", ", children.Select(c => $"{c.NodeType}:{c.ComplianceStateID}")));
+
                 var result = await _engine.EvaluateBubbleUpAsync(
                     ComplianceNodeTypes.Section, children.Select(c => c.ComplianceStateID).ToList());
 
@@ -524,7 +532,22 @@ namespace Nexus.DEB.Infrastructure.Services
                 await _debService.UpsertComplianceTreeNodesAsync(rootNodes, cancellationToken);
         }
 
-        private static IReadOnlyList<Section> OrderSectionsByDepthAscending(IReadOnlyList<Section> sections)
+        // Used by RebuildTreeAsync for level-by-level INSERT (parents before children)
+        private static IList<Section> OrderSectionsByDepthAscending(IReadOnlyList<Section> sections)
+        {
+            var depthMap = BuildDepthMap(sections);
+            return sections.OrderBy(s => depthMap[s.Id]).ThenBy(s => s.Ordinal).ToList();
+        }
+
+        // Used by RecalculateAllParentsBottomUp for BUBBLE-UP (children before parents)
+        private static IList<Section> OrderSectionsByDepthDescending(IReadOnlyList<Section> sections)
+        {
+            var depthMap = BuildDepthMap(sections);
+            return sections.OrderByDescending(s => depthMap[s.Id]).ThenBy(s => s.Ordinal).ToList();
+        }
+
+        // Shared depth calculation
+        private static Dictionary<Guid, int> BuildDepthMap(IReadOnlyList<Section> sections)
         {
             var depthMap = new Dictionary<Guid, int>();
 
@@ -539,7 +562,7 @@ namespace Nexus.DEB.Infrastructure.Services
             }
 
             foreach (var s in sections) GetDepth(s);
-            return sections.OrderBy(s => depthMap[s.Id]).ThenBy(s => s.Ordinal).ToList();
+            return depthMap;
         }
     }
 }

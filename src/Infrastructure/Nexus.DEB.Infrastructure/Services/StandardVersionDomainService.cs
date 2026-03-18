@@ -199,7 +199,15 @@ namespace Nexus.DEB.Infrastructure.Services
 
 				if (cloneSections)
 				{
-					await CloneStandardVersionSectionsAsync(upVersionSourceEntityId, standardVersion, cancellationToken);
+					var originalSections = await this.DebService.GetSectionsForStandardVersionAsync(upVersionSourceEntityId, cancellationToken);
+					var sectionIdMapping = originalSections.Select(s => s.Id).Select(s => new KeyValuePair<Guid, Guid>(s, Guid.NewGuid())).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+					await CloneStandardVersionSectionsAsync(standardVersion, originalSections, sectionIdMapping, cancellationToken);
+
+					if(cloneRequirementLinks)
+					{
+						await CloneStandardVersionRequirementLinks(standardVersion.EntityId, originalSections, sectionIdMapping, cancellationToken);
+					}
 				}
 
 				await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, standardVersion.EntityId, null, null, cancellationToken);
@@ -214,12 +222,34 @@ namespace Nexus.DEB.Infrastructure.Services
 			}
 		}
 
-		private async Task<List<Section>> CloneStandardVersionSectionsAsync(Guid sourceEntityId, StandardVersion target, CancellationToken cancellationToken)
+		private async Task CloneStandardVersionRequirementLinks(Guid targetEntityId, IReadOnlyList<Section> originalSections, Dictionary<Guid, Guid> sectionIdMapping, CancellationToken cancellationToken)
 		{
-			var originalSections = await this.DebService.GetSectionsForStandardVersionAsync(sourceEntityId, cancellationToken);
+			var newSectionRequirements = new List<SectionRequirement>();
+			foreach (var section in originalSections)
+			{
+				foreach( var requirement in section.SectionRequirements)
+				{
+					var sectionRequirement = new SectionRequirement
+					{
+						SectionID = sectionIdMapping[section.Id],
+						RequirementID = requirement.RequirementID,
+						Ordinal = requirement.Ordinal,
+						LastModifiedBy = this.CurrentUserService.PostId,
+						LastModifiedAt = DateTime.Now,
+						IsEnabled = true
+					};
 
-			var sectionIdMapping = originalSections.Select(s => s.Id).Select(s => new KeyValuePair<Guid, Guid>(s, Guid.NewGuid())).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+					newSectionRequirements.Add(sectionRequirement);
+				}
+			}
 
+			await this.DebService.CreateSectionRequirementsAsync(newSectionRequirements, cancellationToken);
+
+			await this.DebService.UpdateStandardVersionRequirementsAsync(targetEntityId, cancellationToken);
+		}
+
+		private async Task<List<Section>> CloneStandardVersionSectionsAsync(StandardVersion target, IReadOnlyList<Section> originalSections, Dictionary<Guid, Guid> sectionIdMapping, CancellationToken cancellationToken)
+		{
 			var newSections = new List<Section>();
 			foreach(var section in originalSections)
 			{

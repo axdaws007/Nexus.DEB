@@ -194,11 +194,13 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task UpdateStandardVersionRequirementsAsync(Guid standardVersionId, CancellationToken cancellationToken);
 
-        #endregion Other
+        Task CreateSectionRequirementsAsync(IEnumerable<SectionRequirement> sectionRequirements, CancellationToken cancellationToken);
 
-        #region Dashboard 
+		#endregion Other
 
-        Task<DashboardInfo> CreateDashBoardInfoAsync(DashboardInfo dashboardInfo, CancellationToken cancellationToken);
+		#region Dashboard 
+
+		Task<DashboardInfo> CreateDashBoardInfoAsync(DashboardInfo dashboardInfo, CancellationToken cancellationToken);
 
         Task<DashboardInfo> UpdateDashBoardInfoAsync(DashboardInfo dashboardInfo, CancellationToken cancellationToken);
 

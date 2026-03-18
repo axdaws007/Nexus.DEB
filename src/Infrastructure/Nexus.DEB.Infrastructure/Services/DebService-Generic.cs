@@ -891,7 +891,14 @@ namespace Nexus.DEB.Infrastructure.Services
             }
         }
 
-        public async Task UpdateStandardVersionRequirementsAsync(
+        public async Task CreateSectionRequirementsAsync(IEnumerable<SectionRequirement> sectionRequirements,
+			CancellationToken cancellationToken)
+		{
+			await _dbContext.SectionRequirements.AddRangeAsync(sectionRequirements, cancellationToken);
+			await _dbContext.SaveChangesAsync(cancellationToken);
+		}
+
+		public async Task UpdateStandardVersionRequirementsAsync(
             Guid standardVersionId,
             CancellationToken cancellationToken)
         {

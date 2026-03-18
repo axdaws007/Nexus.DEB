@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nexus.DEB.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Nexus.DEB.Infrastructure.Persistence;
 namespace Nexus.DEB.Infrastructure.Migrations
 {
     [DbContext(typeof(DebContext))]
-    partial class DebContextModelSnapshot : ModelSnapshot
+    [Migration("20260312103823_AddComplianceStateMappingAndRemovePseudostateMappingTables")]
+    partial class AddComplianceStateMappingAndRemovePseudostateMappingTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -384,47 +387,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.ToTable("ComplianceState", "compliance");
                 });
 
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.ComplianceStateMapping", b =>
-                {
-                    b.Property<int>("ComplianceStateMappingID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ComplianceStateMappingID"));
-
-                    b.Property<int>("ActivityID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ActivityTitle")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("ComplianceStateID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StatusID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("StatusTitle")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<Guid>("WorkflowID")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("ComplianceStateMappingID");
-
-                    b.HasIndex("ComplianceStateID");
-
-                    b.HasIndex("WorkflowID", "ActivityID", "StatusID")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_ComplianceStateMapping");
-
-                    b.ToTable("ComplianceStateMapping", "compliance");
-                });
-
             modelBuilder.Entity("Nexus.DEB.Domain.Models.ComplianceTreeNode", b =>
                 {
                     b.Property<long>("ComplianceTreeNodeID")
@@ -451,23 +413,10 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("getdate()");
 
-                    b.Property<string>("NodeLabel")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<string>("NodeReference")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
                     b.Property<string>("NodeType")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("Ordinal")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
 
                     b.Property<Guid?>("ParentEntityID")
                         .HasColumnType("uniqueidentifier");
@@ -478,9 +427,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
 
                     b.Property<int?>("PseudoStateID")
                         .HasColumnType("int");
-
-                    b.Property<string>("PseudoStateTitle")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("ScopeID")
                         .HasColumnType("uniqueidentifier");
@@ -813,6 +759,47 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .HasDatabaseName("UQ_NodeDefault");
 
                     b.ToTable("NodeDefault", "compliance");
+                });
+
+            modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ComplianceStateMapping", b =>
+                {
+                    b.Property<int>("ComplianceStateMappingID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ComplianceStateMappingID"));
+
+                    b.Property<int>("ActivityID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ActivityTitle")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ComplianceStateID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StatusID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StatusTitle")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("WorkflowID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ComplianceStateMappingID");
+
+                    b.HasIndex("ComplianceStateID");
+
+                    b.HasIndex("WorkflowID", "ActivityID", "StatusID")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_ComplianceStateMapping");
+
+                    b.ToTable("ComplianceStateMapping", "compliance");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.DashboardInfo", b =>
@@ -2552,17 +2539,6 @@ namespace Nexus.DEB.Infrastructure.Migrations
                     b.Navigation("CommentType");
                 });
 
-            modelBuilder.Entity("Nexus.DEB.Domain.Models.ComplianceStateMapping", b =>
-                {
-                    b.HasOne("Nexus.DEB.Domain.Models.ComplianceState", "ComplianceState")
-                        .WithMany()
-                        .HasForeignKey("ComplianceStateID")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("ComplianceState");
-                });
-
             modelBuilder.Entity("Nexus.DEB.Domain.Models.ComplianceTreeNode", b =>
                 {
                     b.HasOne("Nexus.DEB.Domain.Models.ComplianceState", "ComplianceState")
@@ -2600,6 +2576,17 @@ namespace Nexus.DEB.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("DefaultComplianceState");
+                });
+
+            modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ComplianceStateMapping", b =>
+                {
+                    b.HasOne("Nexus.DEB.Domain.Models.ComplianceState", "ComplianceState")
+                        .WithMany()
+                        .HasForeignKey("ComplianceStateID")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("ComplianceState");
                 });
 
             modelBuilder.Entity("Nexus.DEB.Domain.Models.Other.ModuleSetting", b =>

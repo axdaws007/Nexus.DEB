@@ -171,6 +171,10 @@ namespace Nexus.DEB.Infrastructure
             // HTTP request correlationId service
             services.AddScoped<ICorrelationIdAccessor, CorrelationIdAccessor>();
 
+            services.AddScoped<IComplianceStateEngine, ComplianceStateEngine>();
+            services.AddScoped<IComplianceTreeRecalculator, ComplianceTreeRecalculator>();
+            services.AddScoped<IComplianceTreeService, ComplianceTreeService>();
+
             // Register the delegating handler
             services.AddTransient<CorrelationIdDelegatingHandler>();
 

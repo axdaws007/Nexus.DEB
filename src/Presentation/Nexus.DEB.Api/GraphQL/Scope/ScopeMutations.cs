@@ -5,6 +5,7 @@ using Nexus.DEB.Application.Common.Models.Events;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Domain.Models.Common;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -96,17 +97,16 @@ namespace Nexus.DEB.Api.GraphQL
 			}
 			
 			var scope = result.Data!;
-			
-			await eventPublisher.PublishAsync(new EntitySavedEvent
-			{
-				Entity = scope,
-				EntityType = scope.EntityTypeTitle,
-				EntityId = scope.EntityId,
-				SerialNumber = scope.SerialNumber ?? string.Empty,
-				IsNew = false,
-			}, cancellationToken);
-			
-			return result.Data;
+
+            await eventPublisher.PublishAsync(new ChildEntitySavedEvent
+            {
+                ParentEntityType = EntityTypes.Scope,
+                ParentEntityId = scopeId,
+                ChildEntityType = "ScopeRequirement",
+                EventContext = $"Updated requirements for scope {scopeId}"
+            }, cancellationToken);
+
+            return result.Data;
 		}
 	}
 }

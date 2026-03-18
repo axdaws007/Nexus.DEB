@@ -1,4 +1,5 @@
 ﻿using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Application.Common.Models.Compliance;
 using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Interfaces;
@@ -26,6 +27,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<Requirement> CreateRequirementAsync(Requirement requirement, CancellationToken cancellationToken = default);
         Task<Requirement> UpdateRequirementAsync(Requirement requirement, CancellationToken cancellationToken = default);
         IQueryable<RequirementSectionSummary> GetRequirementsWithSectionCounts(RequirementSectionFilters filters);
+        Task<IReadOnlyList<Guid>> GetRequirementIdsByScopeAsync(Guid scopeId, CancellationToken cancellationToken = default);
 
         ICollection<StandardVersionWithSections> GetRelatedStandardVersionsAndSections(Guid requirementId);
 		ICollection<ScopeWithStatements> GetRelatedScopesWithStatements(Guid requirementId);
@@ -38,6 +40,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<ScopeExport> GetScopesForExport(ScopeFilters? filters);
 		Task<Scope?> GetScopeByIdAsync(Guid id, CancellationToken cancellationToken);
 		Task<ScopeDetail?> GetScopeDetailByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<IReadOnlyList<Guid>> GetScopeIdsByStandardVersionAsync(Guid standardVersionId, CancellationToken cancellationToken = default);
+
         Task<List<StandardVersionRequirements>> GetStandardVersionRequirementsForScopeAsync(Guid scopeId, CancellationToken cancellationToken);
 		Task<ScopeChildCounts> GetChildCountsForScopeAsync(Guid id, CancellationToken cancellationToken);
 		Task<ICollection<ScopeCondensed>> GetScopesForRequirementAsync(Guid requirementId, Guid? statementId, CancellationToken cancellationToken);
@@ -55,7 +59,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<StandardVersion> UpdateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default);
         Task<List<StandardVersionSummary>> GetStandardVersionsForThisStandardAndStatusAsync(short standardId, string status, CancellationToken cancellationToken);
         Task<List<Section>> CreateSectionsAsync(List<Section> sections, CancellationToken cancellationToken);
-
+        Task<IReadOnlyList<Guid>> GetStandardVersionIdsByScopeAsync(Guid scopeId, CancellationToken cancellationToken = default);
 
 
 		IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
@@ -65,6 +69,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<Statement?> GetStatementByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<ICollection<Guid>> GetStandardVersionIdsForStatementAsync(Guid statementId, CancellationToken cancellationToken);
         Task<StatementChildCounts> GetChildCountsForStatementAsync(Guid id, CancellationToken cancellationToken);
+        Task<IReadOnlyList<StatementRequirementLink>> GetStatementRequirementLinksByScopeAsync(Guid scopeId, CancellationToken cancellationToken = default);
 
         Task<Statement> CreateStatementAsync(Statement statement, ICollection<RequirementScopes> requirementScopeCombinations, CancellationToken cancellationToken = default);
         Task<Statement> UpdateStatementAsync(Statement statement, ICollection<RequirementScopes> requirementScopeCombinations, CancellationToken cancellationToken = default);
@@ -239,5 +244,87 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<AuditData?> GetAuditDataAsync(Guid entityId, string entityTypeTitle, CancellationToken cancellationToken = default);
 
         #endregion
+
+        #region Compliance
+
+        #region Tree query 
+
+        Task<ComplianceTreeResult> GetFilteredTreeAsync(ComplianceTreeQuery query, CancellationToken cancellationToken = default);
+
+        #endregion Tree query
+
+        #region Configuration
+
+        Task<IReadOnlyList<ComplianceState>> GetActiveComplianceStatesAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<ComplianceStateMapping>> GetComplianceStateMappingsAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<BubbleUpRule>> GetActiveBubbleUpRulesAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<NodeDefault>> GetNodeDefaultsAsync(CancellationToken cancellationToken = default);
+
+        #endregion
+
+        #region Queries for rebuild
+
+        Task<IReadOnlyList<Section>> GetSectionsByStandardVersionIdAsync(Guid standardVersionId, CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<SectionRequirement>> GetSectionRequirementsByStandardVersionIdAsync(Guid standardVersionId, CancellationToken cancellationToken = default);
+
+        #endregion Queries for rebuild
+
+        #region Compliance Tree
+
+        Task<ComplianceTreeNode?> GetComplianceTreeNodeAsync(
+            TreeIdentifier tree, string nodeType, Guid entityId, Guid? parentEntityId,
+            CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeNodesByEntityAsync(
+            TreeIdentifier tree, string nodeType, Guid entityId,
+            CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeNodesByEntityAcrossTreesAsync(
+            Guid entityId, string nodeType,
+            CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeChildrenAsync(
+            TreeIdentifier tree, Guid parentEntityId,
+            CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<ComplianceTreeNode>> GetDescendantRequirementsAsync(
+            TreeIdentifier tree, Guid ancestorEntityId,
+            CancellationToken cancellationToken = default);
+
+        Task UpsertComplianceTreeNodeAsync(ComplianceTreeNode node, CancellationToken cancellationToken = default);
+        Task UpsertComplianceTreeNodesAsync(IEnumerable<ComplianceTreeNode> nodes, CancellationToken cancellationToken = default);
+
+        Task RemoveComplianceTreeNodeAsync(
+            TreeIdentifier tree, string nodeType, Guid entityId, Guid? parentEntityId,
+            CancellationToken cancellationToken = default);
+
+        Task RemoveComplianceTreeNodesByEntityAsync(
+            TreeIdentifier tree, string nodeType, Guid entityId,
+            CancellationToken cancellationToken = default);
+
+        Task RemoveComplianceTreeAsync(TreeIdentifier tree, CancellationToken cancellationToken = default);
+        Task RemoveComplianceTreesByScopeAsync(Guid scopeId, CancellationToken cancellationToken = default);
+
+        Task ReplaceComplianceTreeNodeSummariesAsync(
+            long complianceTreeNodeId,
+            IEnumerable<ComplianceTreeNodeSummary> summaries,
+            CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeAsync(
+            TreeIdentifier tree,
+            CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<TreeIdentifier>> GetTreesContainingEntityAsync(
+            Guid entityId, string nodeType,
+            CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<TreeIdentifier>> GetTreeIdentifiersForStatementAsync(
+            Guid statementId, CancellationToken cancellationToken = default);
+
+        #endregion Compliance Tree
+
+        #endregion Compliance
+
     }
 }

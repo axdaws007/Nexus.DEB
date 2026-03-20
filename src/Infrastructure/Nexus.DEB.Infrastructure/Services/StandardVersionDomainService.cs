@@ -212,6 +212,9 @@ namespace Nexus.DEB.Infrastructure.Services
 
 				await this.PawsService.CreateWorkflowInstanceAsync(this.WorkflowId.Value, standardVersion.EntityId, null, null, cancellationToken);
 
+				var sourceEntity = await this.DebService.GetEntityHeadDetailAsync(upVersionSourceEntityId, cancellationToken);
+				await this.DebService.AddChangeRecordItem(standardVersion.EntityId, "UpVersionedFrom", "Up-Versioned From", null, sourceEntity.Title, cancellationToken);
+
 				var fullStandardVersion = await this.DebService.GetStandardVersionByIdAsync(standardVersion.EntityId, cancellationToken);
 
 				return Result<StandardVersion>.Success(fullStandardVersion);
@@ -243,7 +246,7 @@ namespace Nexus.DEB.Infrastructure.Services
 				}
 			}
 
-			await this.DebService.CreateSectionRequirementsAsync(newSectionRequirements, cancellationToken);
+			await this.DebService.CreateSectionRequirementsAsync(newSectionRequirements, true, cancellationToken);
 
 			await this.DebService.UpdateStandardVersionRequirementsAsync(targetEntityId, cancellationToken);
 		}
@@ -271,7 +274,7 @@ namespace Nexus.DEB.Infrastructure.Services
 				newSections.Add(newSection);
 			}
 
-			return await this.DebService.CreateSectionsAsync(newSections, cancellationToken);
+			return await this.DebService.CreateSectionsAsync(newSections, true, cancellationToken);
 		}
 
 		private async Task ValidatePreExistingStandard(short standardId, CancellationToken cancellationToken)

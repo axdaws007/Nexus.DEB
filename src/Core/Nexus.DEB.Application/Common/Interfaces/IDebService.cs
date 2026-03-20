@@ -58,7 +58,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<StandardVersion> CreateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default);
         Task<StandardVersion> UpdateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default);
         Task<List<StandardVersionSummary>> GetStandardVersionsForThisStandardAndStatusAsync(short standardId, string status, CancellationToken cancellationToken);
-        Task<List<Section>> CreateSectionsAsync(List<Section> sections, CancellationToken cancellationToken);
+        Task<List<Section>> CreateSectionsAsync(List<Section> sections, bool disableAuditHistory, CancellationToken cancellationToken);
         Task<IReadOnlyList<Guid>> GetStandardVersionIdsByScopeAsync(Guid scopeId, CancellationToken cancellationToken = default);
 
 
@@ -199,7 +199,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task UpdateStandardVersionRequirementsAsync(Guid standardVersionId, CancellationToken cancellationToken);
 
-        Task CreateSectionRequirementsAsync(IEnumerable<SectionRequirement> sectionRequirements, CancellationToken cancellationToken);
+        Task CreateSectionRequirementsAsync(IEnumerable<SectionRequirement> sectionRequirements, bool disableAuditHistory, CancellationToken cancellationToken);
 
 		#endregion Other
 

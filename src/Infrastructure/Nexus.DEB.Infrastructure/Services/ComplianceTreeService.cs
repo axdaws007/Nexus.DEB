@@ -52,8 +52,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     Nodes = traversalEntries.Select(e => new ComplianceTreeNodeResult
                     {
                         Node = e.Node,
-                        IsDirectMatch = true,
-                        ParentComplianceTreeNodeID = e.ParentComplianceTreeNodeID
+                        IsDirectMatch = true
                     }).ToList(),
                     ComplianceStates = complianceStates,
                     IsFiltered = query.HideEmptySections
@@ -90,8 +89,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     resultNodes.Add(new ComplianceTreeNodeResult
                     {
                         Node = traversalEntries[i].Node,
-                        IsDirectMatch = directMatchIndexes.Contains(i),
-                        ParentComplianceTreeNodeID = traversalEntries[i].ParentComplianceTreeNodeID
+                        IsDirectMatch = directMatchIndexes.Contains(i)
                     });
                 }
             }
@@ -144,13 +142,13 @@ namespace Nexus.DEB.Infrastructure.Services
         {
             if (nodes.Count == 0) return [];
 
-            var childLookup = nodes.ToLookup(n => n.ParentEntityID);
+            var childLookup = nodes.ToLookup(n => n.ParentComplianceTreeNodeID);
             var entries = new List<TraversalEntry>(nodes.Count);
 
-            var root = nodes.FirstOrDefault(n => n.ParentEntityID == null);
+            var root = nodes.FirstOrDefault(n => n.ParentComplianceTreeNodeID == null);
             if (root == null) return nodes.Select(n => new TraversalEntry(n, null)).ToList();
 
-            TraverseDepthFirst(root, null, childLookup, entries);
+            TraverseDepthFirst(root, childLookup, entries);
 
             // Safety: include any orphaned nodes
             var includedIds = new HashSet<long>(entries.Select(e => e.Node.ComplianceTreeNodeID));
@@ -165,13 +163,12 @@ namespace Nexus.DEB.Infrastructure.Services
 
         private static void TraverseDepthFirst(
             ComplianceTreeNode node,
-            long? parentComplianceTreeNodeID,
-            ILookup<Guid?, ComplianceTreeNode> childLookup,
+            ILookup<long?, ComplianceTreeNode> childLookup,
             List<TraversalEntry> entries)
         {
-            entries.Add(new TraversalEntry(node, parentComplianceTreeNodeID));
+            entries.Add(new TraversalEntry(node, node.ParentComplianceTreeNodeID));
 
-            var children = childLookup[node.EntityID]
+            var children = childLookup[node.ComplianceTreeNodeID]
                 .OrderBy(c => c.NodeType switch
                 {
                     ComplianceNodeTypes.Section => 0,
@@ -184,7 +181,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             foreach (var child in children)
             {
-                TraverseDepthFirst(child, node.ComplianceTreeNodeID, childLookup, entries);
+                TraverseDepthFirst(child, childLookup, entries);
             }
         }
 

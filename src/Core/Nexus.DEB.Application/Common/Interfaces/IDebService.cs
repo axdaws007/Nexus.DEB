@@ -288,6 +288,10 @@ namespace Nexus.DEB.Application.Common.Interfaces
             TreeIdentifier tree, Guid parentEntityId,
             CancellationToken cancellationToken = default);
 
+        Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeChildrenAsync(
+                    TreeIdentifier tree, long parentTreeNodeId,
+                    CancellationToken cancellationToken = default);
+
         Task<IReadOnlyList<ComplianceTreeNode>> GetDescendantRequirementsAsync(
             TreeIdentifier tree, Guid ancestorEntityId,
             CancellationToken cancellationToken = default);

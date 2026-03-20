@@ -12,7 +12,5 @@ namespace Nexus.DEB.Application.Common.Models
         /// to a matching descendant. Always true when no filter is applied.
         /// </summary>
         public bool IsDirectMatch { get; init; } = true;
-
-        public long? ParentComplianceTreeNodeID { get; init; }
     }
 }

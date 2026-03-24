@@ -1361,10 +1361,22 @@ namespace Nexus.DEB.Infrastructure.Services
         public async Task<List<StandardVersionSummary>> GetStandardVersionsForThisStandardAndStatusAsync(short standardId, string status, CancellationToken cancellationToken)
             => await _dbContext.StandardVersionSummaries.Where(x => x.StandardId == standardId && x.Status == status).ToListAsync(cancellationToken);
 
-        public async Task<List<Section>> CreateSectionsAsync(List<Section> sections, CancellationToken cancellationToken = default)
+        public async Task<List<Section>> CreateSectionsAsync(List<Section> sections, bool disableAuditHistory, CancellationToken cancellationToken = default)
 		{
+			var httpContext = _httpContextAccessor.HttpContext;
+			if (disableAuditHistory && httpContext != null)
+			{
+				httpContext.Items["IgnoreAudit"] = true;
+			}
+
 			await _dbContext.Sections.AddRangeAsync(sections, cancellationToken);
 			await _dbContext.SaveChangesAsync(cancellationToken);
+
+			if (disableAuditHistory && httpContext != null)
+			{
+				httpContext.Items.Remove("IgnoreAudit");
+			}
+
 			return sections;
 		}
 

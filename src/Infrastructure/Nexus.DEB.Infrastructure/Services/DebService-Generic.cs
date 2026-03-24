@@ -169,7 +169,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 new SqlParameter("@entityId", entityId),
                 new SqlParameter("@fieldName", fieldName),
                 new SqlParameter("friendlyFieldName", friendlyFieldName),
-                new SqlParameter("@oldValue", oldValue),
+                new SqlParameter("@oldValue", string.IsNullOrEmpty(oldValue) ? DBNull.Value : oldValue),
                 new SqlParameter("@newValue", newValue),
                 new SqlParameter("@ChangeEventId", eventId)
             );
@@ -892,11 +892,21 @@ namespace Nexus.DEB.Infrastructure.Services
             }
         }
 
-        public async Task CreateSectionRequirementsAsync(IEnumerable<SectionRequirement> sectionRequirements,
-			CancellationToken cancellationToken)
+        public async Task CreateSectionRequirementsAsync(IEnumerable<SectionRequirement> sectionRequirements, bool disableAuditHistory, CancellationToken cancellationToken)
 		{
-			await _dbContext.SectionRequirements.AddRangeAsync(sectionRequirements, cancellationToken);
+			var httpContext = _httpContextAccessor.HttpContext;
+			if (disableAuditHistory && httpContext != null)
+			{
+				httpContext.Items["IgnoreAudit"] = true;
+			}
+			
+            await _dbContext.SectionRequirements.AddRangeAsync(sectionRequirements, cancellationToken);
 			await _dbContext.SaveChangesAsync(cancellationToken);
+
+			if (disableAuditHistory && httpContext != null)
+			{
+				httpContext.Items.Remove("IgnoreAudit");
+			}
 		}
 
 		public async Task UpdateStandardVersionRequirementsAsync(

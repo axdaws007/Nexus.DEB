@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -37,24 +38,7 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 		}
 
 		using var command = conn.CreateCommand();
-		command.CommandText = "EXEC sys.sp_set_session_context @key, @value";
-
-		var pKey = command.CreateParameter();
-		pKey.ParameterName = "@key";
-		pKey.DbType = DbType.String;
-		pKey.Value = key;
-
-		var pValue = command.CreateParameter();
-		pValue.ParameterName = "@value";
-		if(value is Guid)
-			pValue.DbType = DbType.Guid;
-		else
-			pValue.DbType = DbType.String;
-		pValue.Value = value;
-
-		command.Parameters.Add(pKey);
-		command.Parameters.Add(pValue);
-
+		command.SetSessionContextCommand(key, value);
 		await command.ExecuteNonQueryAsync(cancellationToken);
 	}
 
@@ -70,21 +54,7 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 		}
 
 		using var command = conn.CreateCommand();
-		command.CommandText = "EXEC sys.sp_set_session_context @key, @value";
-
-		var pKey = command.CreateParameter();
-		pKey.ParameterName = "@key";
-		pKey.DbType = DbType.String;
-		pKey.Value = key;
-
-		var pValue = command.CreateParameter();
-		pValue.ParameterName = "@value";
-		pValue.DbType = DbType.Guid;
-		pValue.Value = value;
-
-		command.Parameters.Add(pKey);
-		command.Parameters.Add(pValue);
-
+		command.SetSessionContextCommand(key, value);
 		command.ExecuteNonQuery();
 	}
 
@@ -106,42 +76,47 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 					eventId = Guid.Parse(httpContext.Items["CorrelationId"].ToString()!);
 				}
 
-				if(httpContext.User != null)
+				if (httpContext.User != null)
 				{
 					var user = new DebUser(httpContext.User);
 					userDetails = user.UserDetails;
 				}
 
-                if (httpContext.Items.TryGetValue("MovedSectionId", out var movedSectionIdObj)
-                    && movedSectionIdObj is Guid movedSectionId)
-                {
-                    await SetSessionContextAsync(eventData.Context, "MovedSectionId", movedSectionId, cancellationToken);
-                }
+				if (httpContext.Items.TryGetValue("MovedSectionId", out var movedSectionIdObj)
+					&& movedSectionIdObj is Guid movedSectionId)
+				{
+					await SetSessionContextAsync(eventData.Context, "MovedSectionId", movedSectionId, cancellationToken);
+				}
 
-                if (httpContext.Items.TryGetValue("MovedRequirementId", out var movedReqIdObj)
-                    && movedReqIdObj is Guid movedRequirementId)
-                {
-                    await SetSessionContextAsync(eventData.Context, "MovedRequirementId", movedRequirementId, cancellationToken);
-                }
+				if (httpContext.Items.TryGetValue("MovedRequirementId", out var movedReqIdObj)
+					&& movedReqIdObj is Guid movedRequirementId)
+				{
+					await SetSessionContextAsync(eventData.Context, "MovedRequirementId", movedRequirementId, cancellationToken);
+				}
 
-                if (httpContext.Items.TryGetValue("SuppressOrdinalAudit", out var suppressObj)
-                    && suppressObj is bool suppress && suppress)
-                {
-                    await SetSessionContextAsync(eventData.Context, "SuppressOrdinalAudit", "true", cancellationToken);
-                }
+				if (httpContext.Items.TryGetValue("SuppressOrdinalAudit", out var suppressObj)
+					&& suppressObj is bool suppress && suppress)
+				{
+					await SetSessionContextAsync(eventData.Context, "SuppressOrdinalAudit", "true", cancellationToken);
+				}
 
-                if (httpContext.Items.TryGetValue("MovedRequirementOldSectionId", out var oldSectionObj)
-                    && oldSectionObj is Guid oldSectionId)
-                {
-                    await SetSessionContextAsync(eventData.Context, "MovedRequirementOldSectionId", oldSectionId, cancellationToken);
-                }
+				if (httpContext.Items.TryGetValue("MovedRequirementOldSectionId", out var oldSectionObj)
+					&& oldSectionObj is Guid oldSectionId)
+				{
+					await SetSessionContextAsync(eventData.Context, "MovedRequirementOldSectionId", oldSectionId, cancellationToken);
+				}
 
-                if (httpContext.Items.TryGetValue("MovedRequirementOldOrdinal", out var oldOrdinalObj)
-                    && oldOrdinalObj is int oldOrdinal)
-                {
-                    await SetSessionContextAsync(eventData.Context, "MovedRequirementOldOrdinal", oldOrdinal.ToString(), cancellationToken);
-                }
-            }
+				if (httpContext.Items.TryGetValue("MovedRequirementOldOrdinal", out var oldOrdinalObj)
+					&& oldOrdinalObj is int oldOrdinal)
+				{
+					await SetSessionContextAsync(eventData.Context, "MovedRequirementOldOrdinal", oldOrdinal.ToString(), cancellationToken);
+				}
+
+				if (httpContext.Items.TryGetValue("IgnoreAudit", out var ignoreAudit) && (bool)ignoreAudit)
+				{
+					await SetSessionContextAsync(eventData.Context, "IgnoreAudit", ignoreAudit, cancellationToken);
+				}
+			}
             await SetSessionContextAsync(eventData.Context, SessionContextEventId, eventId, cancellationToken);
 			await SetSessionContextAsync(eventData.Context, SessionContextUserDetails, userDetails, cancellationToken);
         }
@@ -200,13 +175,44 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
                     && oldOrdinalObj is int oldOrdinal)
                 {
                     SetSessionContext(eventData.Context, "MovedRequirementOldOrdinal", oldOrdinal.ToString());
-                }
-            }
+				}
+
+				if (httpContext.Items.TryGetValue("IgnoreAudit", out var ignoreAudit) && (bool)ignoreAudit)
+				{
+					SetSessionContext(eventData.Context, "IgnoreAudit", ignoreAudit);
+				}
+			}
 
 			SetSessionContext(eventData.Context, SessionContextEventId, eventId);
 			SetSessionContext(eventData.Context, SessionContextUserDetails, userDetails);
 		}
 
 		return result;
+	}
+}
+
+internal static class DbCommandExtensions
+{
+	public static void SetSessionContextCommand(this DbCommand command, string key, object value)
+	{
+		command.CommandText = "EXEC sys.sp_set_session_context @key, @value";
+
+		var pKey = command.CreateParameter();
+		pKey.ParameterName = "@key";
+		pKey.DbType = DbType.String;
+		pKey.Value = key;
+
+		var pValue = command.CreateParameter();
+		pValue.ParameterName = "@value";
+		if (value is Guid)
+			pValue.DbType = DbType.Guid;
+		else if(value is bool)
+			pValue.DbType = DbType.Boolean;
+		else
+			pValue.DbType = DbType.String;
+		pValue.Value = value;
+
+		command.Parameters.Add(pKey);
+		command.Parameters.Add(pValue);
 	}
 }

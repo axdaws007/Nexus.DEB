@@ -162,6 +162,7 @@ try
         options.AddPolicy(DebHelper.Policies.CanDeleteDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllDeleteDocCapabilities));
         options.AddPolicy(DebHelper.Policies.CanEditDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllEditDocCapabilities));
         options.AddPolicy(DebHelper.Policies.CanViewDocuments, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.AllViewDocCapabilities));
+        options.AddPolicy(DebHelper.Policies.CanEditCommonEvidence, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditCommonEvidence));
 
         options.AddPolicy(DebHelper.Policies.CanCreateOrEditSoC, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditSoC));
         options.AddPolicy(DebHelper.Policies.CanCreateOrEditScope, policy => policy.RequireClaim(DebHelper.ClaimTypes.Capability, DebHelper.Capabilites.CanEditScope));

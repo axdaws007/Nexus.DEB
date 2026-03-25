@@ -1,9 +1,12 @@
 ﻿using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Nexus.DEB.Application.Common.Extensions;
+using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Compliance;
+using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
@@ -1317,7 +1320,8 @@ namespace Nexus.DEB.Infrastructure.Services
 			return standardVersionDetail;
 		}
 
-		public async Task<StandardVersionChildCounts> GetChildCountsForStandardVersionAsync(Guid id, CancellationToken cancellationToken)
+		public async Task<StandardVersionChildCounts> GetChildCountsForStandardVersionAsync(Guid id, IApplicationSettingsService applicationSettingsService,
+            IDmsService dmsService, CancellationToken cancellationToken)
 		{
 			var numberOfComments = await GetCommentsCountForEntityAsync(id, cancellationToken);
 
@@ -1325,13 +1329,32 @@ namespace Nexus.DEB.Infrastructure.Services
 
             var numberOfSections = await GetSectionsCountForEntityAsync(id, cancellationToken);
 
-			return new StandardVersionChildCounts()
+            var commonEvidenceIds = await GetCommonDocumentIdsForStandardVersionAsync(id, applicationSettingsService, dmsService, cancellationToken);
+
+            return new StandardVersionChildCounts()
 			{
 				CommentsCount = numberOfComments,
 				HistoryCount = numberOfHistoryEvents,
-                SectionCount = numberOfSections
-			};
+                SectionCount = numberOfSections,
+                CommonEvidenceCount = commonEvidenceIds.Count()
+            };
 		}
+
+        public async Task<ICollection<Guid>> GetCommonDocumentIdsForStandardVersionAsync(
+            Guid standardVersionId,
+            IApplicationSettingsService applicationSettingsService,
+            IDmsService dmsService,
+            CancellationToken cancellationToken)
+        {
+            var libraryId = applicationSettingsService.GetLibraryId(DebHelper.Dms.Libraries.CommonDocuments);
+            var filter = new DmsCommonDocumentListFilters();
+            filter.StandardVersionIds = [standardVersionId];
+
+            var documents = await dmsService.GetCommonDocumentListAsync(libraryId, filter);
+            var documentIds = documents?.Select(d => d.ActionData.ID).ToList();
+
+            return documentIds ?? [];
+        }
 
         public async Task<int?> GetStandardVersionTotalRequirementsAsync(Guid id, CancellationToken cancellationToken)
         {
@@ -1397,13 +1420,13 @@ namespace Nexus.DEB.Infrastructure.Services
                 .Distinct()
                 .ToListAsync(cancellationToken);
 
-		#endregion StandardVersions
+        #endregion StandardVersions
 
-		// --------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------
 
-		#region Tasks
+        #region Tasks
 
-		public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
+        public IQueryable<TaskSummary> GetTasksForGrid(TaskSummaryFilters? filters)
         {
             var query = _dbContext.TaskSummaries.AsQueryable();
 

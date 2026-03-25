@@ -54,7 +54,9 @@ namespace Nexus.DEB.Application.Common.Interfaces
         IQueryable<StandardVersion> GetStandardVersions();
         IQueryable<StandardVersionSummary> GetStandardVersionsForGrid(StandardVersionSummaryFilters? filters);
         Task<StandardVersionDetail?> GetStandardVersionDetailByIdAsync(Guid id, CancellationToken cancellationToken);
-        Task<StandardVersionChildCounts> GetChildCountsForStandardVersionAsync(Guid id, CancellationToken cancellationToken);
+        Task<StandardVersionChildCounts> GetChildCountsForStandardVersionAsync(Guid id, IApplicationSettingsService applicationSettingsService, IDmsService dmsService,  CancellationToken cancellationToken);
+
+        Task<ICollection<Guid>> GetCommonDocumentIdsForStandardVersionAsync(Guid standardVersionId, IApplicationSettingsService applicationSettingsService, IDmsService dmsService, CancellationToken cancellationToken);
         Task<int?> GetStandardVersionTotalRequirementsAsync(Guid id, CancellationToken cancellationToken);
         Task<StandardVersion> CreateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default);
         Task<StandardVersion> UpdateStandardVersionAsync(StandardVersion standardVersion, CancellationToken cancellationToken = default);
@@ -62,8 +64,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<List<Section>> CreateSectionsAsync(List<Section> sections, bool disableAuditHistory, CancellationToken cancellationToken);
         Task<IReadOnlyList<Guid>> GetStandardVersionIdsByScopeAsync(Guid scopeId, CancellationToken cancellationToken = default);
 
-
-		IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
+        IQueryable<StatementExport> GetStatementsForExport(StatementSummaryFilters? filters);
         IQueryable<StandardVersionExport> GetStandardVersionsForExport(StandardVersionSummaryFilters? filters);
         IQueryable<StatementSummary> GetStatementsForGrid(StatementSummaryFilters? filters);
         Task<StatementDetail?> GetStatementDetailByIdAsync(Guid id, CancellationToken cancellationToken = default);

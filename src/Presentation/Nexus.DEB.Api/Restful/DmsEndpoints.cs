@@ -449,7 +449,7 @@ namespace Nexus.DEB.Api.Restful
             }
         }
 
-        private static DmsDocumentMetadata? ParseMetadata(string? metadata)
+        public static DmsDocumentMetadata? ParseMetadata(string? metadata)
         {
             if (string.IsNullOrWhiteSpace(metadata))
             {

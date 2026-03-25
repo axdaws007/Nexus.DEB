@@ -68,7 +68,8 @@ namespace Nexus.DEB.Domain
             public const string CanDeleteDocuments = "CanDeleteDocuments";
             public const string CanEditDocuments = "CanEditDocuments";
 			public const string CanViewDocuments = "CanViewDocuments";
-		}
+            public const string CanEditCommonEvidence = "CanEditCommonEvidence";
+        }
 
         public static class Capabilites
         {
@@ -102,9 +103,10 @@ namespace Nexus.DEB.Domain
 			public const string CanViewReports = "CanViewReports";
             public const string CanViewCommonDocuments = "CanViewCommonDocuments";
             public const string CanEditCommonDocuments = "CanEditCommonDocuments";
-			
+            public const string CanEditCommonEvidence = "CanEditCommonEvidence";
+
             #region Comments
-			public const string CanCreateSoCComments = "CanCreateSoCComments";
+            public const string CanCreateSoCComments = "CanCreateSoCComments";
 			public const string CanCreateScopeComments = "CanCreateScopeComments";
 			public const string CanCreateStdVersionComments = "CanCreateStdVersionComments";
 			public const string CanCreateRequirementComments = "CanCreateRequirementComments";

@@ -2,8 +2,11 @@
 using HotChocolate.Resolvers;
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
+using Nexus.DEB.Application.Common.Models.Dms;
 using Nexus.DEB.Application.Common.Models.Filters;
+using Nexus.DEB.Domain;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Infrastructure.Services;
 
 namespace Nexus.DEB.Api.GraphQL
 {
@@ -83,8 +86,17 @@ namespace Nexus.DEB.Api.GraphQL
 		public static async Task<StandardVersionChildCounts> GetChildCountsForStandardVersion(
 			Guid standardVersionId,
 			IDebService debService,
-			CancellationToken cancellationToken)
-			=> await debService.GetChildCountsForStandardVersionAsync(standardVersionId, cancellationToken);
+            IApplicationSettingsService applicationSettingsService,
+            IDmsService dmsService,
+            CancellationToken cancellationToken)
+			=> await debService.GetChildCountsForStandardVersionAsync(standardVersionId, applicationSettingsService, dmsService, cancellationToken);
 
-	}
+        [Authorize]
+        public static async Task<ICollection<Guid>> GetCommonDocumentIdsForStandardVersionAsync(
+            Guid standardVersionId,
+            IApplicationSettingsService applicationSettingsService,
+            IDmsService dmsService,
+            IDebService debService,
+            CancellationToken cancellationToken) => await debService.GetCommonDocumentIdsForStandardVersionAsync(standardVersionId, applicationSettingsService, dmsService, cancellationToken);
+    }
 }

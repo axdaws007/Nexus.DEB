@@ -90,18 +90,18 @@ namespace Nexus.DEB.Infrastructure.Services
         }
 
         public async Task<IReadOnlyList<ComplianceTreeNodeSummary>> CalculateRequirementAggregatesAsync(
-            TreeIdentifier tree, Guid parentEntityId, CancellationToken cancellationToken = default)
+            TreeIdentifier tree, Guid parentEntityId, Guid buildId, CancellationToken cancellationToken = default)
         {
             var descendants = await _debService.GetDescendantRequirementsAsync(
-                tree, parentEntityId, cancellationToken);
+                tree, parentEntityId, buildId, cancellationToken);
 
             return BuildAggregates(descendants, ComplianceNodeTypes.Requirement);
         }
 
         public async Task<IReadOnlyList<ComplianceTreeNodeSummary>> CalculateSectionAggregatesAsync(
-            TreeIdentifier tree, Guid rootEntityId, CancellationToken cancellationToken = default)
+            TreeIdentifier tree, Guid rootEntityId, Guid buildId, CancellationToken cancellationToken = default)
         {
-            var children = await _debService.GetComplianceTreeChildrenAsync(tree, rootEntityId, cancellationToken);
+            var children = await _debService.GetComplianceTreeChildrenAsync(tree, rootEntityId, buildId, cancellationToken);
 
             var sectionChildren = children
                 .Where(c => c.NodeType == ComplianceNodeTypes.Section)

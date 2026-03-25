@@ -1,6 +1,7 @@
 using HotChocolate.AspNetCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Nexus.DEB.Api.GraphQL._Helpers_;
+using Nexus.DEB.Api.Jobs;
 using Nexus.DEB.Api.Restful;
 using Nexus.DEB.Api.Security;
 using Nexus.DEB.Application;
@@ -8,6 +9,7 @@ using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Domain;
 using Nexus.DEB.Infrastructure;
 using Nexus.DEB.Infrastructure.Authentication;
+using Quartz;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -175,7 +177,29 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100 MB
 });
 
-builder
+    builder.Services.AddQuartz(q =>
+    {
+        var jobKey = new JobKey("ComplianceTreeRebuildJob");
+
+        q.AddJob<ComplianceTreeRebuildJob>(opts => opts
+            .WithIdentity(jobKey)
+            .StoreDurably());
+
+        q.AddTrigger(opts => opts
+            .ForJob(jobKey)
+            .WithIdentity("ComplianceTreeRebuildJob-trigger")
+            .WithSimpleSchedule(schedule => schedule
+                .WithIntervalInSeconds(
+                    builder.Configuration.GetValue("ComplianceTree:PollIntervalSeconds", 10))
+                .RepeatForever()));
+    });
+
+    builder.Services.AddQuartzHostedService(opts =>
+    {
+        opts.WaitForJobsToComplete = true;
+    });
+
+    builder
     .AddGraphQL()
     .AddAuthorization()
     .AddTypes()

@@ -3,6 +3,7 @@ using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Compliance;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Domain.Models.Enums;
 
 namespace Nexus.DEB.Infrastructure.Services
 {
@@ -26,9 +27,28 @@ namespace Nexus.DEB.Infrastructure.Services
             ComplianceTreeQuery query,
             CancellationToken cancellationToken = default)
         {
+            var rebuildStatus = await _debService.GetRebuildRequestStatusAsync(query.Tree, cancellationToken);
+            var isRebuildPending = rebuildStatus is ComplianceTreeRebuildStatus.Pending
+                or ComplianceTreeRebuildStatus.Building;
+
             // 1. Load the full tree
-            var allNodes = await _debService.GetComplianceTreeAsync(query.Tree, cancellationToken);
             var complianceStates = await _engine.GetActiveComplianceStatesAsync();
+
+            var buildInfo = await _debService.GetCurrentLiveBuildInformationAsync(query.Tree, cancellationToken);
+
+            if (buildInfo is null)
+            {
+                return new ComplianceTreeResult
+                {
+                    Nodes = [],
+                    ComplianceStates = complianceStates,
+                    IsFiltered = false,
+                    IsRebuildPending = isRebuildPending,
+                    LiveBuildDate = null
+                };
+            }
+
+            var allNodes = await _debService.GetComplianceTreeAsync(query.Tree, buildInfo!.LiveBuildId, cancellationToken);
 
             // 2. Build working list
             var workingNodes = allNodes.ToList();
@@ -55,7 +75,9 @@ namespace Nexus.DEB.Infrastructure.Services
                         IsDirectMatch = true
                     }).ToList(),
                     ComplianceStates = complianceStates,
-                    IsFiltered = query.HideEmptySections
+                    IsFiltered = query.HideEmptySections,
+                    IsRebuildPending = isRebuildPending,
+                    LiveBuildDate = buildInfo!.PromotedAt
                 };
             }
 
@@ -98,7 +120,9 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 Nodes = resultNodes,
                 ComplianceStates = complianceStates,
-                IsFiltered = true
+                IsFiltered = true,
+                IsRebuildPending = isRebuildPending,
+                LiveBuildDate = buildInfo!.PromotedAt
             };
         }
 

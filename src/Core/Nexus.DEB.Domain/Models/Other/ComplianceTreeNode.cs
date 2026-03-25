@@ -25,5 +25,6 @@
         public int Ordinal { get; set; }             // Section.Ordinal or SectionRequirement.Ordinal
         public ComplianceTreeNode? ParentComplianceTreeNode { get; set; }
         public long? ParentComplianceTreeNodeID { get; set; }
+        public Guid BuildId { get; set; }
     }
 }

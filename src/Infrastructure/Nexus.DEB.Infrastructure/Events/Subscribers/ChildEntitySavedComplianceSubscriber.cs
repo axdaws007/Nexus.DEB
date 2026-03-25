@@ -13,7 +13,7 @@ namespace Nexus.DEB.Infrastructure.Events.Subscribers
     {
         private readonly ILogger<ChildEntitySavedComplianceSubscriber> _logger;
         private readonly IDebService _debService;
-        private readonly IComplianceTreeRecalculator _recalculator;
+        private readonly IComplianceTreeRebuildManager _rebuildManager;
 
         public string Name => "ChildEntitySavedCompliance";
         public int Order => 60;
@@ -21,71 +21,70 @@ namespace Nexus.DEB.Infrastructure.Events.Subscribers
         public ChildEntitySavedComplianceSubscriber(
             IDebService debService,
             ILogger<ChildEntitySavedComplianceSubscriber> logger,
-            IComplianceTreeRecalculator recalculator)
+            IComplianceTreeRebuildManager rebuildManager)
         {
             _debService = debService;
             _logger = logger;
-            _recalculator = recalculator;
+            _rebuildManager = rebuildManager;
         }
 
         public async Task HandleAsync(
             ChildEntitySavedEvent @event,
             CancellationToken cancellationToken = default)
         {
-            if (@event.ParentEntityType == EntityTypes.StandardVersion)
+            switch (@event.ParentEntityType)
             {
-                _logger.LogInformation(
-                    "Processing structural change compliance update for StandardVersion {StandardVersionId}, " +
-                    "child type {ChildEntityType}: {EventContext}",
-                    @event.ParentEntityId, @event.ChildEntityType, @event.EventContext);
-
-
-                try
-                {
-                    // Rebuild all trees for this Standard Version (across all Scopes)
-                    // This is the safest approach for structural changes — section moves,
-                    // requirement reassignments, etc. can affect the tree shape in ways
-                    // that are complex to handle differentially.
-                    await _recalculator.RebuildAllTreesForStandardVersionAsync(@event.ParentEntityId, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to rebuild compliance trees for StandardVersion {StandardVersionId}", @event.ParentEntityId);
-                }
-            }
-
-            else if (@event.ParentEntityType == EntityTypes.Scope)
-            {
-                _logger.LogInformation(
-                    "Processing structural change compliance update for Scope {ScopeId}, " +
-                    "child type {ChildEntityType}: {EventContext}",
-                    @event.ParentEntityId, @event.ChildEntityType, @event.EventContext);
-
-                var ids = await _debService.GetStandardVersionIdsByScopeAsync(@event.ParentEntityId, cancellationToken);
-
-                foreach(var id in ids)
-                {
-                    _logger.LogDebug("Processing tree for StandardVersion {StandardVersionId} and Scope {ScopeId}", id, @event.ParentEntityId);
-
-                    var tree = new TreeIdentifier(id, @event.ParentEntityId);
+                case EntityTypes.StandardVersion:
+                    _logger.LogInformation(
+                        "Requesting compliance tree rebuilds for StandardVersion {StandardVersionId}, " +
+                        "child type {ChildEntityType}: {EventContext}",
+                        @event.ParentEntityId, @event.ChildEntityType, @event.EventContext);
 
                     try
                     {
-                        await _recalculator.RebuildTreeAsync(tree, cancellationToken);
+                        await _rebuildManager.RequestAllTreeRebuildsForStandardVersionAsync(
+                            @event.ParentEntityId, cancellationToken);
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Failed to rebuild compliance tree for StandardVersion {StandardVersionId} and Scope {ScopeId}", id, @event.ParentEntityId);
+                        _logger.LogError(ex,
+                            "Failed to request compliance tree rebuilds for StandardVersion {StandardVersionId}",
+                            @event.ParentEntityId);
                     }
-                }
-            }
+                    break;
 
-            else
-            {
-                _logger.LogDebug("ChildEntitySaved for parent type {ParentEntityType} not relevant to compliance tree, skipping", @event.ParentEntityType);
-            }
+                case EntityTypes.Scope:
+                    _logger.LogInformation(
+                        "Requesting compliance tree rebuilds for Scope {ScopeId}, " +
+                        "child type {ChildEntityType}: {EventContext}",
+                        @event.ParentEntityId, @event.ChildEntityType, @event.EventContext);
 
-            return;
+                    try
+                    {
+                        var ids = await _debService.GetStandardVersionIdsByScopeAsync(
+                            @event.ParentEntityId, cancellationToken);
+
+                        foreach (var id in ids)
+                        {
+                            var tree = new TreeIdentifier(id, @event.ParentEntityId);
+                            await _rebuildManager.RequestTreeRebuildAsync(tree, cancellationToken);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex,
+                            "Failed to request compliance tree rebuilds for Scope {ScopeId}",
+                            @event.ParentEntityId);
+                    }
+                    break;
+
+                default:
+                    _logger.LogDebug(
+                        "ChildEntitySaved for parent type {ParentEntityType} not relevant " +
+                        "to compliance tree, skipping",
+                        @event.ParentEntityType);
+                    break;
+            }
         }
     }
 }

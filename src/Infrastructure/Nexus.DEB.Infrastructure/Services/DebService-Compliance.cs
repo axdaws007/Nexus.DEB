@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Nexus.DEB.Application.Common.Models;
 using Nexus.DEB.Application.Common.Models.Compliance;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Domain.Models.Enums;
+using Nexus.DEB.Domain.Models.Other;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using Task = System.Threading.Tasks.Task;
 
 namespace Nexus.DEB.Infrastructure.Services
@@ -79,36 +81,8 @@ namespace Nexus.DEB.Infrastructure.Services
 
         #region Compliance Tree - Node Operations
 
-        public async Task<IReadOnlyList<ComplianceTreeNode>> GetTreeAsync(TreeIdentifier tree, CancellationToken cancellationToken = default)
-            => await _dbContext.ComplianceTreeNodes
-                .AsNoTracking()
-                .Include(n => n.ComplianceState)
-                .Include(n => n.Summaries)
-                    .ThenInclude(s => s.ComplianceState)
-                .Where(n => n.StandardVersionID == tree.StandardVersionId
-                          && n.ScopeID == tree.ScopeId)
-                .OrderBy(n => n.NodeType)
-                    .ThenBy(n => n.ParentEntityID)
-                    .ThenBy(n => n.EntityID)
-                .ToListAsync(cancellationToken);
-
-        public async Task<ComplianceTreeNode?> GetComplianceTreeNodeAsync(
-            TreeIdentifier tree, string nodeType, Guid entityId, Guid? parentEntityId,
-            CancellationToken cancellationToken = default)
-        {
-            return await _dbContext.ComplianceTreeNodes
-                .Include(n => n.ComplianceState)
-                .FirstOrDefaultAsync(n =>
-                    n.StandardVersionID == tree.StandardVersionId &&
-                    n.ScopeID == tree.ScopeId &&
-                    n.NodeType == nodeType &&
-                    n.EntityID == entityId &&
-                    n.ParentEntityID == parentEntityId,
-                    cancellationToken);
-        }
-
         public async Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeNodesByEntityAsync(
-            TreeIdentifier tree, string nodeType, Guid entityId,
+            TreeIdentifier tree, string nodeType, Guid entityId, Guid buildId,
             CancellationToken cancellationToken = default)
         {
             return await _dbContext.ComplianceTreeNodes
@@ -117,7 +91,8 @@ namespace Nexus.DEB.Infrastructure.Services
                     n.StandardVersionID == tree.StandardVersionId &&
                     n.ScopeID == tree.ScopeId &&
                     n.NodeType == nodeType &&
-                    n.EntityID == entityId)
+                    n.EntityID == entityId &&
+                    n.BuildId == buildId)
                 .ToListAsync(cancellationToken);
         }
 
@@ -129,12 +104,16 @@ namespace Nexus.DEB.Infrastructure.Services
                 .Include(n => n.ComplianceState)
                 .Where(n =>
                     n.EntityID == entityId &&
-                    n.NodeType == nodeType)
+                    n.NodeType == nodeType &&
+                    _dbContext.ComplianceTreeBuilds.Any(b =>
+                        b.StandardVersionID == n.StandardVersionID &&
+                        b.ScopeID == n.ScopeID &&
+                        b.LiveBuildId == n.BuildId))
                 .ToListAsync(cancellationToken);
         }
 
         public async Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeChildrenAsync(
-            TreeIdentifier tree, Guid parentEntityId,
+            TreeIdentifier tree, Guid parentEntityId, Guid buildId,
             CancellationToken cancellationToken = default)
         {
             return await _dbContext.ComplianceTreeNodes
@@ -142,12 +121,13 @@ namespace Nexus.DEB.Infrastructure.Services
                 .Where(n =>
                     n.StandardVersionID == tree.StandardVersionId &&
                     n.ScopeID == tree.ScopeId &&
-                    n.ParentEntityID == parentEntityId)
+                    n.ParentEntityID == parentEntityId &&
+                    n.BuildId == buildId)
                 .ToListAsync(cancellationToken);
         }
 
         public async Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeChildrenAsync(
-            TreeIdentifier tree, long parentTreeNodeId,
+            TreeIdentifier tree, long parentTreeNodeId, Guid buildId,
             CancellationToken cancellationToken = default)
         {
             return await _dbContext.ComplianceTreeNodes
@@ -155,12 +135,13 @@ namespace Nexus.DEB.Infrastructure.Services
                 .Where(n =>
                     n.StandardVersionID == tree.StandardVersionId &&
                     n.ScopeID == tree.ScopeId &&
-                    n.ParentComplianceTreeNodeID == parentTreeNodeId)
+                    n.ParentComplianceTreeNodeID == parentTreeNodeId &&
+                    n.BuildId == buildId)
                 .ToListAsync(cancellationToken);
         }
 
         public async Task<IReadOnlyList<ComplianceTreeNode>> GetDescendantRequirementsAsync(
-            TreeIdentifier tree, Guid ancestorEntityId,
+            TreeIdentifier tree, Guid ancestorEntityId, Guid buildId,
             CancellationToken cancellationToken = default)
         {
             // Load all nodes for this tree and walk in memory
@@ -169,7 +150,8 @@ namespace Nexus.DEB.Infrastructure.Services
                 .AsNoTracking()
                 .Where(n =>
                     n.StandardVersionID == tree.StandardVersionId &&
-                    n.ScopeID == tree.ScopeId)
+                    n.ScopeID == tree.ScopeId &&
+                    n.BuildId == buildId)
                 .ToListAsync(cancellationToken);
 
             var childLookup = allNodes.ToLookup(n => n.ParentEntityID);
@@ -311,103 +293,21 @@ namespace Nexus.DEB.Infrastructure.Services
 
         #region Compliance Tree - Full Tree Queries
 
-        public async Task<ComplianceTreeResult> GetFilteredTreeAsync(ComplianceTreeQuery query, CancellationToken cancellationToken = default)
-        {
-            var allNodes = await GetTreeAsync(query.Tree, cancellationToken);
-            var complianceStates = await GetActiveComplianceStatesAsync();
-
-            var workingSet = allNodes.ToList();
-
-            // ── Step 1: Hide empty Sections ──
-            if (query.HideEmptySections)
-            {
-                workingSet = RemoveEmptySections(workingSet);
-            }
-
-            var hasComplianceFilter = query.ComplianceStateFilter is { Count: > 0 };
-
-            // ── Step 2: No compliance filter — return working set as direct matches ──
-            if (!hasComplianceFilter)
-            {
-                return new ComplianceTreeResult
-                {
-                    Nodes = workingSet.Select(n => new ComplianceTreeNodeResult
-                    {
-                        Node = n,
-                        IsDirectMatch = true
-                    }).ToList(),
-                    ComplianceStates = complianceStates,
-                    IsFiltered = false,
-                    EmptySectionsHidden = query.HideEmptySections
-                };
-            }
-
-            // ── Step 3: Apply compliance state filter ──
-            var filterSet = query.ComplianceStateFilter!.ToHashSet();
-
-            var directMatchIds = new HashSet<long>(
-                workingSet
-                    .Where(n => n.ComplianceStateID.HasValue && filterSet.Contains(n.ComplianceStateID.Value))
-                    .Select(n => n.ComplianceTreeNodeID));
-
-            // ── Step 4: Walk up from matches to preserve ancestor paths ──
-            var visibleIds = new HashSet<long>(directMatchIds);
-
-            foreach (var matchId in directMatchIds)
-            {
-                var current = workingSet.First(n => n.ComplianceTreeNodeID == matchId);
-
-                while (current.ParentEntityID != null && current.ParentNodeType != null)
-                {
-                    var parent = workingSet.FirstOrDefault(n =>
-                        n.NodeType == current.ParentNodeType &&
-                        n.EntityID == current.ParentEntityID.Value);
-
-                    if (parent == null)
-                        break;
-
-                    if (!visibleIds.Add(parent.ComplianceTreeNodeID))
-                        break; // Already visited — ancestors above are already included
-
-                    current = parent;
-                }
-            }
-
-            // ── Step 5: Build result ──
-            var resultNodes = workingSet
-                .Where(n => visibleIds.Contains(n.ComplianceTreeNodeID))
-                .Select(n => new ComplianceTreeNodeResult
-                {
-                    Node = n,
-                    IsDirectMatch = directMatchIds.Contains(n.ComplianceTreeNodeID)
-                })
-                .ToList();
-
-            return new ComplianceTreeResult
-            {
-                Nodes = resultNodes,
-                ComplianceStates = complianceStates,
-                IsFiltered = true,
-                EmptySectionsHidden = query.HideEmptySections
-            };
-        }
-
         public async Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeAsync(
-            TreeIdentifier tree, CancellationToken cancellationToken = default)
-        {
-            return await _dbContext.ComplianceTreeNodes
+            TreeIdentifier tree, Guid buildId, CancellationToken cancellationToken = default)
+        => await _dbContext.ComplianceTreeNodes
                 .AsNoTracking()
                 .Include(n => n.ComplianceState)
                 .Include(n => n.Summaries)
                     .ThenInclude(s => s.ComplianceState)
                 .Where(n =>
                     n.StandardVersionID == tree.StandardVersionId &&
-                    n.ScopeID == tree.ScopeId)
+                    n.ScopeID == tree.ScopeId && 
+                    n.BuildId == buildId)
                 .OrderBy(n => n.NodeType)
                     .ThenBy(n => n.ParentEntityID)
                     .ThenBy(n => n.EntityID)
                 .ToListAsync(cancellationToken);
-        }
 
         public async Task<IReadOnlyList<TreeIdentifier>> GetTreesContainingEntityAsync(
             Guid entityId, string nodeType,
@@ -425,55 +325,184 @@ namespace Nexus.DEB.Infrastructure.Services
 
         #endregion
 
-        private static List<ComplianceTreeNode> RemoveEmptySections(List<ComplianceTreeNode> nodes)
+        #region Compliance Tree Rebuild Requests
+
+        public async Task UpsertRebuildRequestAsync(
+            TreeIdentifier tree, CancellationToken ct = default)
         {
-            var emptyIds = new HashSet<long>();
-            var changed = true;
+            var request = await _dbContext.ComplianceTreeRebuildRequests
+                .FindAsync([tree.StandardVersionId, tree.ScopeId], ct);
 
-            // Iteratively remove until stable (handles cascading parent removal)
-            while (changed)
+            if (request == null)
             {
-                changed = false;
-
-                foreach (var node in nodes)
+                request = new ComplianceTreeRebuildRequest
                 {
-                    if (emptyIds.Contains(node.ComplianceTreeNodeID))
-                        continue;
-
-                    if (node.NodeType != ComplianceNodeTypes.Section)
-                        continue;
-
-                    // A Section is empty if TotalRequirementCount is 0 or null
-                    var isEmpty = !node.TotalRequirementCount.HasValue
-                                  || node.TotalRequirementCount.Value == 0;
-
-                    if (!isEmpty)
-                        continue;
-
-                    // Also check if the Section has any non-empty children remaining
-                    // (another Section that is not yet marked empty)
-                    var hasNonEmptyChild = nodes.Any(n =>
-                        !emptyIds.Contains(n.ComplianceTreeNodeID) &&
-                        n.ParentEntityID == node.EntityID &&
-                        n.NodeType != ComplianceNodeTypes.Section); // non-Section child = not empty
-
-                    if (hasNonEmptyChild)
-                        continue;
-
-                    var hasNonEmptySectionChild = nodes.Any(n =>
-                        !emptyIds.Contains(n.ComplianceTreeNodeID) &&
-                        n.ParentEntityID == node.EntityID &&
-                        n.NodeType == ComplianceNodeTypes.Section);
-
-                    if (hasNonEmptySectionChild)
-                        continue;
-
-                    emptyIds.Add(node.ComplianceTreeNodeID);
-                    changed = true;
-                }
+                    StandardVersionID = tree.StandardVersionId,
+                    ScopeID = tree.ScopeId,
+                    Status = ComplianceTreeRebuildStatus.Pending,
+                    RequestedAt = DateTime.UtcNow
+                };
+                _dbContext.ComplianceTreeRebuildRequests.Add(request);
+            }
+            else
+            {
+                request.Status = ComplianceTreeRebuildStatus.Pending;
+                request.RequestedAt = DateTime.UtcNow;
+                request.BuildId = null;
+                request.StartedAt = null;
             }
 
-            return nodes.Where(n => !emptyIds.Contains(n.ComplianceTreeNodeID)).ToList();
+            await _dbContext.SaveChangesAsync(ct);
         }
+
+        public async Task<IReadOnlyList<TreeIdentifier>> GetEligibleRebuildRequestsAsync(
+            DateTime threshold, CancellationToken ct = default)
+        {
+            return await _dbContext.ComplianceTreeRebuildRequests
+                .AsNoTracking()
+                .Where(r =>
+                    r.Status == ComplianceTreeRebuildStatus.Pending &&
+                    r.RequestedAt <= threshold)
+                .Select(r => new TreeIdentifier(r.StandardVersionID, r.ScopeID))
+                .ToListAsync(ct);
+        }
+
+        public async Task<bool> TryClaimRebuildRequestAsync(
+            TreeIdentifier tree, Guid buildId, CancellationToken ct = default)
+        {
+            var request = await _dbContext.ComplianceTreeRebuildRequests
+                .FindAsync([tree.StandardVersionId, tree.ScopeId], ct);
+
+            if (request == null || request.Status != ComplianceTreeRebuildStatus.Pending)
+                return false;
+
+            request.Status = ComplianceTreeRebuildStatus.Building;
+            request.BuildId = buildId;
+            request.StartedAt = DateTime.UtcNow;
+
+            await _dbContext.SaveChangesAsync(ct);
+            return true;
+        }
+
+        public async Task<ComplianceTreeRebuildStatus?> GetRebuildRequestStatusAsync(
+            TreeIdentifier tree, CancellationToken ct = default)
+        {
+            return await _dbContext.ComplianceTreeRebuildRequests
+                .AsNoTracking()
+                .Where(r =>
+                    r.StandardVersionID == tree.StandardVersionId &&
+                    r.ScopeID == tree.ScopeId)
+                .Select(r => (ComplianceTreeRebuildStatus?)r.Status)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        public async Task ResetRebuildRequestToPendingAsync(
+            TreeIdentifier tree, CancellationToken ct = default)
+        {
+            var request = await _dbContext.ComplianceTreeRebuildRequests
+                .FindAsync([tree.StandardVersionId, tree.ScopeId], ct);
+
+            if (request != null && request.Status == ComplianceTreeRebuildStatus.Building)
+            {
+                request.Status = ComplianceTreeRebuildStatus.Pending;
+                request.BuildId = null;
+                request.StartedAt = null;
+                await _dbContext.SaveChangesAsync(ct);
+            }
+        }
+
+        public async Task<BuildInfo?> GetCurrentLiveBuildInformationAsync(TreeIdentifier tree, CancellationToken cancellationToken = default)
+            => await _dbContext.ComplianceTreeBuilds
+                .AsNoTracking()
+                .Where(b =>
+                    b.StandardVersionID == tree.StandardVersionId &&
+                    b.ScopeID == tree.ScopeId)
+                .Select(b => new BuildInfo{ LiveBuildId = b.LiveBuildId, PromotedAt = b.PromotedAt })
+                .FirstOrDefaultAsync(cancellationToken);
+
+        #endregion
+
+        #region Compliance Tree Builds
+
+        public async Task<Guid?> GetLiveBuildIdAsync(
+            TreeIdentifier tree, CancellationToken ct = default)
+        {
+            return await _dbContext.ComplianceTreeBuilds
+                .AsNoTracking()
+                .Where(b =>
+                    b.StandardVersionID == tree.StandardVersionId &&
+                    b.ScopeID == tree.ScopeId)
+                .Select(b => (Guid?)b.LiveBuildId)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        public async Task PromoteAndCleanupBuildAsync(TreeIdentifier tree, Guid newBuildId, CancellationToken ct = default)
+        {
+            await using var transaction = await _dbContext.Database
+                .BeginTransactionAsync(ct);
+
+            try
+            {
+                // 1. Update or insert the ComplianceTreeBuild row
+                var build = await _dbContext.ComplianceTreeBuilds
+                    .FindAsync([tree.StandardVersionId, tree.ScopeId], ct);
+
+                Guid? oldBuildId = null;
+
+                if (build == null)
+                {
+                    build = new ComplianceTreeBuild
+                    {
+                        StandardVersionID = tree.StandardVersionId,
+                        ScopeID = tree.ScopeId,
+                        LiveBuildId = newBuildId,
+                        PromotedAt = DateTime.UtcNow
+                    };
+                    _dbContext.ComplianceTreeBuilds.Add(build);
+                }
+                else
+                {
+                    oldBuildId = build.LiveBuildId;
+                    build.LiveBuildId = newBuildId;
+                    build.PromotedAt = DateTime.UtcNow;
+                }
+
+                await _dbContext.SaveChangesAsync(ct);
+
+                // 2. Delete old build's nodes (cascade handles summaries)
+                if (oldBuildId.HasValue)
+                {
+                    await _dbContext.ComplianceTreeNodes
+                        .Where(n => n.BuildId == oldBuildId.Value)
+                        .ExecuteDeleteAsync(ct);
+                }
+
+                // 3. Mark request as complete
+                var request = await _dbContext.ComplianceTreeRebuildRequests
+                    .FindAsync([tree.StandardVersionId, tree.ScopeId], ct);
+
+                if (request != null)
+                {
+                    request.Status = ComplianceTreeRebuildStatus.Complete;
+                    await _dbContext.SaveChangesAsync(ct);
+                }
+
+                await transaction.CommitAsync(ct);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(ct);
+                throw;
+            }
+        }
+
+        public async Task<int> DeleteNodesByBuildIdAsync(Guid buildId, CancellationToken ct = default)
+        {
+            return await _dbContext.ComplianceTreeNodes
+                .Where(n => n.BuildId == buildId)
+                .ExecuteDeleteAsync(ct);
+        }
+
+        #endregion
     }
 }

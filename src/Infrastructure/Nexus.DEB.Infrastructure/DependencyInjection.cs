@@ -10,6 +10,7 @@ using Nexus.DEB.Infrastructure.Events;
 using Nexus.DEB.Infrastructure.Http;
 using Nexus.DEB.Infrastructure.Persistence;
 using Nexus.DEB.Infrastructure.Services;
+using Nexus.DEB.Infrastructure.Services.Compliance;
 using Nexus.DEB.Infrastructure.Services.Registries;
 using Nexus.DEB.Infrastructure.Validators;
 using System.Reflection;
@@ -174,6 +175,7 @@ namespace Nexus.DEB.Infrastructure
             services.AddScoped<IComplianceStateEngine, ComplianceStateEngine>();
             services.AddScoped<IComplianceTreeRecalculator, ComplianceTreeRecalculator>();
             services.AddScoped<IComplianceTreeService, ComplianceTreeService>();
+            services.AddScoped<IComplianceTreeRebuildManager, ComplianceTreeRebuildManager>();
 
             // Register the delegating handler
             services.AddTransient<CorrelationIdDelegatingHandler>();

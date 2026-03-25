@@ -51,6 +51,8 @@ namespace Nexus.DEB.Infrastructure.Persistence
         public DbSet<ComplianceTreeNodeSummary> ComplianceTreeNodeSummaries { get; set; }
         public DbSet<NodeDefault> NodeDefaults { get; set; }
         public DbSet<ComplianceStateMapping> ComplianceStateMappings { get; set; }
+        public DbSet<ComplianceTreeBuild> ComplianceTreeBuilds { get; set; }
+        public DbSet<ComplianceTreeRebuildRequest> ComplianceTreeRebuildRequests { get; set; }
 
         // Entities
         public DbSet<EntityHead> EntityHeads { get; set; }

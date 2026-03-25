@@ -25,6 +25,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<IReadOnlyList<ComplianceTreeNodeSummary>> CalculateRequirementAggregatesAsync(
             TreeIdentifier tree,
             Guid parentEntityId,
+            Guid buildId,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -34,6 +35,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
         Task<IReadOnlyList<ComplianceTreeNodeSummary>> CalculateSectionAggregatesAsync(
             TreeIdentifier tree,
             Guid rootEntityId,
+            Guid buildId,
             CancellationToken cancellationToken = default);
 
         /// <summary>

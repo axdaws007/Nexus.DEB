@@ -5,6 +5,7 @@ using Nexus.DEB.Application.Common.Models.Filters;
 using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
 using Nexus.DEB.Domain.Models.Common;
+using Nexus.DEB.Domain.Models.Enums;
 using Nexus.DEB.Domain.Models.Other;
 using Nexus.DEB.Domain.Models.Views;
 using Task = System.Threading.Tasks.Task;
@@ -247,12 +248,6 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         #region Compliance
 
-        #region Tree query 
-
-        Task<ComplianceTreeResult> GetFilteredTreeAsync(ComplianceTreeQuery query, CancellationToken cancellationToken = default);
-
-        #endregion Tree query
-
         #region Configuration
 
         Task<IReadOnlyList<ComplianceState>> GetActiveComplianceStatesAsync(CancellationToken cancellationToken = default);
@@ -272,12 +267,8 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         #region Compliance Tree
 
-        Task<ComplianceTreeNode?> GetComplianceTreeNodeAsync(
-            TreeIdentifier tree, string nodeType, Guid entityId, Guid? parentEntityId,
-            CancellationToken cancellationToken = default);
-
         Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeNodesByEntityAsync(
-            TreeIdentifier tree, string nodeType, Guid entityId,
+            TreeIdentifier tree, string nodeType, Guid entityId, Guid buildId,
             CancellationToken cancellationToken = default);
 
         Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeNodesByEntityAcrossTreesAsync(
@@ -285,15 +276,15 @@ namespace Nexus.DEB.Application.Common.Interfaces
             CancellationToken cancellationToken = default);
 
         Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeChildrenAsync(
-            TreeIdentifier tree, Guid parentEntityId,
+            TreeIdentifier tree, Guid parentEntityId, Guid buildId,
             CancellationToken cancellationToken = default);
 
         Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeChildrenAsync(
-                    TreeIdentifier tree, long parentTreeNodeId,
+                    TreeIdentifier tree, long parentTreeNodeId, Guid buildId,
                     CancellationToken cancellationToken = default);
 
         Task<IReadOnlyList<ComplianceTreeNode>> GetDescendantRequirementsAsync(
-            TreeIdentifier tree, Guid ancestorEntityId,
+            TreeIdentifier tree, Guid ancestorEntityId, Guid buildId,
             CancellationToken cancellationToken = default);
 
         Task UpsertComplianceTreeNodeAsync(ComplianceTreeNode node, CancellationToken cancellationToken = default);
@@ -317,6 +308,7 @@ namespace Nexus.DEB.Application.Common.Interfaces
 
         Task<IReadOnlyList<ComplianceTreeNode>> GetComplianceTreeAsync(
             TreeIdentifier tree,
+            Guid buildId,
             CancellationToken cancellationToken = default);
 
         Task<IReadOnlyList<TreeIdentifier>> GetTreesContainingEntityAsync(
@@ -327,6 +319,60 @@ namespace Nexus.DEB.Application.Common.Interfaces
             Guid statementId, CancellationToken cancellationToken = default);
 
         #endregion Compliance Tree
+
+        #region Compliance Tree Rebuild Requests
+
+        /// <summary>
+        /// Inserts a new Pending rebuild request, or updates an existing one
+        /// by resetting Status to Pending and updating RequestedAt.
+        /// </summary>
+        Task UpsertRebuildRequestAsync(TreeIdentifier tree, CancellationToken ct = default);
+
+        /// <summary>
+        /// Returns tree identifiers for all Pending requests where RequestedAt
+        /// is older than the given threshold.
+        /// </summary>
+        Task<IReadOnlyList<TreeIdentifier>> GetEligibleRebuildRequestsAsync(
+            DateTime threshold, CancellationToken ct = default);
+
+        /// <summary>
+        /// Attempts to transition a request from Pending to Building.
+        /// Assigns the given BuildId and sets StartedAt.
+        /// Returns true if the claim succeeded (row was still Pending), false otherwise.
+        /// </summary>
+        Task<bool> TryClaimRebuildRequestAsync(
+            TreeIdentifier tree, Guid buildId, CancellationToken ct = default);
+
+        /// <summary>
+        /// Checks the current status of a rebuild request directly from the database.
+        /// Returns null if no request exists.
+        /// </summary>
+        Task<ComplianceTreeRebuildStatus?> GetRebuildRequestStatusAsync(
+            TreeIdentifier tree, CancellationToken ct = default);
+
+        /// <summary>
+        /// Resets a Building request back to Pending and clears its BuildId/StartedAt.
+        /// Preserves the existing RequestedAt so debounce doesn't restart.
+        /// </summary>
+        Task ResetRebuildRequestToPendingAsync(TreeIdentifier tree, CancellationToken ct = default);
+
+        Task<BuildInfo?> GetCurrentLiveBuildInformationAsync(TreeIdentifier tree, CancellationToken cancellationToken = default);
+
+        #endregion
+
+        #region Compliance Tree Builds
+
+        Task<Guid?> GetLiveBuildIdAsync(TreeIdentifier tree, CancellationToken ct = default);
+
+        /// <summary>
+        /// Atomically promotes a new BuildId to live, deletes the old build's nodes,
+        /// and marks the rebuild request as Complete. All within a single transaction.
+        /// </summary>
+        Task PromoteAndCleanupBuildAsync(TreeIdentifier tree, Guid newBuildId, CancellationToken ct = default);
+
+        Task<int> DeleteNodesByBuildIdAsync(Guid buildId, CancellationToken ct = default);
+
+        #endregion
 
         #endregion Compliance
 

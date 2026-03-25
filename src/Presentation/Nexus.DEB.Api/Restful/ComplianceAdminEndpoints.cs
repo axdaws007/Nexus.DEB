@@ -2,6 +2,8 @@
 using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Application.Common.Models.Compliance;
 using Nexus.DEB.Domain.Models;
+using Nexus.DEB.Infrastructure.Services;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Nexus.DEB.Api.Restful
 {
@@ -35,7 +37,7 @@ namespace Nexus.DEB.Api.Restful
 
                         try
                         {
-                            await recalculator.RebuildAllTreesForStandardVersionAsync(
+                            await recalculator.RebuildAllTreesForStandardVersionDirectAsync(
                             standardVersionId, cancellationToken);
 
                         }
@@ -72,7 +74,7 @@ namespace Nexus.DEB.Api.Restful
 
                     try
                     {
-                        await recalculator.RebuildAllTreesForStandardVersionAsync(
+                        await recalculator.RebuildAllTreesForStandardVersionDirectAsync(
                         standardVersionId, cancellationToken);
 
                         return Results.Ok(new
@@ -110,7 +112,7 @@ namespace Nexus.DEB.Api.Restful
                     try
                     {
                         var tree = new TreeIdentifier(standardVersionId, scopeId);
-                        await recalculator.RebuildTreeAsync(tree, cancellationToken);
+                        await recalculator.RebuildTreeDirectAsync(tree, cancellationToken);
 
                         return Results.Ok(new
                         {
@@ -141,7 +143,9 @@ namespace Nexus.DEB.Api.Restful
                     CancellationToken cancellationToken) =>
                 {
                     var tree = new TreeIdentifier(standardVersionId, scopeId);
-                    var nodes = await debService.GetComplianceTreeAsync(tree, cancellationToken);
+                    var buildInfo = await debService.GetCurrentLiveBuildInformationAsync(tree, cancellationToken);
+
+                    var nodes = await debService.GetComplianceTreeAsync(tree, buildInfo!.LiveBuildId, cancellationToken);
 
                     var stats = new
                     {

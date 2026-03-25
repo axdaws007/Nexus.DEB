@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Nexus.DEB.Application.Common.Interfaces;
-using Nexus.DEB.Application.Common.Models.Compliance;
 using Nexus.DEB.Application.Common.Models.Events;
 using Nexus.DEB.Domain.Interfaces;
 using Nexus.DEB.Domain.Models;
@@ -13,7 +12,7 @@ namespace Nexus.DEB.Infrastructure.Events.Subscribers
         : IDomainEventSubscriber<EntitySavedEvent>
     {
         private readonly ILogger<EntitySavedComplianceSubscriber> _logger;
-        private readonly IComplianceTreeRecalculator _recalculator;
+        private readonly IComplianceTreeRebuildManager _rebuildManager;
         private readonly IDebService _debService;
 
         public string Name => "EntitySavedCompliance";
@@ -21,11 +20,11 @@ namespace Nexus.DEB.Infrastructure.Events.Subscribers
 
         public EntitySavedComplianceSubscriber(
             ILogger<EntitySavedComplianceSubscriber> logger,
-            IComplianceTreeRecalculator recalculator,
+            IComplianceTreeRebuildManager rebuildManager,
             IDebService debService)
         {
             _logger = logger;
-            _recalculator = recalculator;
+            _rebuildManager = rebuildManager;
             _debService = debService;
         }
 
@@ -33,72 +32,56 @@ namespace Nexus.DEB.Infrastructure.Events.Subscribers
             EntitySavedEvent @event,
             CancellationToken cancellationToken = default)
         {
+            // Only Statements need tree rebuilds on save.
+            // New Statements need adding to trees, updated Statements may
+            // have changed their requirement-scope links.
+            // Workflow state changes are handled by WorkflowTransitionCompletedComplianceSubscriber.
+            if (@event.EntityType != EntityTypes.SoC)
+                return;
+
+            _logger.LogInformation(
+                "Requesting compliance tree rebuilds for Statement {StatementId} " +
+                "(IsNew={IsNew})",
+                @event.EntityId, @event.IsNew);
+
             try
             {
-                switch (@event.EntityType)
-                {
-                    case EntityTypes.SoC:
-                        await HandleStatementSavedAsync(@event, cancellationToken);
-                        break;
+                // Find trees the Statement currently lives in (handles removals)
+                var existingTrees = await _debService.GetTreesContainingEntityAsync(
+                    @event.EntityId, ComplianceNodeTypes.Statement, cancellationToken);
 
-                    default:
-                        return;
+                // Find trees the Statement should live in (handles additions)
+                var targetTrees = await _debService.GetTreeIdentifiersForStatementAsync(
+                    @event.EntityId, cancellationToken);
+
+                // Union both sets
+                var allAffectedTrees = existingTrees
+                    .Union(targetTrees)
+                    .Distinct()
+                    .ToList();
+
+                if (allAffectedTrees.Count == 0)
+                {
+                    _logger.LogDebug(
+                        "No affected trees found for Statement {StatementId}, skipping",
+                        @event.EntityId);
+                    return;
                 }
+
+                foreach (var tree in allAffectedTrees)
+                {
+                    await _rebuildManager.RequestTreeRebuildAsync(tree, cancellationToken);
+                }
+
+                _logger.LogInformation(
+                    "Requested {Count} compliance tree rebuild(s) for Statement {StatementId}",
+                    allAffectedTrees.Count, @event.EntityId);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Failed to update compliance tree for {EntityType} {EntityId}",
-                    @event.EntityType, @event.EntityId);
-            }
-        }
-
-        private async Task HandleStatementSavedAsync(
-            EntitySavedEvent @event,
-            CancellationToken cancellationToken)
-        {
-            _logger.LogInformation(
-                "Processing statement {Action} compliance update for {EntityId}",
-                @event.IsNew ? "creation" : "update", @event.EntityId);
-
-            // 1. Trees that currently contain this Statement (covers removals on update)
-            var existingTrees = await _debService.GetTreesContainingEntityAsync(
-                @event.EntityId, ComplianceNodeTypes.Statement, cancellationToken);
-
-            // 2. Trees that should contain this Statement (from current SRS links)
-            var expectedTrees = await _debService.GetTreeIdentifiersForStatementAsync(
-                @event.EntityId, cancellationToken);
-
-            // 3. Union — rebuild all affected trees
-            var allTrees = existingTrees
-                .Union(expectedTrees)
-                .Distinct()
-                .ToList();
-
-            if (allTrees.Count == 0)
-            {
-                _logger.LogDebug(
-                    "No compliance trees affected by Statement {EntityId}, skipping",
+                    "Failed to request compliance tree rebuilds for Statement {StatementId}",
                     @event.EntityId);
-                return;
-            }
-
-            _logger.LogDebug(
-                "Rebuilding {Count} compliance tree(s) for Statement {EntityId}",
-                allTrees.Count, @event.EntityId);
-
-            foreach (var tree in allTrees)
-            {
-                try
-                {
-                    await _recalculator.RebuildTreeAsync(tree, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex,
-                        "Failed to rebuild compliance tree for SV={StandardVersionId} Scope={ScopeId}",
-                        tree.StandardVersionId, tree.ScopeId);
-                }
             }
         }
     }

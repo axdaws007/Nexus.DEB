@@ -25,5 +25,15 @@ namespace Nexus.DEB.Application.Common.Models
         /// Whether empty sections are hidden
         /// </summary>
         public bool EmptySectionsHidden { get; init; }
+
+        /// <summary>
+        /// Is there a rebuild in progress for this tree
+        /// </summary>
+        public bool IsRebuildPending { get; set; }
+
+        /// <summary>
+        /// Date/time stamp of the current live build
+        /// </summary>
+        public DateTime? LiveBuildDate { get; set; }
     }
 }

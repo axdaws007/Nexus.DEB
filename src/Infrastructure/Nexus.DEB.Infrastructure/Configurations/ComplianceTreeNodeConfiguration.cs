@@ -21,6 +21,10 @@ namespace Nexus.DEB.Infrastructure.Configurations
             builder.Property(x => x.LastCalculatedAt).HasDefaultValueSql("getdate()");
             builder.Property(x => x.Ordinal).HasDefaultValue(0);
 
+            builder.Property(x => x.BuildId).IsRequired();
+
+            builder.HasIndex(x => x.BuildId).HasDatabaseName("IX_ComplianceTreeNode_BuildId");
+
             builder.HasOne(x => x.ComplianceState)
                 .WithMany()
                 .HasForeignKey(x => x.ComplianceStateID)
@@ -32,13 +36,13 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .OnDelete(DeleteBehavior.NoAction);
 
             // Filtered unique: one row per entity per parent per tree, where a parent exists
-            builder.HasIndex(e => new { e.StandardVersionID, e.ScopeID, e.NodeType, e.EntityID, e.ParentComplianceTreeNodeID })
+            builder.HasIndex(e => new { e.StandardVersionID, e.ScopeID, e.BuildId, e.NodeType, e.EntityID, e.ParentComplianceTreeNodeID })
                 .IsUnique()
                 .HasFilter("[ParentComplianceTreeNodeID] IS NOT NULL")
                 .HasDatabaseName("UQ_ComplianceTreeNode_WithParent");
 
             // Filtered unique: one root node per tree
-            builder.HasIndex(e => new { e.StandardVersionID, e.ScopeID, e.NodeType, e.EntityID })
+            builder.HasIndex(e => new { e.StandardVersionID, e.ScopeID, e.BuildId, e.NodeType, e.EntityID })
                 .IsUnique()
                 .HasFilter("[ParentEntityID] IS NULL")
                 .HasDatabaseName("UQ_ComplianceTreeNode_Root");
@@ -57,7 +61,7 @@ namespace Nexus.DEB.Infrastructure.Configurations
                 .HasDatabaseName("IX_ComplianceTreeNode_Entity");
 
             // Get all nodes for a specific tree (full tree query and rebuild)
-            builder.HasIndex(e => new { e.StandardVersionID, e.ScopeID })
+            builder.HasIndex(e => e.BuildId)
                 .IncludeProperties(e => new { e.NodeType, e.EntityID, e.ParentNodeType, e.ParentEntityID, e.ComplianceStateID, e.ComplianceStateLabel })
                 .HasDatabaseName("IX_ComplianceTreeNode_Tree");
 

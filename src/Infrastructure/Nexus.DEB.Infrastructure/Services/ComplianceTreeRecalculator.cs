@@ -81,8 +81,12 @@ namespace Nexus.DEB.Infrastructure.Services
 
             foreach (var branch in parentBranches)
             {
+                var liveBuildId = await _debService.GetLiveBuildIdAsync(branch.Tree, cancellationToken);
+                if (!liveBuildId.HasValue) continue;
+
                 await BubbleUpAsync(
                     branch.Tree,
+                    liveBuildId.Value,
                     branch.ParentEntityID!.Value,
                     branch.ParentNodeType!,
                     cancellationToken);
@@ -99,35 +103,47 @@ namespace Nexus.DEB.Infrastructure.Services
                 "in tree SV={StandardVersionId} Scope={ScopeId}",
                 parentNodeType, parentEntityId, tree.StandardVersionId, tree.ScopeId);
 
-            await BubbleUpAsync(tree, parentEntityId, parentNodeType, cancellationToken);
+            var liveBuildId = await _debService.GetLiveBuildIdAsync(tree, cancellationToken);
+
+            await BubbleUpAsync(tree, liveBuildId.Value, parentEntityId, parentNodeType, cancellationToken);
         }
 
-        public async Task RebuildTreeAsync(TreeIdentifier tree, CancellationToken cancellationToken = default)
+        public async Task RebuildTreeAsync(
+            TreeIdentifier tree,
+            Guid buildId,
+            Func<Task<bool>>? checkpointCallback = null,
+            CancellationToken cancellationToken = default)
         {
             _logger.LogInformation(
-                "Rebuilding compliance tree for SV={StandardVersionId} Scope={ScopeId}",
-                tree.StandardVersionId, tree.ScopeId);
+                "Rebuilding compliance tree for SV={StandardVersionId} Scope={ScopeId} BuildId={BuildId}",
+                tree.StandardVersionId, tree.ScopeId, buildId);
 
-            // 1. Clear existing tree
-            await _debService.RemoveComplianceTreeAsync(tree, cancellationToken);
+            // NOTE: We no longer clear the existing tree here — the old live build
+            // remains untouched until this new build is promoted.
 
-            // 2. Load structural data
-            var standardVersion = await _debService.GetStandardVersionByIdAsync(tree.StandardVersionId, cancellationToken);
+            // Load structural data
+            var standardVersion = await _debService.GetStandardVersionByIdAsync(
+                tree.StandardVersionId, cancellationToken);
             if (standardVersion == null)
             {
-                _logger.LogWarning("StandardVersion {Id} not found, cannot rebuild", tree.StandardVersionId);
+                _logger.LogWarning("StandardVersion {Id} not found, cannot rebuild",
+                    tree.StandardVersionId);
                 return;
             }
 
-            var scopeRequirementIds = await _debService.GetRequirementIdsByScopeAsync(tree.ScopeId, cancellationToken);
+            var scopeRequirementIds = await _debService.GetRequirementIdsByScopeAsync(
+                tree.ScopeId, cancellationToken);
             var inScopeRequirementIds = new HashSet<Guid>(scopeRequirementIds);
 
-            var allSections = await _debService.GetSectionsByStandardVersionIdAsync(tree.StandardVersionId, cancellationToken);
-            var sectionRequirements = await _debService.GetSectionRequirementsByStandardVersionIdAsync(tree.StandardVersionId, cancellationToken);
-            var statementLinks = await _debService.GetStatementRequirementLinksByScopeAsync(tree.ScopeId, cancellationToken);
+            var allSections = await _debService.GetSectionsByStandardVersionIdAsync(
+                tree.StandardVersionId, cancellationToken);
+            var sectionRequirements = await _debService.GetSectionRequirementsByStandardVersionIdAsync(
+                tree.StandardVersionId, cancellationToken);
+            var statementLinks = await _debService.GetStatementRequirementLinksByScopeAsync(
+                tree.ScopeId, cancellationToken);
 
-            // Batch load entity details for labels
-            var requirementLookup = await _debService.GetEntityHeadsAsync(inScopeRequirementIds, cancellationToken);
+            var requirementLookup = await _debService.GetEntityHeadsAsync(
+                inScopeRequirementIds, cancellationToken);
 
             var statementIds = statementLinks
                 .Where(link => inScopeRequirementIds.Contains(link.RequirementId))
@@ -135,13 +151,19 @@ namespace Nexus.DEB.Infrastructure.Services
                 .Distinct()
                 .ToList();
 
-            var statementLookup = await _debService.GetEntityHeadsAsync(statementIds, cancellationToken);
+            var statementLookup = await _debService.GetEntityHeadsAsync(
+                statementIds, cancellationToken);
+
+            // ── Checkpoint: structural data loaded ──
+            if (!await ShouldContinueAsync(checkpointCallback))
+                return;
 
             // ── Level 0: Root ──
             var rootNode = new ComplianceTreeNode
             {
                 StandardVersionID = tree.StandardVersionId,
                 ScopeID = tree.ScopeId,
+                BuildId = buildId,
                 NodeType = ComplianceNodeTypes.StandardVersion,
                 EntityID = tree.StandardVersionId,
                 ParentNodeType = null,
@@ -155,9 +177,9 @@ namespace Nexus.DEB.Infrastructure.Services
 
             await _debService.UpsertComplianceTreeNodeAsync(rootNode, cancellationToken);
 
-            // ── Level 1+: Sections (insert by depth, shallowest first) ──
+            // ── Level 1+: Sections ──
             var sectionsByDepth = OrderSectionsByDepthAscending(allSections);
-            var sectionNodeLookup = new Dictionary<Guid, long>(); // Section.Id → ComplianceTreeNodeID
+            var sectionNodeLookup = new Dictionary<Guid, long>();
 
             foreach (var section in sectionsByDepth)
             {
@@ -165,7 +187,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 if (section.ParentSectionId.HasValue)
                 {
                     if (!sectionNodeLookup.TryGetValue(section.ParentSectionId.Value, out parentTreeNodeId))
-                        continue; // Parent not found — skip
+                        continue;
                 }
                 else
                 {
@@ -176,6 +198,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     StandardVersionID = tree.StandardVersionId,
                     ScopeID = tree.ScopeId,
+                    BuildId = buildId,
                     NodeType = ComplianceNodeTypes.Section,
                     EntityID = section.Id,
                     ParentNodeType = section.ParentSectionId.HasValue
@@ -193,8 +216,11 @@ namespace Nexus.DEB.Infrastructure.Services
                 sectionNodeLookup[section.Id] = sectionNode.ComplianceTreeNodeID;
             }
 
-            // ── Requirement level: one per SectionRequirement link ──
-            // A Requirement in two Sections = two tree nodes
+            // ── Checkpoint: sections complete ──
+            if (!await ShouldContinueAsync(checkpointCallback))
+                return;
+
+            // ── Requirement level ──
             var treeRequirementIds = new HashSet<Guid>();
             var requirementNodeLookup = new Dictionary<(Guid SectionId, Guid RequirementId), long>();
 
@@ -212,6 +238,7 @@ namespace Nexus.DEB.Infrastructure.Services
                 {
                     StandardVersionID = tree.StandardVersionId,
                     ScopeID = tree.ScopeId,
+                    BuildId = buildId,
                     NodeType = ComplianceNodeTypes.Requirement,
                     EntityID = sr.RequirementID,
                     ParentNodeType = ComplianceNodeTypes.Section,
@@ -228,7 +255,11 @@ namespace Nexus.DEB.Infrastructure.Services
                 treeRequirementIds.Add(sr.RequirementID);
             }
 
-            // ── Statement level: one per Requirement tree node instance ──
+            // ── Checkpoint: requirements complete ──
+            if (!await ShouldContinueAsync(checkpointCallback))
+                return;
+
+            // ── Statement level ──
             var statementEntityIds = new HashSet<Guid>();
 
             foreach (var link in statementLinks)
@@ -238,8 +269,6 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 statementLookup.TryGetValue(link.StatementId, out var statement);
 
-                // Find ALL Requirement tree nodes for this RequirementId
-                // (there may be multiple if the Requirement is in multiple Sections)
                 var reqTreeNodes = requirementNodeLookup
                     .Where(kvp => kvp.Key.RequirementId == link.RequirementId)
                     .ToList();
@@ -250,6 +279,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     {
                         StandardVersionID = tree.StandardVersionId,
                         ScopeID = tree.ScopeId,
+                        BuildId = buildId,
                         NodeType = ComplianceNodeTypes.Statement,
                         EntityID = link.StatementId,
                         ParentNodeType = ComplianceNodeTypes.Requirement,
@@ -267,28 +297,59 @@ namespace Nexus.DEB.Infrastructure.Services
                 statementEntityIds.Add(link.StatementId);
             }
 
+            // ── Checkpoint: statements complete, resolving states ──
+            if (!await ShouldContinueAsync(checkpointCallback))
+                return;
+
             // ── Resolve intrinsic compliance states ──
+            // These methods need to query nodes by BuildId (not live build)
             await ResolveIntrinsicStatesInBatch(
-                tree, statementEntityIds, EntityTypes.SoC, ComplianceNodeTypes.Statement, cancellationToken);
+                tree, buildId, statementEntityIds, EntityTypes.SoC,
+                ComplianceNodeTypes.Statement, cancellationToken);
             await ResolveIntrinsicStatesInBatch(
-                tree, treeRequirementIds, EntityTypes.Requirement, ComplianceNodeTypes.Requirement, cancellationToken);
+                tree, buildId, treeRequirementIds, EntityTypes.Requirement,
+                ComplianceNodeTypes.Requirement, cancellationToken);
             await ResolveIntrinsicStatesInBatch(
-                tree, new HashSet<Guid> { tree.StandardVersionId }, EntityTypes.StandardVersion,
-                ComplianceNodeTypes.StandardVersion, cancellationToken);
+                tree, buildId, new HashSet<Guid> { tree.StandardVersionId },
+                EntityTypes.StandardVersion, ComplianceNodeTypes.StandardVersion,
+                cancellationToken);
+
+            // ── Checkpoint: states resolved, bubbling up ──
+            if (!await ShouldContinueAsync(checkpointCallback))
+                return;
 
             // ── Bubble up bottom-to-top ──
-            await RecalculateAllParentsBottomUp(tree, allSections, sectionRequirements, treeRequirementIds, cancellationToken);
+            await RecalculateAllParentsBottomUp(
+                tree, allSections, sectionRequirements,
+                treeRequirementIds, buildId, cancellationToken);
 
-            // Count total nodes for logging
             var totalNodes = 1 + sectionNodeLookup.Count + requirementNodeLookup.Count
-                + statementEntityIds.Count; // approximate — statements may have multiple nodes
+                + statementEntityIds.Count;
 
             _logger.LogInformation(
-                "Compliance tree rebuilt for SV={StandardVersionId} Scope={ScopeId}: ~{NodeCount} nodes",
-                tree.StandardVersionId, tree.ScopeId, totalNodes);
+                "Compliance tree rebuilt for SV={StandardVersionId} Scope={ScopeId} " +
+                "BuildId={BuildId}: ~{NodeCount} nodes",
+                tree.StandardVersionId, tree.ScopeId, buildId, totalNodes);
         }
 
-        public async Task RebuildAllTreesForStandardVersionAsync(
+        // ── Private helpers ──
+
+        public async Task RebuildTreeDirectAsync(
+            TreeIdentifier tree, CancellationToken cancellationToken = default)
+        {
+            var buildId = Guid.NewGuid();
+
+            await RebuildTreeAsync(tree, buildId, checkpointCallback: null, cancellationToken);
+
+            await _debService.PromoteAndCleanupBuildAsync(tree, buildId, cancellationToken);
+
+            _logger.LogInformation(
+                "Direct rebuild completed and promoted for SV={StandardVersionId} " +
+                "Scope={ScopeId}, BuildId={BuildId}",
+                tree.StandardVersionId, tree.ScopeId, buildId);
+        }
+
+        public async Task RebuildAllTreesForStandardVersionDirectAsync(
             Guid standardVersionId, CancellationToken cancellationToken = default)
         {
             var scopeIds = await _debService.GetScopeIdsByStandardVersionAsync(
@@ -300,15 +361,22 @@ namespace Nexus.DEB.Infrastructure.Services
 
             foreach (var scopeId in scopeIds)
             {
-                await RebuildTreeAsync(
+                await RebuildTreeDirectAsync(
                     new TreeIdentifier(standardVersionId, scopeId), cancellationToken);
             }
         }
 
-        // ── Private helpers ──
+        private static async Task<bool> ShouldContinueAsync(
+            Func<Task<bool>>? checkpointCallback)
+        {
+            if (checkpointCallback == null)
+                return true;
+
+            return await checkpointCallback();
+        }
 
         private async Task BubbleUpAsync(
-            TreeIdentifier tree, Guid entityId, string nodeType,
+            TreeIdentifier tree, Guid buildId, Guid entityId, string nodeType,
             CancellationToken cancellationToken)
         {
             var currentEntityId = entityId;
@@ -322,7 +390,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 // Get direct children for compliance state calculation
                 var children = await _debService.GetComplianceTreeChildrenAsync(
-                    tree, currentEntityId, cancellationToken);
+                    tree, currentEntityId, buildId, cancellationToken);
 
                 var childStateIds = children.Select(c => c.ComplianceStateID).ToList();
 
@@ -331,7 +399,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
                 // Update the current node(s)
                 var currentNodes = await _debService.GetComplianceTreeNodesByEntityAsync(
-                    tree, currentNodeType, currentEntityId, cancellationToken);
+                    tree, currentNodeType, currentEntityId, buildId, cancellationToken);
 
                 foreach (var node in currentNodes)
                 {
@@ -340,7 +408,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     node.LastCalculatedAt = _dateTimeProvider.Now;
 
                     // Calculate aggregates for Sections and StandardVersion
-                    await RecalculateAggregatesAsync(node, tree, cancellationToken);
+                    await RecalculateAggregatesAsync(node, tree, buildId, cancellationToken);
                 }
 
                 if (currentNodes.Count > 0)
@@ -357,7 +425,7 @@ namespace Nexus.DEB.Infrastructure.Services
         }
 
         private async Task RecalculateAggregatesAsync(
-            ComplianceTreeNode node, TreeIdentifier tree,
+            ComplianceTreeNode node, TreeIdentifier tree, Guid buildId,
             CancellationToken cancellationToken)
         {
             var summaries = new List<ComplianceTreeNodeSummary>();
@@ -366,24 +434,24 @@ namespace Nexus.DEB.Infrastructure.Services
             {
                 case ComplianceNodeTypes.Section:
                     var reqAggregates = await _engine.CalculateRequirementAggregatesAsync(
-                        tree, node.EntityID, cancellationToken);
+                        tree, node.EntityID, buildId, cancellationToken);
                     summaries.AddRange(reqAggregates);
                     node.TotalRequirementCount = reqAggregates.Sum(a => a.Count);
 
                     var sectionChildAggregates = await _engine.CalculateSectionAggregatesAsync(
-                        tree, node.EntityID, cancellationToken);
+                        tree, node.EntityID, buildId, cancellationToken);
                     summaries.AddRange(sectionChildAggregates);
                     node.TotalSectionCount = sectionChildAggregates.Sum(a => a.Count);
                     break;
 
                 case ComplianceNodeTypes.StandardVersion:
                     var rootReqAggregates = await _engine.CalculateRequirementAggregatesAsync(
-                        tree, node.EntityID, cancellationToken);
+                        tree, node.EntityID, buildId, cancellationToken);
                     summaries.AddRange(rootReqAggregates);
                     node.TotalRequirementCount = rootReqAggregates.Sum(a => a.Count);
 
                     var sectionAggregates = await _engine.CalculateSectionAggregatesAsync(
-                        tree, node.EntityID, cancellationToken);
+                        tree, node.EntityID, buildId, cancellationToken);
                     summaries.AddRange(sectionAggregates);
                     node.TotalSectionCount = sectionAggregates.Sum(a => a.Count);
                     break;
@@ -416,6 +484,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
         private async Task ResolveIntrinsicStatesInBatch(
             TreeIdentifier tree,
+            Guid buildId,
             IReadOnlyCollection<Guid> entityIds,
             string entityType, string nodeType,
             CancellationToken cancellationToken)
@@ -431,7 +500,7 @@ namespace Nexus.DEB.Infrastructure.Services
                     : null;
 
                 var nodes = await _debService.GetComplianceTreeNodesByEntityAsync(
-                    tree, nodeType, entityId, cancellationToken);
+                    tree, nodeType, entityId, buildId, cancellationToken);
 
                 foreach (var node in nodes)
                 {
@@ -453,6 +522,7 @@ namespace Nexus.DEB.Infrastructure.Services
             IReadOnlyList<Section> allSections,
             IReadOnlyList<SectionRequirement> sectionRequirements,
             IReadOnlyCollection<Guid> inScopeRequirementIds,
+            Guid buildId,
             CancellationToken cancellationToken)
         {
             // 1. Requirements: recalculate from statement children
@@ -463,12 +533,12 @@ namespace Nexus.DEB.Infrastructure.Services
 
             foreach (var reqId in requirementIds)
             {
-                var children = await _debService.GetComplianceTreeChildrenAsync(tree, reqId, cancellationToken);
+                var children = await _debService.GetComplianceTreeChildrenAsync(tree, reqId, buildId, cancellationToken);
                 var result = await _engine.EvaluateBubbleUpAsync(
                     ComplianceNodeTypes.Requirement, children.Select(c => c.ComplianceStateID).ToList());
 
                 var reqNodes = await _debService.GetComplianceTreeNodesByEntityAsync(
-                    tree, ComplianceNodeTypes.Requirement, reqId, cancellationToken);
+                    tree, ComplianceNodeTypes.Requirement, reqId, buildId, cancellationToken);
 
                 foreach (var n in reqNodes)
                 {
@@ -485,7 +555,7 @@ namespace Nexus.DEB.Infrastructure.Services
 
             foreach (var section in sectionsByDepth)
             {
-                var children = await _debService.GetComplianceTreeChildrenAsync(tree, section.Id, cancellationToken);
+                var children = await _debService.GetComplianceTreeChildrenAsync(tree, section.Id, buildId, cancellationToken);
 
                 _logger.LogDebug(
                     "Processing Section {SectionId} (depth position {Index}), found {ChildCount} children with states [{States}]",
@@ -498,14 +568,14 @@ namespace Nexus.DEB.Infrastructure.Services
                     ComplianceNodeTypes.Section, children.Select(c => c.ComplianceStateID).ToList());
 
                 var sectionNodes = await _debService.GetComplianceTreeNodesByEntityAsync(
-                    tree, ComplianceNodeTypes.Section, section.Id, cancellationToken);
+                    tree, ComplianceNodeTypes.Section, section.Id, buildId, cancellationToken);
 
                 foreach (var n in sectionNodes)
                 {
                     n.ComplianceStateID = result.ComplianceStateID;
                     n.ComplianceStateLabel = result.Label;
                     n.LastCalculatedAt = _dateTimeProvider.Now;
-                    await RecalculateAggregatesAsync(n, tree, cancellationToken);
+                    await RecalculateAggregatesAsync(n, tree, buildId, cancellationToken);
                 }
                 if (sectionNodes.Count > 0)
                     await _debService.UpsertComplianceTreeNodesAsync(sectionNodes, cancellationToken);
@@ -513,20 +583,20 @@ namespace Nexus.DEB.Infrastructure.Services
 
             // 3. Root
             var rootChildren = await _debService.GetComplianceTreeChildrenAsync(
-                tree, tree.StandardVersionId, cancellationToken);
+                tree, tree.StandardVersionId, buildId, cancellationToken);
             var rootResult = await _engine.EvaluateBubbleUpAsync(
                 ComplianceNodeTypes.StandardVersion,
                 rootChildren.Select(c => c.ComplianceStateID).ToList());
 
             var rootNodes = await _debService.GetComplianceTreeNodesByEntityAsync(
-                tree, ComplianceNodeTypes.StandardVersion, tree.StandardVersionId, cancellationToken);
+                tree, ComplianceNodeTypes.StandardVersion, tree.StandardVersionId, buildId, cancellationToken);
 
             foreach (var n in rootNodes)
             {
                 n.ComplianceStateID = rootResult.ComplianceStateID;
                 n.ComplianceStateLabel = rootResult.Label;
                 n.LastCalculatedAt = _dateTimeProvider.Now;
-                await RecalculateAggregatesAsync(n, tree, cancellationToken);
+                await RecalculateAggregatesAsync(n, tree, buildId, cancellationToken);
             }
             if (rootNodes.Count > 0)
                 await _debService.UpsertComplianceTreeNodesAsync(rootNodes, cancellationToken);

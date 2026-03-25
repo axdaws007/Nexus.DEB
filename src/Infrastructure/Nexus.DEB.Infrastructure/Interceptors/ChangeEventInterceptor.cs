@@ -3,15 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
-using Nexus.DEB.Application.Common.Interfaces;
 using Nexus.DEB.Infrastructure.Helpers;
-using Nexus.DEB.Infrastructure.Services;
-using System;
 using System.Data;
 using System.Data.Common;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 public class ChangeEventInterceptor : SaveChangesInterceptor
 {
@@ -42,21 +36,6 @@ public class ChangeEventInterceptor : SaveChangesInterceptor
 		command.SetSessionContextCommand(key, value);
         command.Transaction = context.Database.CurrentTransaction?.GetDbTransaction();
 
-        var pKey = command.CreateParameter();
-		pKey.ParameterName = "@key";
-		pKey.DbType = DbType.String;
-		pKey.Value = key;
-
-		var pValue = command.CreateParameter();
-		pValue.ParameterName = "@value";
-		if(value is Guid)
-			pValue.DbType = DbType.Guid;
-		else
-			pValue.DbType = DbType.String;
-		pValue.Value = value;
-
-		command.Parameters.Add(pKey);
-		command.Parameters.Add(pValue);
 		await command.ExecuteNonQueryAsync(cancellationToken);
 	}
 
